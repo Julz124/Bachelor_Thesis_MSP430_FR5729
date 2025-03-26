@@ -1,0 +1,12 @@
+# Code Composer
+
+# Folders
+/Debug
+/.settings
+/targetConfigs
+
+# Binaries
+.ccsproject
+.cproject
+.project
+lnk_msp430fr5729.cmd

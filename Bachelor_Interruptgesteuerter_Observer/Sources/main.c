@@ -6,6 +6,7 @@
 #include "UCA0.h"
 #include "UCA1.h"
 #include "Handler.h"
+#include "Observer.h"
 
 GLOBAL Int _system_pre_init(Void) {
    // stop watchdog timer
@@ -80,14 +81,15 @@ LOCAL Void GPIO_init(Void) {
 
 GLOBAL Void main(Void) {
 
-   CS_init();     // set up Clock System
-   GPIO_init();   // set up Ports
-   Event_init();  // set up Event System
-   UCA0_init();   // set up UART Interface
-   UCA1_init();   // set up SPI Interface
-   TA0_init();    // set up Timer A0 (LED     Interrupts)
-   TA1_init();    // set up Timer A1 (Buttons Interrupts)
-   Handler_init();// set up Handler
+   CS_init();       // set up Clock System
+   GPIO_init();     // set up Ports
+   Event_init();    // set up Event System
+   UCA0_init();     // set up UART Interface
+   UCA1_init();     // set up SPI Interface
+   TA0_init();      // set up Timer A0 (LED     Interrupts)
+   TA1_init();      // set up Timer A1 (Buttons Interrupts)
+   Handler_init();  // set up Handler
+   Observer_init(); // set up Observer
 
    while(TRUE) {
 

@@ -83,17 +83,33 @@ GLOBAL Void Observer_init(Void) {
     /*
      * Initialize UART
      */
+    SETBIT(UCA2CTLW0, UCSWRST);  // UCA2 in Software-Reset versetzen
 
-    /*
-     * UART Receiver
-     */
+    UCA2CTLW1 = 0x0002;          // Entprellzeit ~100ns
+    UCA2BRW   = 6;               // Baudraten-Prescaler für 9600 Baud
+    UCA2MCTLW = 0x20 << 8        // zweite Modulationsstufe
+              | 0x00 << 4        // erste Modulationsstufe
+              | UCOS16;          // 16-faches Oversampling aktivieren
 
+    UCA2CTLW0 = UCPEN            // Parität aktivieren
+              | UCPAR            // Gerade Parität (even)
+              | 0                // LSB first
+              | 0                // 8 Datenbits
+              | 0                // Ein Stoppbit
+              | UCMODE_0         // UART-Modus
+              | 0                // Asynchroner Modus
+              | UCSSEL__ACLK     // Taktquelle: ACLK
+              | UCRXEIE          // Fehler-Interrupt aktivieren
+              | UCBRKIE          // Break-Interrupt aktivieren
+              | 0;               // UCA2 aus Reset freigeben
 
+    UCA2IE    = 0                // Transmit Complete Interrupt deaktivieren
+              | 0                // Start Bit Interrupt deaktivieren
+              | 0                // Transmit Interrupt deaktivieren
+              | UCRXIE;          // Empfangs-Interrupt aktivieren
 
-
-    /*
-     * UART Transmitter
-     */
+    buffer_index = 0;
+    uart_buffer[0] = '\0';
 
 }
 

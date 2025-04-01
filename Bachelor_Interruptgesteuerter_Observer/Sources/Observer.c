@@ -7,6 +7,8 @@
 
 #include <msp430.h>
 #include <msp430fr5729.h>
+#include <string.h>
+#include <stdlib.h>
 #include <..\base.h>
 #include <Observer.h>
 
@@ -16,18 +18,18 @@
 
 // UART Einstellungen
 #define UART_BUFFER_SIZE 64
-#define BAUD_RATE 9600
+#define TIMEOUT_THRESHOLD 600  // 6s = 600 * 10ms
 
 // UART Logic
 static char uart_buffer[UART_BUFFER_SIZE];
 static int buffer_index = 0;
-static Bool timeout_occurred = FALSE;
-static Bool command_ready = FALSE;
-
-#define TIMEOUT_THRESHOLD 600  // 6s = 600 * 10ms
+static Bool timeout_occurred = 0;
+static Bool command_ready = 0;
 static volatile int timeout_counter = 0;
 
-
+/*
+ * Initialization
+ */
 #pragma FUNC_ALWAYS_INLINE(Observer_init)
 GLOBAL Void Observer_init(Void) {
     /*
@@ -61,7 +63,6 @@ GLOBAL Void Observer_init(Void) {
      * max count to 65.535 (16-bit)
      *
      * Capture-Mode rising and falling edge
-     * TODO: Select Input signal CCIxA (see 11.3.3 User's Guide)
      */
 /*
     TA2CCTL1 = CCIE;                // clear timer A2 control register 1 and set it to Compare Mode
@@ -86,7 +87,7 @@ GLOBAL Void Observer_init(Void) {
     SETBIT(UCA2CTLW0, UCSWRST);  // UCA2 in Software-Reset versetzen
 
     UCA2CTLW1 = 0x0002;          // Entprellzeit ~100ns
-    UCA2BRW   = 6;               // Baudraten-Prescaler für 9600 Baud
+    UCA2BRW   = 4;               // Baudraten-Prescaler für 9600 Baud (614,4kHz / (16*9600) = 4)
     UCA2MCTLW = 0x20 << 8        // zweite Modulationsstufe
               | 0x00 << 4        // erste Modulationsstufe
               | UCOS16;          // 16-faches Oversampling aktivieren
@@ -113,69 +114,119 @@ GLOBAL Void Observer_init(Void) {
 
 }
 
-
-// ISR für UART Empfang
-#pragma vector = USCI_A2_VECTOR
-__interrupt Void USCI_A2_ISR(Void) {
-    switch(__even_in_range(UCA2IV, USCI_UART_UCTXCPTIFG)) {
-        case USCI_NONE: break;
-        case USCI_UART_UCRXIFG:     // Empfangsdaten verfügbar
-            // Empfange Byte und speichere im Buffer
-            char rx_byte = UCA2RXBUF;
-
-            // Reset Timeout-Timer bei jedem empfangenen Zeichen
-            timeout_counter = 0;    // Clear Timer
-
-            // Prüfe auf Zeilenende (Befehlsende)
-            if (rx_byte == '\r' || rx_byte == '\n' || rx_byte ' ') {
-                uart_buffer[buffer_index] = '\0';  // String terminieren
-                command_ready = TRUE;              // Befehl ist vollständig
-                // Kein Rücksetzen des Buffer-Index hier, wird in der ISR gemacht
-            }
-            // Speichere Zeichen im Buffer, wenn noch Platz ist
-            else if (buffer_index < UART_BUFFER_SIZE - 1) {
-                uart_buffer[buffer_index++] = rx_byte;
-            }
-            break;
-        default: break;
+// Compare Strings
+#pragma FUNC_ALWAYS_INLINE(string_compare)
+LOCAL int string_compare(const char *str1, const char *str2, int len) {
+    int i;
+    for (i = 0; i < len; i++) {
+        if (str1[i] != str2[i] || str1[i] == '\0' || str2[i] == '\0')
+            return 0;
     }
+    return 1;
 }
 
-
-#pragma vector = TIMER2_A1_VECTOR
-__interrupt Void TIMER2_A1_ISR(Void) {
-
-    // UART Time-Out Counter Logic
-    timeout_counter++;
-
-    if (timeout_counter >= TIMEOUT_THRESHOLD) {
-        timeout_counter = 0;  // Reset Counter
-        Timeout-timeout_occurred = TRUE;
-    }
-
-    // Befehlsverarbeitung
-    if (command_ready){
-
-    }
-
-}
-
+// Print chars to UART-connection
 #pragma FUNC_ALWAYS_INLINE(Observer_print)
 LOCAL int Observer_print(const char * str) {
-
+    while (*str) {
+        while (!(UCA2IFG & UCTXIFG));  // Warten, bis TX-Buffer leer ist
+        UCA2TXBUF = *str++;            // Zeichen senden
+    }
+    return 0;
 }
 
+// Reads from memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(read_mem)
 LOCAL int read_mem(const int str, const int addr, const int blocks) {
 
 }
 
+// Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL int write_mem(const int str, const int addr, const int blocks) {
 
 }
 
+// Set interrupt breakpoint
 #pragma FUNC_ALWAYS_INLINE(interrupt)
 LOCAL int interrupt() {
 
 }
+
+/*
+ * UART ISR
+ */
+#pragma vector = USCI_A2_VECTOR
+__interrupt Void USCI_A2_ISR(Void) {
+    switch(__even_in_range(UCA2IV, USCI_UART_UCTXCPTIFG)) {
+        case USCI_NONE:
+            // TODO: Fehlerausgabe
+            break;
+        case USCI_UART_UCRXIFG:     // Data ready to read
+            // Read and save byte
+            char rx_byte = UCA2RXBUF;
+
+            // Reset Timeout-Timer
+            timeout_counter = 0;
+
+            // Check on end of word
+            if (rx_byte == '\r' || rx_byte == '\n') {
+                uart_buffer[buffer_index] = '\0';   // Terminate string
+                command_ready = 1;                  // Command ready
+            }
+            // Save chars in Buffer if space available
+            else if (buffer_index < UART_BUFFER_SIZE - 1) {
+                uart_buffer[buffer_index++] = rx_byte;
+            }
+            break;
+        default:
+            // TODO: Fehlerausgabe
+            break;
+    }
+}
+
+/*
+ * Command ISR
+ */
+#pragma vector = TIMER2_A1_VECTOR
+__interrupt Void TIMER2_A1_ISR(Void) {
+
+    // UART Time-Out counter logic
+    timeout_counter++;
+
+    if (timeout_counter >= TIMEOUT_THRESHOLD) {
+        timeout_counter = 0;  // Reset counter
+        timeout_occurred = 1;
+    }
+
+    // Command computation
+    if (command_ready == 1) {
+        command_ready = 0;
+
+        for (int i = 0; i < OBSERVER_FUNC_COUNT; i++) {
+
+            if (string_compare(uart_buffer, OBSERVER_FUNC_DICT[i].key, 3) == 1){
+
+                char *params = uart_buffer + 3;
+
+                char *token = strtok(params, " ");
+                if (token) int addr = (int)strtol(token, NULL, 16);  // Hexadezimal
+                token = strtok(NULL, " ");
+                if (token) int blocks = (int)strtol(token, NULL, 10); // Dezimal
+
+                if (i = 0) {
+                    int (*func_ptr)(const int, const int, const int) = (int (*)(const int, const int, const int))OBSERVER_FUNC_DICT[i].func;
+                    (*func_ptr)(0, addr, blocks);
+                } else if (i = 1) {
+                    int (*func_ptr)(const int, const int, const int) = (int (*)(const int, const int, const int))OBSERVER_FUNC_DICT[i].func;
+                    (*func_ptr)(0, addr, blocks);
+                } else if (i = 2) {
+                    int (*func_ptr)() = (int (*)())OBSERVER_FUNC_DICT[i].func;
+                    (*func_ptr)();
+                }
+            }
+        }
+    }
+
+}
+

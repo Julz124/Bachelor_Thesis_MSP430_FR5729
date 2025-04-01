@@ -14,6 +14,10 @@ typedef struct {
     void* func;         // Pointer to the function
 } ObserverFuncEntry;
 
+EXTERN int read_mem(const int addr, const int blocks);
+EXTERN int write_mem(const char* str, const int addr, const int value);
+EXTERN int interrupt();
+
 // Dictionary of function pointers with their keys
 static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
     {"rdm", (void*)read_mem},     // read_mem function
@@ -26,11 +30,6 @@ static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
 
 // Function declarations
 EXTERN void Observer_init(void);
-EXTERN int Observer_print(const char * str);
-
-EXTERN int read_mem(const int str, const int addr, const int blocks);
-EXTERN int write_mem(const int str, const int addr, const int blocks);
-EXTERN int interrupt();
 
 
 #endif /* OBSERVER_H_ */

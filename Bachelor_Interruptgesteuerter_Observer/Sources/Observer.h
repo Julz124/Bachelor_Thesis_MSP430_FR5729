@@ -8,25 +8,56 @@
 #ifndef OBSERVER_H_
 #define OBSERVER_H_
 
+#include "..\base.h"
+
+typedef unsigned int TEvent;
+
+/*
+ * Event initialization
+ */
+#define NO_EVENTS   0x0000
+#define EVENT_1     0x0001
+#define EVENT_2     0x0002
+#define EVENT_3     0x0004
+#define EVENT_4     0x0008
+#define EVENT_5     0x0010
+#define EVENT_6     0x0020
+#define EVENT_7     0x0040
+#define EVENT_8     0x0080
+#define EVENT_9     0x0100
+#define EVENT_10    0x0200
+#define EVENT_11    0x0400
+#define EVENT_12    0x0800
+#define EVENT_13    0x1000
+#define EVENT_14    0x2000
+#define EVENT_15    0x4000
+#define EVENT_16    0x8000
+#define ALL_EVENTS  0xFFFF
+
+/*
+ * Event allocation
+ */
+#define CMD_RDY         EVENT_1     // Command event
+#define EVENT_ERR       EVENT_2     // Error event
+
+
+/*
+ * UART Error
+ */
+#define NO_ERROR            7       // no error
+#define CMD_ERROR           6       // unknown command
+#define TIME_OUT            5       // time out
+#define BUFFER_ERROR        4       // buffer error (e.g. to many bytes received)
+#define CHARACTOR_ERROR     3       // charactor error (e.g. wrong charactor received)
+#define FROVPAR_ERROR       2       // frame overrun or parity error
+#define BREAK_ERROR         1       // break error (lost communication)
+#define PRINT_ERROR         0       // unable to print on UART
+
 // Struct to combine key and function pointer
 typedef struct {
-    const char* key;    // String key for the function
-    void* func;         // Pointer to the function
+    const char* const key;      // String key for the function
+    const void* const func;     // Pointer to the function
 } ObserverFuncEntry;
-
-EXTERN int read_mem(const int addr, const int blocks);
-EXTERN int write_mem(const char* str, const int addr, const int value);
-EXTERN int interrupt();
-
-// Dictionary of function pointers with their keys
-static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
-    {"rdm", (void*)read_mem},     // read_mem function
-    {"wrm", (void*)write_mem},    // write_mem function
-    {"inr", (void*)interrupt}     // interrupt function
-};
-
-// Number of functions in the dictionary
-#define OBSERVER_FUNC_COUNT (sizeof(OBSERVER_FUNC_DICT) / sizeof(OBSERVER_FUNC_DICT[0]))
 
 // Function declarations
 EXTERN void Observer_init(void);

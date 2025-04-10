@@ -21,28 +21,40 @@
 
 
 // Event/Error Logic
-LOCAL TEvent event = NO_EVENTS;
-LOCAL TEvent errflg = NO_EVENTS;
-LOCAL UChar error = NO_ERROR;
+LOCAL TEvent event;
+LOCAL TEvent errflg;
+LOCAL UChar error;
 
 
 // Function Logic
 static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
     {"rdm", (void*)read_mem},     // read_mem function
     {"wrm", (void*)write_mem},    // write_mem function
-    {"inr", (void*)interrupt},    // interrupt function
+    {"inr", (void*)set_interrupt},    // interrupt function
     {"\0", NULL}
 };
 
-ObserverFuncEntry* dict_ptr = &OBSERVER_FUNC_DICT[0];
+ObserverFuncEntry* dict_ptr;
+
+// Define error message strings
+static const char* ERROR_MESSAGES[] = {
+    "no error",                         // NO_ERR (assuming 0)
+    "no or unknown command",            // CMD_ERROR
+    "lost communication",               // BREAK_ERROR
+    "frame overrun or parity error",    // FROVPAR_ERROR
+    "wrong character received",         // CHARACTOR_ERROR
+    "too many bytes received",          // BUFFER_ERROR
+    "time out",                         // TIME_OUT
+    "unable to print on UART"           // PRINT_ERROR
+};
+
+static const char** err_msg_ptr;
 
 // UART Logic
-static int command_ready = 0;
-static int timeout_counter = 0;
-
+static int timeout_counter;
 static char uart_buffer[UART_BUFFER_SIZE];
-static int buffer_index = 0;
-static const char * print_ptr;
+static int buffer_index;
+static const char* print_ptr;
 
 /*
  * Initialization
@@ -83,7 +95,7 @@ GLOBAL Void Observer_init(Void) {
     /*
      * Initialize UART
      */
-    SETBIT(UCA2CTLW0, UCSWRST);  // UCA2 in Software-Reset versetzen
+    SETBIT(UCA0CTLW0, UCSWRST);  // UCA0 in Software-Reset versetzen
 
     UCA0CTLW1 = 0x0002;          // Entprellzeit ~100ns
     UCA0BRW   = 4;               // Baudraten-Prescaler für 9600 Baud (614,4kHz / (16*9600) = 4)
@@ -108,9 +120,55 @@ GLOBAL Void Observer_init(Void) {
               | 0                // Transmit Interrupt deaktivieren
               | UCRXIE;          // Empfangs-Interrupt aktivieren
 
+    event  = NO_EVENTS;
+    errflg = NO_EVENTS;
+    error = NO_ERR;
+
+    dict_ptr = &OBSERVER_FUNC_DICT[0];
+
+    timeout_counter = 0;
     buffer_index = 0;
     uart_buffer[0] = '\0';
 
+}
+
+/*
+ * Event & Error Handling Logic
+ */
+#pragma FUNC_ALWAYS_INLINE(set_evt)
+LOCAL Void set_evt(TEvent arg) {
+   errflg  |= event BAND arg;
+   TGLBIT(event, arg);
+}
+
+#pragma FUNC_ALWAYS_INLINE(set_error)
+LOCAL Void set_error(UChar err) {
+  if (err == NO_ERR || error > err) {
+    error = err;
+    set_evt(EVT_ERR);
+  }
+}
+
+#pragma FUNC_ALWAYS_INLINE(clr_evt)
+GLOBAL Void clr_evt(TEvent arg) {
+   TGLBIT(event, arg);
+}
+
+#pragma FUNC_ALWAYS_INLINE(tst_evt)
+GLOBAL Bool tst_evt(TEvent arg) {
+   return TSTBIT(event, arg);
+}
+
+#pragma FUNC_ALWAYS_INLINE(err_evt)
+GLOBAL Bool err_evt(Void) {
+   return (errflg NE NO_EVENTS);
+}
+
+#pragma FUNC_ALWAYS_INLINE(get_evt)
+GLOBAL TEvent get_evt(TEvent mask) {
+   TEvent tmp_event = event & mask;
+   CLRBIT(event, mask);
+   return tmp_event;
 }
 
 // Print chars to UART-connection
@@ -127,66 +185,26 @@ LOCAL int observer_print(const char * str) {
 }
 
 /*
- * Event & Error Handling Logic
- */
-#pragma FUNC_ALWAYS_INLINE(set_error)
-LOCAL void set_error(UChar err) {
-  if (err == NO_ERROR || error > err) {
-    error = err;
-    set_evt(EVENT_ERR);
-  }
-}
-
-#pragma FUNC_ALWAYS_INLINE(clr_evt)
-GLOBAL Void clr_evt(TEvent arg) {
-   TGLBIT(event, arg);
-}
-
-#pragma FUNC_ALWAYS_INLINE(Event_tst)
-GLOBAL Bool tst_evt(TEvent arg) {
-   return TSTBIT(event, arg);
-}
-
-#pragma FUNC_ALWAYS_INLINE(Event_err)
-GLOBAL Bool err_evt(Void) {
-   return (errflg NE NO_EVENTS);
-}
-
-#pragma FUNC_ALWAYS_INLINE(get_evts)
-GLOBAL TEvent get_evt(TEvent mask) {
-   TEvent tmp_event = event & mask;
-   CLRBIT(event, mask);
-   return tmp_event;
-}
-
-#pragma FUNC_ALWAYS_INLINE(Evt_Handler)
-LOCAL void Evt_Handler() {
-    if (get_evt(EVENT_ERR)) {
-        observer_print((error == BREAK_ERROR)       ? 'lost communication'
-                     : (error == FROVPAR_ERROR)     ? 'frame overrun or parity error'
-                     : (error == CHARACTOR_ERROR)   ? 'wrong character received'
-                     : (error == BUFFER_ERROR)      ? 'to many bytes received'
-                     : (error == TIME_OUT)          ? 'time out'
-                     : (error == PRINT_ERROR)       ? 'unable to print on UART');
-    }
-}
-
-/*
  * Main-Functionality Logic
  */
 
 // Reads from memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(read_mem)
-LOCAL int read_mem(const int addr, const int blocks) {
-    /*
-     * Some Code goes in there
-     */
+LOCAL int read_mem(void) {
+
+    // Extract useful
+    char *mem_addr_ptr = strtok(uart_buffer + 4, " ");
+    char *blocks_ptr = strtok(NULL, " ");
+    int blocks = atoi(blocks_ptr);
+
+    char mem_value = *mem_addr_ptr;
+
     return 0;
 }
 
 // Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
-LOCAL int write_mem(const int addr, const char* str) {
+LOCAL int write_mem(void) {
     /*
      * Some Code goes in there
      */
@@ -194,8 +212,8 @@ LOCAL int write_mem(const int addr, const char* str) {
 }
 
 // Set interrupt breakpoint
-#pragma FUNC_ALWAYS_INLINE(interrupt)
-LOCAL int interrupt() {
+#pragma FUNC_ALWAYS_INLINE(set_interrupt)
+LOCAL int set_interrupt(void) {
     /*
      * Some Code goes in there
      */
@@ -209,27 +227,27 @@ LOCAL int interrupt() {
 __interrupt Void USCI_A0_ISR(Void) {
     char rx_byte;
 
-    switch(__even_in_range(UCA2IV, USCI_UART_UCTXCPTIFG)) {
+    switch(__even_in_range(UCA0IV, USCI_UART_UCTXIFG)) {
 
         case USCI_NONE:             // Interrupt Vector 0: No Interrupt pending
             break;
 
         case USCI_UART_UCRXIFG:     // Interrupt Vector 2: Data ready to read
 
-            if (TSTBIT(UCA2STATW, UCBRK)) {
+            if (TSTBIT(UCA0STATW, UCBRK)) {
                set_error(BREAK_ERROR);
                Char ch = UCA0RXBUF;
                return;
             }
 
-            if (TSTBIT(UCA2STATW, UCRXERR)) {
+            if (TSTBIT(UCA0STATW, UCRXERR)) {
                set_error(FROVPAR_ERROR);
                Char ch = UCA0RXBUF;
                return;
             }
 
             // Read and save byte
-            rx_byte = UCA2RXBUF;
+            rx_byte = UCA0RXBUF;
 
             // Reset Timeout-Timer
             timeout_counter = 0;
@@ -246,7 +264,7 @@ __interrupt Void USCI_A0_ISR(Void) {
 
             // Check on end of word
             if (rx_byte == '\r' ) {
-                command_ready = 1;                  // Command ready
+                set_evt(CMD_RDY);       // Command ready
                 return;
             }
 
@@ -264,32 +282,32 @@ __interrupt Void USCI_A0_ISR(Void) {
         case USCI_UART_UCTXIFG:     // Interrupt Vector 4: Data ready to write
 
             // USCI Break received
-            if (TSTBIT(UCA2STATW, UCBRK)) {
-               Char ch = UCA2RXBUF;
+            if (TSTBIT(UCA0STATW, UCBRK)) {
+               Char ch = UCA0RXBUF;
                set_error(BREAK_ERROR);
                return;
             }
 
             // USCI RX Error Flag
-            if (TSTBIT(UCA2STATW, UCRXERR)) {
-               Char ch = UCA2RXBUF;
+            if (TSTBIT(UCA0STATW, UCRXERR)) {
+               Char ch = UCA0RXBUF;
                set_error(FROVPAR_ERROR);
                return;
             }
 
             // Transmit character
-            if (*ptr NE '\0') {
-               UCA2TXBUF = *print_ptr++;
+            if (*print_ptr NE '\0') {
+               UCA0TXBUF = *print_ptr++;
                return;
             }
 
             // Disable UART Transmit Interrupt
-            CLRBIT(UCA2IE, UCTXIE);
-            Char ch = UCA2RXBUF;
-            set_error(NO_ERROR);
+            CLRBIT(UCA0IE, UCTXIE);
+            Char ch = UCA0RXBUF;
+            set_error(NO_ERR);
 
             // Enable UART Receive Interrupt
-            SETBIT(UCA2IE, UCRXIE);
+            SETBIT(UCA0IE, UCRXIE);
             break;
 
         default:
@@ -306,6 +324,23 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     // UART Time-Out counter logic
     timeout_counter++;
 
+    TEvent local_event = get_evt(CMD_RDY | EVT_ERR);
+
+    if (local_event & EVT_ERR) {
+        int msg_idx = ((error == CMD_ERROR)         ? 1
+                    :  (error == BREAK_ERROR)       ? 2
+                    :  (error == FROVPAR_ERROR)     ? 3
+                    :  (error == CHARACTOR_ERROR)   ? 4
+                    :  (error == BUFFER_ERROR)      ? 5
+                    :  (error == TIME_OUT)          ? 6
+                    :  (error == PRINT_ERROR)       ? 7
+                    : 0 );
+
+        err_msg_ptr = ERROR_MESSAGES + msg_idx;
+        observer_print(*err_msg_ptr);
+    }
+
+
     if (timeout_counter >= TIMEOUT_THRESHOLD) {
         timeout_counter = 0;  // Reset counter
         set_error(TIME_OUT);
@@ -314,49 +349,39 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     }
 
     // Command computation
-    if (command_ready == 1) {
-        command_ready = 0;
+    if (local_event & CMD_RDY) {
+        clr_evt(CMD_RDY);
 
         if (uart_buffer EQ '\0') {
             set_error(CMD_ERROR);
             return;
         }
 
+        // Reset dict_ptr and set error
+        if (dict_ptr->key EQ '\0') {
+            dict_ptr = &OBSERVER_FUNC_DICT[0];
+            set_error(CMD_ERROR);
+            return;
+        }
+
+        // Compare buffer with dict entry
         if (strncmp(uart_buffer, dict_ptr->key, 3) == 0) {
-
-            /*
-            char *params = uart_buffer + 3;
-
-            if (i == 0) {
-                char *token = strtok(params, " ");
-                if (token) addr = (int)strtol(token, NULL, 16);
-                token = strtok(NULL, " ");
-                if (token) blocks = (int)strtol(token, NULL, 10);
-
-                char* (*func_ptr)(const int, const int) = (char* (*)(const int, const int))OBSERVER_FUNC_DICT[i].func;
-                Observer_print((*func_ptr)(addr, blocks));
-
-
-            } else if (i == 1) {
-                char *token = strtok(params, " ");
-                if (token) addr = (int)strtol(token, NULL, 16);
-                token = strtok(NULL, " ");
-                if (token) str = token;
-
-                char* (*func_ptr)(const int, const char*) = (char* (*)(const int, const char*))OBSERVER_FUNC_DICT[i].func;
-                Observer_print((*func_ptr)(addr, str));
-
-
-            } else if (i == 2) {
-                char* (*func_ptr)() = (char* (*)())OBSERVER_FUNC_DICT[i].func;
-                Observer_print((*func_ptr)());
+            // Execute function
+            int (*func_ptr)(void) = (int(*)(void))dict_ptr->func;
+            if (func_ptr) {
+                func_ptr();
+            } else {
+                set_error(CMD_ERROR);
             }
-            */
 
+            // Reset buffer and pointer
             buffer_index = 0;
             uart_buffer[0] = '\0';
+            dict_ptr = &OBSERVER_FUNC_DICT[0];
+            return;
         }
+
+        dict_ptr++;
 
     }
 }
-

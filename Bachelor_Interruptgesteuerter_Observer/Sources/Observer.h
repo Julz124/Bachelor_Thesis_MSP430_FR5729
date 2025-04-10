@@ -38,14 +38,14 @@ typedef unsigned int TEvent;
  * Event allocation
  */
 #define CMD_RDY         EVENT_1     // Command event
-#define EVENT_ERR       EVENT_2     // Error event
+#define EVT_ERR         EVENT_2     // Error event
 
 
 /*
  * UART Error
  */
-#define NO_ERROR            7       // no error
-#define CMD_ERROR           6       // unknown command
+#define NO_ERR              7       // no error
+#define CMD_ERROR           6       // no/unknown command
 #define TIME_OUT            5       // time out
 #define BUFFER_ERROR        4       // buffer error (e.g. to many bytes received)
 #define CHARACTOR_ERROR     3       // charactor error (e.g. wrong charactor received)
@@ -58,6 +58,19 @@ typedef struct {
     const char* const key;      // String key for the function
     const void* const func;     // Pointer to the function
 } ObserverFuncEntry;
+
+/*
+ * Main-Functionality Logic
+ */
+
+// Reads from memory cell(s)
+LOCAL int read_mem(void);
+
+// Writes to memory cell(s)
+LOCAL int write_mem(void);
+
+// Set interrupt breakpoint
+LOCAL int set_interrupt(void);
 
 // Function declarations
 EXTERN void Observer_init(void);

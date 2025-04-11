@@ -18,6 +18,7 @@
 // UART Einstellungen
 #define UART_BUFFER_SIZE 64
 #define TIMEOUT_THRESHOLD 600  // 6s = 600 * 10ms
+#define RW_BUFFER_SIZE 64
 
 
 // Event/Error Logic
@@ -35,6 +36,11 @@ static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
 };
 
 ObserverFuncEntry* dict_ptr;
+static Int (*func_ptr)(void);
+static UInt num_block;
+static UInt blocks;
+static Char *mem_addr_ptr;
+static Char rw_buffer[RW_BUFFER_SIZE - 1];
 
 // Define error message strings
 static const char* ERROR_MESSAGES[] = {
@@ -52,7 +58,7 @@ static const char** err_msg_ptr;
 
 // UART Logic
 static int timeout_counter;
-static char uart_buffer[UART_BUFFER_SIZE];
+static char uart_buffer[UART_BUFFER_SIZE - 1];
 static int buffer_index;
 static const char* print_ptr;
 
@@ -126,6 +132,9 @@ GLOBAL Void Observer_init(Void) {
 
     dict_ptr = &OBSERVER_FUNC_DICT[0];
 
+    num_block = 0;
+    blocks = 0;
+
     timeout_counter = 0;
     buffer_index = 0;
     uart_buffer[0] = '\0';
@@ -188,26 +197,61 @@ LOCAL int observer_print(const char * str) {
  * Main-Functionality Logic
  */
 
-// Reads from memory cell(s)
-#pragma FUNC_ALWAYS_INLINE(read_mem)
+
+
+// Writes to memory cell(s)
+#pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL int read_mem(void) {
 
-    // Extract useful
-    char *mem_addr_ptr = strtok(uart_buffer + 4, " ");
-    char *blocks_ptr = strtok(NULL, " ");
-    int blocks = atoi(blocks_ptr);
+    if (num_block < (RW_BUFFER_SIZE - 1) || num_block > (blocks * 7)) {
+        rw_buffer[RW_BUFFER_SIZE - 1] = '\0';
+        observer_print(rw_buffer);
+        clr_evt(CMD_RUN);
+        set_evt(CMD_DONE);
+    }
 
-    char mem_value = *mem_addr_ptr;
+    if (blocks == 0) {
+        // Extract useful arguments
+        Char *mem_addr_str = strtok(uart_buffer + 4, " ");
+        Char *block_str = strtok(NULL, " ");
+
+        mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
+        blocks = (UInt)atoi(block_str);
+    }
+
+    rw_buffer[num_block] = *((volatile Char *)mem_addr_ptr + (num_block*8));
+    num_block++;
 
     return 0;
 }
 
-// Writes to memory cell(s)
-#pragma FUNC_ALWAYS_INLINE(write_mem)
+// Reads from memory cell(s)
+#pragma FUNC_ALWAYS_INLINE(read_mem)
 LOCAL int write_mem(void) {
-    /*
-     * Some Code goes in there
-     */
+
+    if (num_block < (RW_BUFFER_SIZE - 1) || num_block > (blocks * 7)) {
+        observer_print(rw_buffer);
+        clr_evt(CMD_RUN);
+        set_evt(CMD_DONE);
+    }
+
+    if (blocks == 0) {
+        // Extract useful arguments
+        Char *mem_addr_str = strtok(uart_buffer + 4, " ");
+        mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
+
+        Char *token = strtok(NULL, " ");
+        if (token != NULL) {
+            strncpy(rw_buffer, token, RW_BUFFER_SIZE - 1);
+            rw_buffer[RW_BUFFER_SIZE - 1] = '\0';
+        }
+
+        blocks = (strlen(rw_buffer) + 7) / 8;
+    }
+
+    *((volatile Char *)mem_addr_ptr + (num_block*8)) = rw_buffer[num_block];
+    num_block++;
+
     return 0;
 }
 
@@ -324,7 +368,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     // UART Time-Out counter logic
     timeout_counter++;
 
-    TEvent local_event = get_evt(CMD_RDY | EVT_ERR);
+    TEvent local_event = get_evt(CMD_RDY | CMD_RUN | CMD_DONE | EVT_ERR);
 
     if (local_event & EVT_ERR) {
         int msg_idx = ((error == CMD_ERROR)         ? 1
@@ -350,15 +394,16 @@ __interrupt Void TIMER0_B0_ISR(Void) {
 
     // Command computation
     if (local_event & CMD_RDY) {
-        clr_evt(CMD_RDY);
 
         if (uart_buffer EQ '\0') {
+            clr_evt(CMD_RDY);
             set_error(CMD_ERROR);
             return;
         }
 
         // Reset dict_ptr and set error
         if (dict_ptr->key EQ '\0') {
+            clr_evt(CMD_RDY);
             dict_ptr = &OBSERVER_FUNC_DICT[0];
             set_error(CMD_ERROR);
             return;
@@ -366,22 +411,31 @@ __interrupt Void TIMER0_B0_ISR(Void) {
 
         // Compare buffer with dict entry
         if (strncmp(uart_buffer, dict_ptr->key, 3) == 0) {
-            // Execute function
-            int (*func_ptr)(void) = (int(*)(void))dict_ptr->func;
-            if (func_ptr) {
-                func_ptr();
-            } else {
-                set_error(CMD_ERROR);
-            }
-
-            // Reset buffer and pointer
-            buffer_index = 0;
-            uart_buffer[0] = '\0';
-            dict_ptr = &OBSERVER_FUNC_DICT[0];
+            clr_evt(CMD_RDY);
+            // Extract functionpointer
+            func_ptr = (int(*)(void))dict_ptr->func;
             return;
         }
-
         dict_ptr++;
+    }
 
+    if (local_event & CMD_RUN) {
+        // Check if function pointer is available
+        if (!func_ptr) {
+            set_error(CMD_ERROR);
+        }
+        // execute function routine
+        func_ptr();
+    }
+
+    if (local_event & CMD_DONE) {
+        // Reset buffer and pointer
+        blocks = 0;
+        rw_buffer[0] = '\0';
+
+        buffer_index = 0;
+        uart_buffer[0] = '\0';
+        dict_ptr = &OBSERVER_FUNC_DICT[0];
+        return;
     }
 }

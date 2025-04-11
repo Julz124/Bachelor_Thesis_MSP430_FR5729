@@ -38,7 +38,9 @@ typedef unsigned int TEvent;
  * Event allocation
  */
 #define CMD_RDY         EVENT_1     // Command event
-#define EVT_ERR         EVENT_2     // Error event
+#define CMD_RUN         EVENT_2     // Command running
+#define CMD_DONE        EVENT_3     // Command done
+#define EVT_ERR         EVENT_4     // Event error
 
 
 /*

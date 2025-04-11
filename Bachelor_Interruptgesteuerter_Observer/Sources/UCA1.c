@@ -2,6 +2,28 @@
 #include "UCA1.h"
 #include "event.h"
 
+// AS1108 Data Frame struct
+// D15 D14 D13 D12 D11  D10  D9  D8   D7 D6 D5 D4 D3 D2 D1 D0
+// X   X    X   X  Register Address   MSB <--- Data ----> LSB
+// -----------------------------------------------------------
+
+// Register Address
+//                   Register Address Map
+// Register       HEX Code              Address
+//                              D15:D12 D11 D10 D9 D8
+// No-Op              0xX0         X     0   0   0  0
+// Digit 0            0xX1         X     0   0   0  1
+// Digit 1            0xX2         X     0   0   1  0
+// Digit 2            0xX3         X     0   0   1  1
+// Digit 3            0xX4         X     0   1   0  0
+// Decode-Mode        0xX9         X     1   0   0  1
+// Intensity Control  0xXA         X     1   0   1  0
+// Scan Limit         0xXB         X     1   0   1  1
+// Shutdown           0xXC         X     1   1   0  0
+// N/A                0xXD         X     1   1   0  1
+// Feature            0xXE         X     1   1   1  0
+// Display Test       0xXF         X     1   1   1  1
+
 #define INITSIZE 10
 
 typedef struct {
@@ -22,6 +44,7 @@ LOCAL const TFrame init[INITSIZE] = {
    { 0x0B, 0x03 }   // scan limit, display all numbers (digits 0-3) [see data sheet p. 13]
 };
 
+//#pragma FUNC_ALWAYS_INLINE(emit)
 LOCAL Void emit(const UChar adr, const UChar val) {
    UChar ch = UCA1RXBUF;        // RXBUF auslesen, UCRXIFG := 0, UCOE := 0
    CLRBIT(P2OUT, BIT3);         // Select aktivieren
@@ -36,9 +59,11 @@ LOCAL Void emit(const UChar adr, const UChar val) {
 
 #pragma FUNC_ALWAYS_INLINE(UCA1_init)
 GLOBAL Void UCA1_init(Void) {
+   // set up Universal Serial Communication Interface A
    SETBIT(UCA1CTLW0, UCSWRST);  // UCA1 software reset
    UCA1BRW = 20;          // prescaler
 
+   // in �bereinstimung mit dem SPI-Timing-Diagramm von AS1108
    UCA1CTLW0 = UCCKPH           // 15: clock phase select: rising edge
              | 0                // 14: clock polarity: inactive low
              | UCMSB            // 13: MSB first
@@ -57,7 +82,7 @@ GLOBAL Void UCA1_init(Void) {
 }
 
 #define DATASIZE 2
-LOCAL UChar  idx;              // Index
+LOCAL UInt  idx;              // Index
 LOCAL UChar data[DATASIZE];   // Pointer auf das Datenfeldd
 
 GLOBAL Void UCA1_emit(const UChar adr, const UChar val) {

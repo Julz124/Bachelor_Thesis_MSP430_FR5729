@@ -3,7 +3,6 @@
 #include "event.h"
 #include "TA0.h"
 #include "TA1.h"
-#include "UCA0.h"
 #include "UCA1.h"
 #include "Handler.h"
 #include "Observer.h"
@@ -64,7 +63,7 @@ LOCAL Void GPIO_init(Void) {
    PAIFG  = VAL_16BIT(0b00000000, 0b00000000); // clear all interrupt flags
    PAIE   = VAL_16BIT(0b00000000, 0b00000000); // disable all GPIO interrupts
    PASEL0 = VAL_16BIT(0b00000000, 0b00000000);
-   PASEL1 = VAL_16BIT(0b01110011, 0b00000000); // PIN 0: UART TXD, PIN 1: UART RXD (see slide 115)
+   PASEL1 = VAL_16BIT(0b01110000, 0b00000000);
    PAREN  = VAL_16BIT(0b00000000, 0b00000000); // without pull up
 
    //                   Port4       Port3
@@ -81,26 +80,22 @@ LOCAL Void GPIO_init(Void) {
 
 GLOBAL Void main(Void) {
 
-   CS_init();       // set up Clock System
-   GPIO_init();     // set up Ports
-   Event_init();    // set up Event System
-   UCA0_init();     // set up UART Interface
-   UCA1_init();     // set up SPI Interface
-   TA0_init();      // set up Timer A0 (LED     Interrupts)
-   TA1_init();      // set up Timer A1 (Buttons Interrupts)
-   Handler_init();  // set up Handler
-   Observer_init(); // set up Observer
+   CS_init();           // set up Clock System
+   GPIO_init();         // set up Ports
+   Event_init();        // set up Event System
+   UCA1_init();         // set up SPI Interface
+   TA0_init();          // set up Timer A0 (LED     Interrupts)
+   TA1_init();          // set up Timer A1 (Buttons Interrupts)
+   Handler_init();      // set up Handler
+   Observer_init();     // set up Observer
 
    while(TRUE) {
 
       Event_wait();        // wait for event
-
-      Button_Handler();    // handle button events
-      Number_Handler();    // handle number events
+      
       AS1108_Handler();    // handle AS1108 events
-      UART_Handler();      // handle UART events
-
-      Error_Handler();     // handle errors
+      Number_Handler();    // handle number events
+      Button_Handler();    // handle button events
       
       if (Event_err()) {
          SETBIT(P1OUT, BIT2); // LED on

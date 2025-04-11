@@ -10,7 +10,7 @@
 
 #include "..\base.h"
 
-typedef unsigned int TEvent;
+typedef unsigned int TEvt;
 
 /*
  * Event initialization

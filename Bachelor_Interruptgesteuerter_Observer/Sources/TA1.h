@@ -4,10 +4,24 @@
 #ifndef TA1_H_
 #define TA1_H_
 
-#define GET_COUNT(state) ((state) & 0x07)
-#define GET_STATE(state) (((state) >> 3) & 0x01)
-#define SET_COUNT(state, count) ((state) = ((state) & 0xF8) | ((count) & 0x07))
-#define SET_STATE(state, button_state) ((state) = ((state) & 0xF7) | ((button_state) << 3))
+// Button constant values
+typedef struct {
+    const UInt      pin;
+    const TEvent    event;
+    const Char *    port;
+}button_const;
+
+// Button variable values
+typedef struct {
+    Char            cnt;
+    Char           state;
+}button_var;
+
+// Struct representing button
+typedef struct {
+    button_const const*   btn_const;
+    button_var*     btn_var;
+}Button;
 
 EXTERN Void TA1_init(Void);
 

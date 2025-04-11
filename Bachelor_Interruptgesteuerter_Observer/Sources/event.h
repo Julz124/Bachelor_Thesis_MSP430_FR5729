@@ -25,26 +25,17 @@ typedef unsigned int TEvent;
 #define ALL_EVENTS  0xFFFF
 
 #define EVENT_BTN1  EVENT_1         // click on button 1
+#define EVENT_BTN2  EVENT_2         // click on button 2
 #define EVENT_BTN3  EVENT_3         // click on button 3 (external button 0)
 #define EVENT_BTN4  EVENT_4         // click on button 4 (external button 1)
 #define EVENT_BTN5  EVENT_5         // click on button 5 (external button 2)
 #define EVENT_BTN6  EVENT_6         // click on button 6 (external button 3)
 
-#define EVENT_RXD         EVENT_7   // Receiver event for uart
-#define EVENT_TXD         EVENT_8   // Transmitter event for uart
+#define EVEMT_IMA   EVENT_10
+#define EVENT_UPDATE_SEG  EVENT_11
+#define EVENT_DONE_SEG    EVENT_12
 
-#define EVENT_UPDATE_SEG  EVENT_10
-#define EVENT_DONE_SEG    EVENT_11
-#define EVENT_UPDATE_CNT  EVENT_12
-
-#define EVENT_ERR         EVENT_16  // Error event
-
-#define NO_ERROR          6        // no error
-#define BYTE_RECEIVED     5        // byte received
-#define BUFFER_ERROR      4        // buffer error (e.g. to many bytes received)
-#define CHARACTOR_ERROR   3        // charactor error (e.g. wrong charactor received)
-#define FROVPAR_ERROR     2        // frame overrun or parity error
-#define BREAK_ERROR       1        // break error (lost communication)
+#define EVENT_UPDATE_CNT  EVENT_13
 
 EXTERN Void Event_init(Void);
 EXTERN Void Event_wait(Void);
@@ -52,6 +43,5 @@ EXTERN Void Event_set(TEvent);
 EXTERN Void Event_clr(TEvent);
 EXTERN Bool Event_tst(TEvent);
 EXTERN Bool Event_err(Void);
-EXTERN TEvent get_events(TEvent);
 
 #endif /* EVENT_H_ */

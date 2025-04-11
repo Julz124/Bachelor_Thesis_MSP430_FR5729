@@ -22,8 +22,8 @@
 
 
 // Event/Error Logic
-LOCAL TEvent event;
-LOCAL TEvent errflg;
+LOCAL TEvt event;
+LOCAL TEvt errflg;
 LOCAL UChar error;
 
 
@@ -145,7 +145,7 @@ GLOBAL Void Observer_init(Void) {
  * Event & Error Handling Logic
  */
 #pragma FUNC_ALWAYS_INLINE(set_evt)
-LOCAL Void set_evt(TEvent arg) {
+LOCAL Void set_evt(TEvt arg) {
    errflg  |= event BAND arg;
    TGLBIT(event, arg);
 }
@@ -159,12 +159,12 @@ LOCAL Void set_error(UChar err) {
 }
 
 #pragma FUNC_ALWAYS_INLINE(clr_evt)
-GLOBAL Void clr_evt(TEvent arg) {
+GLOBAL Void clr_evt(TEvt arg) {
    TGLBIT(event, arg);
 }
 
 #pragma FUNC_ALWAYS_INLINE(tst_evt)
-GLOBAL Bool tst_evt(TEvent arg) {
+GLOBAL Bool tst_evt(TEvt arg) {
    return TSTBIT(event, arg);
 }
 
@@ -174,8 +174,8 @@ GLOBAL Bool err_evt(Void) {
 }
 
 #pragma FUNC_ALWAYS_INLINE(get_evt)
-GLOBAL TEvent get_evt(TEvent mask) {
-   TEvent tmp_event = event & mask;
+GLOBAL TEvt get_evt(TEvt mask) {
+   TEvt tmp_event = event & mask;
    CLRBIT(event, mask);
    return tmp_event;
 }
@@ -197,16 +197,14 @@ LOCAL int observer_print(const char * str) {
  * Main-Functionality Logic
  */
 
-
-
 // Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL int read_mem(void) {
+    clr_evt(CMD_RUN);
 
     if (num_block < (RW_BUFFER_SIZE - 1) || num_block > (blocks * 7)) {
-        rw_buffer[RW_BUFFER_SIZE - 1] = '\0';
+        rw_buffer[num_block++] = '\0';
         observer_print(rw_buffer);
-        clr_evt(CMD_RUN);
         set_evt(CMD_DONE);
     }
 
@@ -221,6 +219,8 @@ LOCAL int read_mem(void) {
 
     rw_buffer[num_block] = *((volatile Char *)mem_addr_ptr + (num_block*8));
     num_block++;
+
+    set_evt(CMD_RUN);
 
     return 0;
 }
@@ -243,7 +243,7 @@ LOCAL int write_mem(void) {
         Char *token = strtok(NULL, " ");
         if (token != NULL) {
             strncpy(rw_buffer, token, RW_BUFFER_SIZE - 1);
-            rw_buffer[RW_BUFFER_SIZE - 1] = '\0';
+            rw_buffer[buffer_index] = '\0';
         }
 
         blocks = (strlen(rw_buffer) + 7) / 8;
@@ -368,7 +368,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     // UART Time-Out counter logic
     timeout_counter++;
 
-    TEvent local_event = get_evt(CMD_RDY | CMD_RUN | CMD_DONE | EVT_ERR);
+    TEvt local_event = get_evt(CMD_RDY | CMD_RUN | CMD_DONE | EVT_ERR);
 
     if (local_event & EVT_ERR) {
         int msg_idx = ((error == CMD_ERROR)         ? 1
@@ -414,6 +414,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
             clr_evt(CMD_RDY);
             // Extract functionpointer
             func_ptr = (int(*)(void))dict_ptr->func;
+            set_evt(CMD_RUN);
             return;
         }
         dict_ptr++;
@@ -429,6 +430,9 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     }
 
     if (local_event & CMD_DONE) {
+        // Display Memory Content
+        observer_print(rw_buffer);
+
         // Reset buffer and pointer
         blocks = 0;
         rw_buffer[0] = '\0';

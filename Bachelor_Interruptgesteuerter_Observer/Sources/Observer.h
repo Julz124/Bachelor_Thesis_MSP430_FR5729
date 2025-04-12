@@ -39,21 +39,32 @@ typedef unsigned int TEvt;
  */
 #define CMD_RDY         EVENT_1     // Command event
 #define CMD_RUN         EVENT_2     // Command running
-#define CMD_DONE        EVENT_3     // Command done
-#define EVT_ERR         EVENT_4     // Event error
+#define RST             EVENT_3     // Reset Register
 
+#define UART_ERR        EVENT_4     // UART error
+#define CMD_ERR         EVENT_5     // Command error
 
 /*
  * UART Error
  */
-#define NO_ERR              7       // no error
-#define CMD_ERROR           6       // no/unknown command
+#define NO_ERR              6       // no error
 #define TIME_OUT            5       // time out
 #define BUFFER_ERROR        4       // buffer error (e.g. to many bytes received)
-#define CHARACTOR_ERROR     3       // charactor error (e.g. wrong charactor received)
+#define CHARACTOR_ERROR     3       // character error (e.g. wrong character received)
 #define FROVPAR_ERROR       2       // frame overrun or parity error
 #define BREAK_ERROR         1       // break error (lost communication)
 #define PRINT_ERROR         0       // unable to print on UART
+
+/*
+ * Command Error
+ */
+#define NO_CMD              5       // no command to compute
+#define UNKNOWN_CMD         4       // unknown command
+#define INV_PTR             3       // Invalid function pointer
+#define INV_ADDR            2       // Invalid memory address
+#define INV_BLCK            1       // Invalid block-size
+#define INV_STR             0       // Invalid string
+
 
 // Struct to combine key and function pointer
 typedef struct {
@@ -77,5 +88,6 @@ LOCAL int set_interrupt(void);
 // Function declarations
 EXTERN void Observer_init(void);
 
+LOCAL int observer_print(const char * str);
 
 #endif /* OBSERVER_H_ */

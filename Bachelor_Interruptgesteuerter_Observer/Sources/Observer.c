@@ -24,7 +24,8 @@
 // Event/Error Logic
 LOCAL TEvt event;
 LOCAL TEvt errflg;
-LOCAL UChar error;
+LOCAL UChar uart_error;
+LOCAL UChar cmd_error;
 
 
 // Function Logic
@@ -41,20 +42,6 @@ static UInt num_block;
 static UInt blocks;
 static Char *mem_addr_ptr;
 static Char rw_buffer[RW_BUFFER_SIZE - 1];
-
-// Define error message strings
-static const char* ERROR_MESSAGES[] = {
-    "no error",                         // NO_ERR (assuming 0)
-    "no or unknown command",            // CMD_ERROR
-    "lost communication",               // BREAK_ERROR
-    "frame overrun or parity error",    // FROVPAR_ERROR
-    "wrong character received",         // CHARACTOR_ERROR
-    "too many bytes received",          // BUFFER_ERROR
-    "time out",                         // TIME_OUT
-    "unable to print on UART"           // PRINT_ERROR
-};
-
-static const char** err_msg_ptr;
 
 // UART Logic
 static int timeout_counter;
@@ -128,7 +115,8 @@ GLOBAL Void Observer_init(Void) {
 
     event  = NO_EVENTS;
     errflg = NO_EVENTS;
-    error = NO_ERR;
+    uart_error = NO_ERR;
+    cmd_error = NO_ERR;
 
     dict_ptr = &OBSERVER_FUNC_DICT[0];
 
@@ -138,6 +126,8 @@ GLOBAL Void Observer_init(Void) {
     timeout_counter = 0;
     buffer_index = 0;
     uart_buffer[0] = '\0';
+
+    observer_print(">");
 
 }
 
@@ -150,11 +140,19 @@ LOCAL Void set_evt(TEvt arg) {
    TGLBIT(event, arg);
 }
 
-#pragma FUNC_ALWAYS_INLINE(set_error)
-LOCAL Void set_error(UChar err) {
-  if (err == NO_ERR || error > err) {
-    error = err;
-    set_evt(EVT_ERR);
+#pragma FUNC_ALWAYS_INLINE(set_uart_error)
+LOCAL Void set_uart_error(UChar err) {
+  if (err == NO_ERR || uart_error > err) {
+    uart_error = err;
+    set_evt(UART_ERR);
+  }
+}
+
+#pragma FUNC_ALWAYS_INLINE(set_cmd_error)
+LOCAL Void set_cmd_error(UChar err) {
+  if (err == NO_ERR || cmd_error > err) {
+    cmd_error = err;
+    set_evt(CMD_ERR);
   }
 }
 
@@ -184,7 +182,7 @@ GLOBAL TEvt get_evt(TEvt mask) {
 #pragma FUNC_ALWAYS_INLINE(observer_print)
 LOCAL int observer_print(const char * str) {
     if (str EQ NULL) {
-        set_error(PRINT_ERROR);
+        set_uart_error(PRINT_ERROR);
         return -1;
     }
     print_ptr = str;
@@ -200,12 +198,11 @@ LOCAL int observer_print(const char * str) {
 // Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL int read_mem(void) {
-    clr_evt(CMD_RUN);
 
     if (num_block < (RW_BUFFER_SIZE - 1) || num_block > (blocks * 7)) {
         rw_buffer[num_block++] = '\0';
         observer_print(rw_buffer);
-        set_evt(CMD_DONE);
+        set_evt(RST);
     }
 
     if (blocks == 0) {
@@ -231,8 +228,7 @@ LOCAL int write_mem(void) {
 
     if (num_block < (RW_BUFFER_SIZE - 1) || num_block > (blocks * 7)) {
         observer_print(rw_buffer);
-        clr_evt(CMD_RUN);
-        set_evt(CMD_DONE);
+        set_evt(RST);
     }
 
     if (blocks == 0) {
@@ -279,19 +275,22 @@ __interrupt Void USCI_A0_ISR(Void) {
         case USCI_UART_UCRXIFG:     // Interrupt Vector 2: Data ready to read
 
             if (TSTBIT(UCA0STATW, UCBRK)) {
-               set_error(BREAK_ERROR);
+               set_uart_error(BREAK_ERROR);
                Char ch = UCA0RXBUF;
                return;
             }
 
             if (TSTBIT(UCA0STATW, UCRXERR)) {
-               set_error(FROVPAR_ERROR);
+               set_uart_error(FROVPAR_ERROR);
                Char ch = UCA0RXBUF;
                return;
             }
 
             // Read and save byte
             rx_byte = UCA0RXBUF;
+
+            // Echo
+            observer_print(&rx_byte);
 
             // Reset Timeout-Timer
             timeout_counter = 0;
@@ -302,18 +301,19 @@ __interrupt Void USCI_A0_ISR(Void) {
 
             // Checks if rx_byte is a alphanumeric letter
             if (!isalnum(rx_byte)) {
-                set_error(CHARACTOR_ERROR);
+                set_uart_error(CHARACTOR_ERROR);
                 return;
             }
 
             // Check on end of word
             if (rx_byte == '\r' ) {
+                observer_print(&rx_byte);
                 set_evt(CMD_RDY);       // Command ready
                 return;
             }
 
             if (buffer_index >= UART_BUFFER_SIZE) {
-                set_error(BUFFER_ERROR);;
+                set_uart_error(BUFFER_ERROR);
                 buffer_index = 0;
                 return;
             }
@@ -328,14 +328,14 @@ __interrupt Void USCI_A0_ISR(Void) {
             // USCI Break received
             if (TSTBIT(UCA0STATW, UCBRK)) {
                Char ch = UCA0RXBUF;
-               set_error(BREAK_ERROR);
+               set_uart_error(BREAK_ERROR);
                return;
             }
 
             // USCI RX Error Flag
             if (TSTBIT(UCA0STATW, UCRXERR)) {
                Char ch = UCA0RXBUF;
-               set_error(FROVPAR_ERROR);
+               set_uart_error(FROVPAR_ERROR);
                return;
             }
 
@@ -348,7 +348,7 @@ __interrupt Void USCI_A0_ISR(Void) {
             // Disable UART Transmit Interrupt
             CLRBIT(UCA0IE, UCTXIE);
             Char ch = UCA0RXBUF;
-            set_error(NO_ERR);
+            set_uart_error(NO_ERR);
 
             // Enable UART Receive Interrupt
             SETBIT(UCA0IE, UCRXIE);
@@ -368,26 +368,35 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     // UART Time-Out counter logic
     timeout_counter++;
 
-    TEvt local_event = get_evt(CMD_RDY | CMD_RUN | CMD_DONE | EVT_ERR);
+    TEvt local_event = get_evt(CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR);
 
-    if (local_event & EVT_ERR) {
-        int msg_idx = ((error == CMD_ERROR)         ? 1
-                    :  (error == BREAK_ERROR)       ? 2
-                    :  (error == FROVPAR_ERROR)     ? 3
-                    :  (error == CHARACTOR_ERROR)   ? 4
-                    :  (error == BUFFER_ERROR)      ? 5
-                    :  (error == TIME_OUT)          ? 6
-                    :  (error == PRINT_ERROR)       ? 7
-                    : 0 );
-
-        err_msg_ptr = ERROR_MESSAGES + msg_idx;
-        observer_print(*err_msg_ptr);
+    // Error Handling
+    if (local_event & UART_ERR) {
+        observer_print((uart_error == TIME_OUT)         ? "#A\n"    // time out
+                    :  (uart_error == BUFFER_ERROR)     ? "#B\n"    // buffer error (e.g. to many bytes received)
+                    :  (uart_error == CHARACTOR_ERROR)  ? "#C\n"    // character error (e.g. wrong charactor received)
+                    :  (uart_error == FROVPAR_ERROR)    ? "#D\n"    // frame overrun or parity error
+                    :  (uart_error == BREAK_ERROR)      ? "#E\n"    // break error (lost communication)
+                    :  (uart_error == PRINT_ERROR)      ? "#F\n"    // unable to print on UART
+                    : "\n" );
+        set_evt(RST);
     }
 
+    if (local_event & CMD_ERR) {
+        observer_print((cmd_error == NO_CMD)            ? "#1\n"    // no command to compute
+                    :  (cmd_error == UNKNOWN_CMD)       ? "#2\n"    // unknown command
+                    :  (cmd_error == INV_PTR)           ? "#3\n"    // Invalid function pointer
+                    :  (cmd_error == INV_ADDR)          ? "#4\n"    // Invalid memory address
+                    :  (cmd_error == INV_BLCK)          ? "#5\n"    // Invalid block-size
+                    :  (cmd_error == INV_STR)           ? "#6\n"    // Invalid string
+                    : "\n" );
+        set_evt(RST);
+    }
 
+    // Timeout Handling
     if (timeout_counter >= TIMEOUT_THRESHOLD) {
         timeout_counter = 0;  // Reset counter
-        set_error(TIME_OUT);
+        set_uart_error(TIME_OUT);
         buffer_index = 0;
         uart_buffer[0] = '\0';
     }
@@ -397,7 +406,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
 
         if (uart_buffer EQ '\0') {
             clr_evt(CMD_RDY);
-            set_error(CMD_ERROR);
+            set_cmd_error(NO_CMD);
             return;
         }
 
@@ -405,7 +414,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
         if (dict_ptr->key EQ '\0') {
             clr_evt(CMD_RDY);
             dict_ptr = &OBSERVER_FUNC_DICT[0];
-            set_error(CMD_ERROR);
+            set_cmd_error(UNKNOWN_CMD);
             return;
         }
 
@@ -423,13 +432,13 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     if (local_event & CMD_RUN) {
         // Check if function pointer is available
         if (!func_ptr) {
-            set_error(CMD_ERROR);
+            set_cmd_error(INV_PTR);
         }
         // execute function routine
         func_ptr();
     }
 
-    if (local_event & CMD_DONE) {
+    if (local_event & RST) {
         // Display Memory Content
         observer_print(rw_buffer);
 

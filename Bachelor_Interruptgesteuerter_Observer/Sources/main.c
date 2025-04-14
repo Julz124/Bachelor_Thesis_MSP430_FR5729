@@ -63,7 +63,8 @@ LOCAL Void GPIO_init(Void) {
    PAIFG  = VAL_16BIT(0b00000000, 0b00000000); // clear all interrupt flags
    PAIE   = VAL_16BIT(0b00000000, 0b00000000); // disable all GPIO interrupts
    PASEL0 = VAL_16BIT(0b00000000, 0b00000000);
-   PASEL1 = VAL_16BIT(0b01110000, 0b00000000);
+   PASEL1 = VAL_16BIT(0b01110011, 0b00000000);  // UART Enabled
+   //PASEL1 = VAL_16BIT(0b01110000, 0b00000000);  // UART Disabled
    PAREN  = VAL_16BIT(0b00000000, 0b00000000); // without pull up
 
    //                   Port4       Port3
@@ -80,14 +81,15 @@ LOCAL Void GPIO_init(Void) {
 
 GLOBAL Void main(Void) {
 
-   CS_init();           // set up Clock System
-   GPIO_init();         // set up Ports
-   Event_init();        // set up Event System
-   UCA1_init();         // set up SPI Interface
-   TA0_init();          // set up Timer A0 (LED     Interrupts)
-   TA1_init();          // set up Timer A1 (Buttons Interrupts)
-   Handler_init();      // set up Handler
-   Observer_init();     // set up Observer
+   CS_init();     // set up Clock System
+   GPIO_init();   // set up Ports
+   Event_init();
+   Observer_init();
+   UCA1_init();   // set up SPI Interface
+   TA0_init();    // set up Timer A0 (LED     Interrupts)
+   TA1_init();    // set up Timer A1 (Buttons Interrupts)
+   Handler_init();// set up Handler
+
 
    while(TRUE) {
 

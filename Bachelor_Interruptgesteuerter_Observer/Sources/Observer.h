@@ -5,44 +5,44 @@
  *      Author: Julian Rapp
  */
 
+#include "..\base.h"
+
 #ifndef OBSERVER_H_
 #define OBSERVER_H_
-
-#include "..\base.h"
 
 typedef unsigned int TEvt;
 
 /*
  * Event initialization
  */
-#define NO_EVENTS   0x0000
-#define EVENT_1     0x0001
-#define EVENT_2     0x0002
-#define EVENT_3     0x0004
-#define EVENT_4     0x0008
-#define EVENT_5     0x0010
-#define EVENT_6     0x0020
-#define EVENT_7     0x0040
-#define EVENT_8     0x0080
-#define EVENT_9     0x0100
-#define EVENT_10    0x0200
-#define EVENT_11    0x0400
-#define EVENT_12    0x0800
-#define EVENT_13    0x1000
-#define EVENT_14    0x2000
-#define EVENT_15    0x4000
-#define EVENT_16    0x8000
-#define ALL_EVENTS  0xFFFF
+#define NO_EVTS   0x0000
+#define EVT_1     0x0001
+#define EVT_2     0x0002
+#define EVT_3     0x0004
+#define EVT_4     0x0008
+#define EVT_5     0x0010
+#define EVT_6     0x0020
+#define EVT_7     0x0040
+#define EVT_8     0x0080
+#define EVT_9     0x0100
+#define EVT_10    0x0200
+#define EVT_11    0x0400
+#define EVT_12    0x0800
+#define EVT_13    0x1000
+#define EVT_14    0x2000
+#define EVT_15    0x4000
+#define EVT_16    0x8000
+#define ALL_EVTS  0xFFFF
 
 /*
  * Event allocation
  */
-#define CMD_RDY         EVENT_1     // Command event
-#define CMD_RUN         EVENT_2     // Command running
-#define RST             EVENT_3     // Reset Register
+#define CMD_RDY         EVT_1     // Command event
+#define CMD_RUN         EVT_2     // Command running
+#define RST             EVT_3     // Reset Register
 
-#define UART_ERR        EVENT_4     // UART error
-#define CMD_ERR         EVENT_5     // Command error
+#define UART_ERR        EVT_4     // UART error
+#define CMD_ERR         EVT_5     // Command error
 
 /*
  * UART Error

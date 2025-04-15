@@ -20,7 +20,8 @@
 #define UART_BUFFER_SIZE 64
 #define TIMEOUT_THRESHOLD 1500  // 15s = 1500 * 10ms
 #define RW_BUFFER_SIZE 64
-#define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
+#define MASK (CMD_RDY | CMD_RUN | RST)
+#define ISR_MASK (UART_ERR | CMD_ERR)
 
 
 // Event/Error Logic
@@ -31,9 +32,9 @@ LOCAL UChar cmd_error;
 
 // Function Logic
 LOCAL ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
-    {"rdm", read_mem},       // read_mem function
-    {"wrm", write_mem},      // write_mem function
-    {"inr", set_interrupt},  // interrupt function
+    {"rdm\0", read_mem},       // read_mem function
+    {"wrm\0", write_mem},      // write_mem function
+    {"inr\0", set_interrupt},  // interrupt function
     {"\0", NULL}
 };
 
@@ -383,9 +384,17 @@ __interrupt Void TIMER0_B1_ISR(Void) {
     // UART Time-Out counter logic
     timeout_counter++;
 
+    // Timeout Handling
+    if (timeout_counter >= TIMEOUT_THRESHOLD) {
+        timeout_counter = 0;  // Reset counter
+        set_uart_error(TIME_OUT);
+        buffer_index = 0;
+        uart_buffer[0] = '\0';
+    }
+
     // Get Events
-    TEvt local_event = global_events & MASK;
-    CLRBIT(global_events, MASK);
+    TEvt local_event = global_events & ISR_MASK;
+    CLRBIT(global_events, ISR_MASK);
 
     // Error Handling
     if (local_event & UART_ERR) {
@@ -412,63 +421,61 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         TGLBIT(global_events, RST);
     }
 
-    // Timeout Handling
-    if (timeout_counter >= TIMEOUT_THRESHOLD) {
-        timeout_counter = 0;  // Reset counter
-        set_uart_error(TIME_OUT);
-        buffer_index = 0;
-        uart_buffer[0] = '\0';
-    }
-
-    // Command computation
-    if (local_event & CMD_RDY) {
-
-        if (uart_buffer EQ '\0') {
-            set_cmd_error(NO_CMD);
-            return;
-        }
-
-        // Reset dict_ptr and set error
-        if (dict_ptr->key[0] EQ '\0') {
-            dict_ptr = OBSERVER_FUNC_DICT;
-            set_cmd_error(UNKNOWN_CMD);
-            return;
-        }
-
-        // Compare buffer with dict entry
-        if (strncmp(uart_buffer, dict_ptr->key, 3) == 0) {
-            // Extract functionpointer
-            func_ptr = dict_ptr->func;
-            TGLBIT(global_events, CMD_RUN);
-            return;
-        }
-        dict_ptr++;
-    }
-
-    if (local_event & CMD_RUN) {
-        // Check if function pointer is available
-        if (!func_ptr) {
-            set_cmd_error(INV_PTR);
-        }
-        // execute function routine
-        func_ptr();
-    }
-
-    if (local_event & RST) {
-        // Display Memory Content
-        observer_print(rw_buffer);
-
-        // Reset buffer and pointer
-        blocks = 0;
-        rw_buffer[0] = '\0';
-
-        buffer_index = 0;
-        uart_buffer[0] = '\0';
-        dict_ptr = &OBSERVER_FUNC_DICT[0];
-        return;
-    }
-
     CLRBIT(TB0CTL, TBIFG);
     __low_power_mode_off_on_exit();
+}
+
+LOCAL Void main (Void) {
+
+    while (True) {
+
+        // Command computation
+        if (local_event & CMD_RDY) {
+
+            if (uart_buffer EQ '\0') {
+                set_cmd_error(NO_CMD);
+                return;
+            }
+
+            // Reset dict_ptr and set error
+            if (dict_ptr->key[0] EQ '\0') {
+                dict_ptr = OBSERVER_FUNC_DICT;
+                set_cmd_error(UNKNOWN_CMD);
+                return;
+            }
+
+            // Compare buffer with dict entry
+            if (strncmp(uart_buffer, dict_ptr->key, 3) == 0) {
+                // Extract functionpointer
+                func_ptr = dict_ptr->func;
+                TGLBIT(global_events, CMD_RUN);
+                return;
+            }
+            dict_ptr++;
+        }
+
+        if (local_event & CMD_RUN) {
+            // Check if function pointer is available
+            if (!func_ptr) {
+                set_cmd_error(INV_PTR);
+            }
+            // execute function routine
+            func_ptr();
+        }
+
+        if (local_event & RST) {
+            // Display Memory Content
+            observer_print(rw_buffer);
+
+            // Reset buffer and pointer
+            blocks = 0;
+            rw_buffer[0] = '\0';
+
+            buffer_index = 0;
+            uart_buffer[0] = '\0';
+            dict_ptr = &OBSERVER_FUNC_DICT[0];
+            return;
+        }
+    }
 }
 

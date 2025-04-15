@@ -67,9 +67,11 @@ typedef unsigned int TEvt;
 
 
 // Struct to combine key and function pointer
+typedef Void (*ObserverFunc)(Void);
+
 typedef struct {
     const char* const key;      // String key for the function
-    const void* const func;     // Pointer to the function
+    ObserverFunc const func;     // Pointer to the function
 } ObserverFuncEntry;
 
 /*
@@ -77,17 +79,17 @@ typedef struct {
  */
 
 // Reads from memory cell(s)
-LOCAL int read_mem(void);
+LOCAL Void read_mem(void);
 
 // Writes to memory cell(s)
-LOCAL int write_mem(void);
+LOCAL Void write_mem(void);
 
 // Set interrupt breakpoint
-LOCAL int set_interrupt(void);
+LOCAL Void set_interrupt(void);
 
 // Function declarations
-EXTERN void Observer_init(void);
+EXTERN Void Observer_init(void);
 
-LOCAL int observer_print(const char * str);
+LOCAL Int observer_print(const char * str);
 
 #endif /* OBSERVER_H_ */

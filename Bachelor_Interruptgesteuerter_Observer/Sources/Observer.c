@@ -13,37 +13,38 @@
 #include "Observer.h"
 
 // Zähllänge der Timer
-#define ISR_TIMER 96
+#define ISR_TIMER (96 - 1)
 
 
 // UART Einstellungen
 #define UART_BUFFER_SIZE 64
-#define TIMEOUT_THRESHOLD 600  // 6s = 600 * 10ms
+#define TIMEOUT_THRESHOLD 1500  // 15s = 1500 * 10ms
 #define RW_BUFFER_SIZE 64
 #define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
+
 
 // Event/Error Logic
 LOCAL TEvt global_events;
 LOCAL UChar uart_error;
 LOCAL UChar cmd_error;
 
-/*
+
 // Function Logic
-static ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
-    {"rdm", (void*)read_mem},       // read_mem function
-    {"wrm", (void*)write_mem},      // write_mem function
-    {"inr", (void*)set_interrupt},  // interrupt function
+LOCAL ObserverFuncEntry OBSERVER_FUNC_DICT[] = {
+    {"rdm", read_mem},       // read_mem function
+    {"wrm", write_mem},      // write_mem function
+    {"inr", set_interrupt},  // interrupt function
     {"\0", NULL}
 };
 
-ObserverFuncEntry* dict_ptr;
+LOCAL ObserverFuncEntry* dict_ptr;
+LOCAL ObserverFunc func_ptr;
 
-LOCAL Int (*func_ptr)(void);
 LOCAL UInt num_block;
 LOCAL UInt blocks;
 LOCAL Char *mem_addr_ptr;
 LOCAL Char rw_buffer[RW_BUFFER_SIZE + 1];
-*/
+
 
 // UART Logic
 LOCAL const Char* print_ptr;
@@ -62,11 +63,13 @@ LOCAL Int timeout_counter;
 #pragma FUNC_ALWAYS_INLINE(Observer_init)
 GLOBAL Void Observer_init(Void) {
     /*
-     * Initialize Clock (Interrupt Timer & Time-Out Timer) TA2
+     * Initialize Clock (Interrupt Timer & Time-Out Timer) TB0
      */
 
-    TB0CTL = MC__STOP               // stop timer
-                | TBCLR;            // clear counter
+    CLRBIT(TB0CTL, MC__STOP     // stop mode
+                   | MC__UP     // no up-mode
+                   | TBIE       // disable interrupt
+                   | TBIFG);    // clear interrupt flag
 
     /*
      * Interrupt Timer
@@ -76,13 +79,17 @@ GLOBAL Void Observer_init(Void) {
      * 614.4kHz * 10ms = 6144
      * 6144 / 8 / 8 = 96
      *
-     * Compare-Mode
+     * UP-Mode
      */
 
-    TB0CCTL0 = CCIE;                // clear timer A2 control register 0 and set it to Compare Mode
+
+    CLRBIT(TB0CCTL0, CM1 | CM0      // no capture mode
+                   | CAP            // compare mode
+                   | CCIE           // disable interrupt
+                   | CCIFG);        // clear interrupt flag
 
     TB0CCR0 = ISR_TIMER;            // compare register interrupt-timer
-    TB0EX0 = TBIDEX_7;              // divide by 8
+    TB0EX0 = TBIDEX__8;             // divide by 8
 
     /*
      * Set and Start Timer B
@@ -91,7 +98,10 @@ GLOBAL Void Observer_init(Void) {
     TB0CTL = TBSSEL__ACLK           // set to ACLK (614.4kHz)
             | ID__8                 // input divider set to /8
             | MC__UP                // mode control, count continuously upwards
-            | TBIE;                 // enable timer interrupt
+            | TBCLR;
+
+    SETBIT(TB0CTL, TBIE             // enable timer interrupt
+            | TBIFG);               // set interrupt flag
 
 
     /*
@@ -125,12 +135,13 @@ GLOBAL Void Observer_init(Void) {
     global_events = NO_EVTS;
     uart_error = NO_ERR;
     cmd_error = NO_ERR;
-/*
-    dict_ptr = &OBSERVER_FUNC_DICT[0];
+
+    dict_ptr = OBSERVER_FUNC_DICT;
+    func_ptr = NULL;
 
     num_block = 0;
     blocks = 0;
-*/
+
     timeout_counter = 0;
     buffer_index = 0;
     uart_buffer[0] = '\0';
@@ -178,8 +189,10 @@ LOCAL int observer_print(const char * str) {
 
 
 // Writes to memory cell(s)
-#pragma FUNC_ALWAYS_INLINE(write_mem)
-LOCAL int read_mem(void) {
+#pragma FUNC_ALWAYS_INLINE(read_mem)
+LOCAL Void read_mem(void) {
+    observer_print("execute read_mem");
+    TGLBIT(global_events, RST);
 /*
     if (num_block < RW_BUFFER_SIZE || num_block > (blocks * 8)) {
         rw_buffer[num_block++] = '\0';
@@ -201,12 +214,14 @@ LOCAL int read_mem(void) {
 
     TGLBIT(global_events, CMD_RUN);
 */
-    return 0;
+    return;
 }
 
 // Reads from memory cell(s)
-#pragma FUNC_ALWAYS_INLINE(read_mem)
-LOCAL int write_mem(void) {
+#pragma FUNC_ALWAYS_INLINE(write_mem)
+LOCAL Void write_mem(void) {
+    observer_print("execute write_mem");
+    TGLBIT(global_events, RST);
 /*
     if (num_block < RW_BUFFER_SIZE || num_block > (blocks * 8)) {
         observer_print(rw_buffer);
@@ -230,18 +245,19 @@ LOCAL int write_mem(void) {
     *((volatile Char *)mem_addr_ptr + (num_block*8)) = rw_buffer[num_block];
     num_block++;
 */
-    return 0;
+    return;
 }
 
 // Set interrupt breakpoint
 #pragma FUNC_ALWAYS_INLINE(set_interrupt)
-LOCAL int set_interrupt(void) {
-
+LOCAL Void set_interrupt(void) {
+    observer_print("execute set_interrupt");
+    TGLBIT(global_events, RST);
 
     // Some Code goes in there
 
 
-    return 0;
+    return;
 }
 
 /*
@@ -271,7 +287,6 @@ __interrupt Void UCA0_ISR(Void) {
 
             // Read and save byte
             rx_byte = UCA0RXBUF;
-            //UCA0TXBUF = rx_byte;
 
             // Reset Timeout-Timer
             timeout_counter = 0;
@@ -349,7 +364,6 @@ __interrupt Void UCA0_ISR(Void) {
             // Disable UART Transmit Interrupt
             CLRBIT(UCA0IE, UCTXIE);
             Char ch = UCA0RXBUF;
-            set_uart_error(NO_ERR);
 
             // Enable UART Receive Interrupt
             SETBIT(UCA0IE, UCRXIE);
@@ -375,24 +389,26 @@ __interrupt Void TIMER0_B1_ISR(Void) {
 
     // Error Handling
     if (local_event & UART_ERR) {
-        observer_print((uart_error == TIME_OUT)         ? "#A\n"    // time out
-                    :  (uart_error == BUFFER_ERROR)     ? "#B\n"    // buffer error (e.g. to many bytes received)
-                    :  (uart_error == CHARACTOR_ERROR)  ? "#C\n"    // character error (e.g. wrong charactor received)
-                    :  (uart_error == FROVPAR_ERROR)    ? "#D\n"    // frame overrun or parity error
-                    :  (uart_error == BREAK_ERROR)      ? "#E\n"    // break error (lost communication)
-                    :  (uart_error == PRINT_ERROR)      ? "#F\n"    // unable to print on UART
-                    : "\n" );
+        observer_print((uart_error == TIME_OUT)         ? "#A\n\r>"    // time out
+                    :  (uart_error == BUFFER_ERROR)     ? "#B\n\r>"    // buffer error (e.g. to many bytes received)
+                    :  (uart_error == CHARACTOR_ERROR)  ? "#C\n\r>"    // character error (e.g. wrong charactor received)
+                    :  (uart_error == FROVPAR_ERROR)    ? "#D\n\r>"    // frame overrun or parity error
+                    :  (uart_error == BREAK_ERROR)      ? "#E\n\r>"    // break error (lost communication)
+                    :  (uart_error == PRINT_ERROR)      ? "#F\n\r>"    // unable to print on UART
+                    : "" );
+        uart_error = NO_ERR;
         TGLBIT(global_events, RST);
     }
 
     if (local_event & CMD_ERR) {
-        observer_print((cmd_error == NO_CMD)            ? "#1\n"    // no command to compute
-                    :  (cmd_error == UNKNOWN_CMD)       ? "#2\n"    // unknown command
-                    :  (cmd_error == INV_PTR)           ? "#3\n"    // Invalid function pointer
-                    :  (cmd_error == INV_ADDR)          ? "#4\n"    // Invalid memory address
-                    :  (cmd_error == INV_BLCK)          ? "#5\n"    // Invalid block-size
-                    :  (cmd_error == INV_STR)           ? "#6\n"    // Invalid string
-                    : "\n" );
+        observer_print((cmd_error == NO_CMD)            ? "#1\n\r>"    // no command to compute
+                    :  (cmd_error == UNKNOWN_CMD)       ? "#2\n\r>"    // unknown command
+                    :  (cmd_error == INV_PTR)           ? "#3\n\r>"    // Invalid function pointer
+                    :  (cmd_error == INV_ADDR)          ? "#4\n\r>"    // Invalid memory address
+                    :  (cmd_error == INV_BLCK)          ? "#5\n\r>"    // Invalid block-size
+                    :  (cmd_error == INV_STR)           ? "#6\n\r>"    // Invalid string
+                    : "" );
+        cmd_error = NO_ERR;
         TGLBIT(global_events, RST);
     }
 
@@ -403,29 +419,26 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         buffer_index = 0;
         uart_buffer[0] = '\0';
     }
-/*
+
     // Command computation
     if (local_event & CMD_RDY) {
 
         if (uart_buffer EQ '\0') {
-            TGLBIT(global_events, CMD_RDY);
             set_cmd_error(NO_CMD);
             return;
         }
 
         // Reset dict_ptr and set error
-        if (dict_ptr->key EQ '\0') {
-            TGLBIT(global_events, CMD_RDY);
-            dict_ptr = &OBSERVER_FUNC_DICT[0];
+        if (dict_ptr->key[0] EQ '\0') {
+            dict_ptr = OBSERVER_FUNC_DICT;
             set_cmd_error(UNKNOWN_CMD);
             return;
         }
 
         // Compare buffer with dict entry
         if (strncmp(uart_buffer, dict_ptr->key, 3) == 0) {
-            TGLBIT(global_events, CMD_RDY);
             // Extract functionpointer
-            func_ptr = (int(*)(void))dict_ptr->func;
+            func_ptr = dict_ptr->func;
             TGLBIT(global_events, CMD_RUN);
             return;
         }
@@ -454,6 +467,8 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         dict_ptr = &OBSERVER_FUNC_DICT[0];
         return;
     }
-*/
+
+    CLRBIT(TB0CTL, TBIFG);
+    __low_power_mode_off_on_exit();
 }
 

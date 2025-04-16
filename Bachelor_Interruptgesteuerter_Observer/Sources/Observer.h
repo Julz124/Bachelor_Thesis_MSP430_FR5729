@@ -12,6 +12,8 @@
 
 typedef unsigned int TEvt;
 
+#define CMD_LENGTH (3 + 1)
+
 /*
  * Event initialization
  */
@@ -67,11 +69,11 @@ typedef unsigned int TEvt;
 
 
 // Struct to combine key and function pointer
-typedef Void (*ObserverFunc)(Void);
+//typedef Void (*ObserverFunc)(Void);
 
 typedef struct {
-    const char* const key;      // String key for the function
-    ObserverFunc const func;     // Pointer to the function
+    const Char key[CMD_LENGTH];     // String key for the function
+    Void (*func)(Void);             // Pointer to the function
 } ObserverFuncEntry;
 
 /*
@@ -79,17 +81,18 @@ typedef struct {
  */
 
 // Reads from memory cell(s)
-LOCAL Void read_mem(void);
+LOCAL Void read_mem(Void);
 
 // Writes to memory cell(s)
-LOCAL Void write_mem(void);
+LOCAL Void write_mem(Void);
 
 // Set interrupt breakpoint
-LOCAL Void set_interrupt(void);
+LOCAL Void set_interrupt(Void);
 
-// Function declarations
-EXTERN Void Observer_init(void);
+// EXTERN Function declarations
+EXTERN Void Observer_init(Void);
+EXTERN Void Observer(Void);
 
-LOCAL Int observer_print(const char * str);
+LOCAL Int observer_print(const Char * str);
 
 #endif /* OBSERVER_H_ */

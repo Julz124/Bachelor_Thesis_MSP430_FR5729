@@ -31,13 +31,28 @@ LOCAL TEvt global_events;
 LOCAL UChar uart_error;
 LOCAL UChar cmd_error;
 
+//LOCAL Char err_temp[6] = {'#',' ','\0'};
+
+
+/*
+ * Main-Functionality Logic
+ */
+
+// Reads from memory cell(s)
+LOCAL Void read_mem(Void);
+
+// Writes to memory cell(s)
+LOCAL Void write_mem(Void);
+
+// Set interrupt breakpoint
+LOCAL Void set_interrupt(Void);
 
 // Function Logic
 LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS + 1] = {
-    {"rdm\0", &read_mem},       // read_mem function
-    {"wrm\0", &write_mem},      // write_mem function
-    {"inr\0", &set_interrupt},  // interrupt function
-    {"\0", NULL}
+    {"rdm", read_mem},       // read_mem function
+    {"wrm", write_mem},      // write_mem function
+    {"inr", set_interrupt},  // interrupt function
+    {"", NULL}
 };
 
 LOCAL UInt dict_idx;
@@ -50,12 +65,12 @@ LOCAL Char rw_buf[RW_BUFF_SIZE + 1];
 
 
 // UART Logic
+//LOCAL const Char new_line[4] = {'\n', '\r', '>', '\0'};
 LOCAL const Char* print_ptr;
 LOCAL Char uart_buffer[UART_BUFFER_SIZE + 1];
 LOCAL Char rx_byte;
 LOCAL Char buffer_index;
 LOCAL Int timeout_counter;
-
 
 
 /*
@@ -148,7 +163,7 @@ GLOBAL Void Observer_init(Void) {
     uart_buffer[0] = '\0';
     rx_byte = '\0';
 
-    observer_print("\n\r>");
+    //observer_print(new_line);
 
 }
 
@@ -160,7 +175,7 @@ GLOBAL Void Observer_init(Void) {
 LOCAL Void set_uart_error(UChar err) {
   if (err == NO_ERR || uart_error > err) {
     uart_error = err;
-    TGLBIT(global_events, UART_ERR);
+    SETBIT(global_events, UART_ERR);
   }
 }
 
@@ -168,7 +183,7 @@ LOCAL Void set_uart_error(UChar err) {
 LOCAL Void set_cmd_error(UChar err) {
   if (err == NO_ERR || cmd_error > err) {
     cmd_error = err;
-    TGLBIT(global_events, CMD_ERR);
+    SETBIT(global_events, CMD_ERR);
   }
 }
 
@@ -306,12 +321,12 @@ __interrupt Void UCA0_ISR(Void) {
                 return;
             }
 
-            // Checks if rx_byte is a alphanumeric letter
-            if (!isalnum(rx_byte)
-                    AND rx_byte NE ' '
-                    AND rx_byte NE '\r'
-                    AND rx_byte NE '\b') {
-                set_uart_error(CHARACTOR_ERROR);
+            // Check on end of word
+            if (rx_byte EQ '\r' ) {
+                observer_print("\n\r>");
+                SETBIT(global_events, CMD_RDY);         // Command ready
+                CLRBIT(global_events, TIMEOUT_FLAG);    // Clear Time-Out-Flag
+                SETBIT(TB0CTL, TBIFG);                  // Set ISR Interrupt Flag
                 return;
             }
 
@@ -319,17 +334,16 @@ __interrupt Void UCA0_ISR(Void) {
             if (rx_byte EQ '\b'
                     AND buffer_index GT 0) {
                 // Delete last character
-                uart_buffer[buffer_index--] = ' ';
-                uart_buffer[buffer_index] = '\0';
+                uart_buffer[--buffer_index] = '\0';
                 // Backspace
                 observer_print("\b \b");
                 return;
             }
 
-            // Check on end of word
-            if (rx_byte EQ '\r' ) {
-                observer_print("\n\r>");
-                TGLBIT(global_events, CMD_RDY);       // Command ready
+            // Checks if rx_byte is a alphanumeric letter
+            if (!isalnum(rx_byte)
+                    AND rx_byte NE ' ') {
+                //set_uart_error(CHARACTOR_ERROR);
                 return;
             }
 
@@ -339,14 +353,17 @@ __interrupt Void UCA0_ISR(Void) {
                 return;
             }
 
-            // Save chars in Buffer if space available
+            // Save chars in Buffer if space avaiable
             uart_buffer[buffer_index++] = rx_byte;
             uart_buffer[buffer_index] = '\0';
 
             // Echo
             observer_print(&uart_buffer[buffer_index - 1]);
 
-            __low_power_mode_off_on_exit();
+            // Set Time-Out-Flag
+            SETBIT(global_events, TIMEOUT_FLAG);
+
+
 
             break;
 
@@ -392,11 +409,14 @@ __interrupt Void UCA0_ISR(Void) {
 __interrupt Void TIMER0_B1_ISR(Void) {
 
     // UART Time-Out counter logic
-    timeout_counter++;
+    if (TSTBIT(global_events & TIMEOUT_FLAG, TIMEOUT_FLAG)) {
+        timeout_counter++;
+    }
 
     // Timeout Handling
     if (timeout_counter >= TIMEOUT_THRESHOLD) {
         timeout_counter = 0;  // Reset counter
+        CLRBIT(global_events, TIMEOUT_FLAG);
         set_uart_error(TIME_OUT);
         buffer_index = 0;
         uart_buffer[0] = '\0';
@@ -405,20 +425,16 @@ __interrupt Void TIMER0_B1_ISR(Void) {
     // Get Events
     TEvt local_event = global_events & MASK;
     CLRBIT(global_events, MASK);
-
+/*
     // Error Handling
     if (local_event & UART_ERR) {
-        observer_print((uart_error == TIME_OUT)         ? "#A\n\r>"    // time out
-                    :  (uart_error == BUFFER_ERROR)     ? "#B\n\r>"    // buffer error (e.g. to many bytes received)
-                    :  (uart_error == CHARACTOR_ERROR)  ? "#C\n\r>"    // character error (e.g. wrong charactor received)
-                    :  (uart_error == FROVPAR_ERROR)    ? "#D\n\r>"    // frame overrun or parity error
-                    :  (uart_error == BREAK_ERROR)      ? "#E\n\r>"    // break error (lost communication)
-                    :  (uart_error == PRINT_ERROR)      ? "#F\n\r>"    // unable to print on UART
-                    : "" );
+        err_temp[1] = uart_error;
+        observer_print(err_temp);
+        err_temp[1] = ' ';
         uart_error = NO_ERR;
         TGLBIT(global_events, RST);
     }
-
+*/
     if (local_event & CMD_ERR) {
         observer_print((cmd_error == NO_CMD)            ? "#1\n\r>"    // no command to compute
                     :  (cmd_error == UNKNOWN_CMD)       ? "#2\n\r>"    // unknown command
@@ -483,10 +499,8 @@ __interrupt Void TIMER0_B1_ISR(Void) {
     }
 
     CLRBIT(TB0CTL, TBIFG);
-    __low_power_mode_off_on_exit();
 }
 
 GLOBAL Void Observer (Void) {
 
 }
-

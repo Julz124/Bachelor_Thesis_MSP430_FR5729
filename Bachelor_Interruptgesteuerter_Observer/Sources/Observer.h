@@ -10,7 +10,7 @@
 #ifndef OBSERVER_H_
 #define OBSERVER_H_
 
-typedef unsigned int TEvt;
+typedef UInt TEvt;
 
 #define CMD_LENGTH (3 + 1)
 
@@ -39,33 +39,35 @@ typedef unsigned int TEvt;
 /*
  * Event allocation
  */
-#define CMD_RDY         EVT_1     // Command event
-#define CMD_RUN         EVT_2     // Command running
-#define RST             EVT_3     // Reset Register
+#define TIMEOUT_FLAG    EVT_1   // Timeout flag for timeout counter
 
-#define UART_ERR        EVT_4     // UART error
-#define CMD_ERR         EVT_5     // Command error
+#define CMD_RDY         EVT_2   // Command event
+#define CMD_RUN         EVT_3   // Command running
+#define RST             EVT_4   // Reset Register
+
+#define UART_ERR        EVT_5   // UART error
+#define CMD_ERR         EVT_6   // Command error
 
 /*
  * UART Error
  */
-#define NO_ERR              6       // no error
-#define TIME_OUT            5       // time out
-#define BUFFER_ERROR        4       // buffer error (e.g. to many bytes received)
-#define CHARACTOR_ERROR     3       // character error (e.g. wrong character received)
-#define FROVPAR_ERROR       2       // frame overrun or parity error
-#define BREAK_ERROR         1       // break error (lost communication)
-#define PRINT_ERROR         0       // unable to print on UART
+#define NO_ERR              0x00       // no error
+#define TIME_OUT            'A'       // time out
+#define BUFFER_ERROR        'B'       // buffer error (e.g. to many bytes received)
+#define CHARACTOR_ERROR     'C'       // character error (e.g. wrong character received)
+#define FROVPAR_ERROR       'D'       // frame overrun or parity error
+#define BREAK_ERROR         'E'       // break error (lost communication)
+#define PRINT_ERROR         'F'       // unable to print on UART
 
 /*
  * Command Error
  */
-#define NO_CMD              5       // no command to compute
-#define UNKNOWN_CMD         4       // unknown command
-#define INV_PTR             3       // Invalid function pointer
-#define INV_ADDR            2       // Invalid memory address
-#define INV_BLCK            1       // Invalid block-size
-#define INV_STR             0       // Invalid string
+#define NO_CMD              '5'       // no command to compute
+#define UNKNOWN_CMD         '4'       // unknown command
+#define INV_PTR             '3'       // Invalid function pointer
+#define INV_ADDR            '2'       // Invalid memory address
+#define INV_BLCK            '1'       // Invalid block-size
+#define INV_STR             '0'       // Invalid string
 
 
 // Struct to combine key and function pointer
@@ -75,19 +77,6 @@ typedef struct {
     const Char key[CMD_LENGTH];     // String key for the function
     Void (*func)(Void);             // Pointer to the function
 } ObserverFuncEntry;
-
-/*
- * Main-Functionality Logic
- */
-
-// Reads from memory cell(s)
-LOCAL Void read_mem(Void);
-
-// Writes to memory cell(s)
-LOCAL Void write_mem(Void);
-
-// Set interrupt breakpoint
-LOCAL Void set_interrupt(Void);
 
 // EXTERN Function declarations
 EXTERN Void Observer_init(Void);

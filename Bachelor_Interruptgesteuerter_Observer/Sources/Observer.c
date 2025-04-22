@@ -18,7 +18,7 @@
 // Observer Function Dictionary Length
 #define OBS_FUNCT_CMDS (3)
 
-#define RW_BUFF_SIZE (1)
+#define RW_BUFF_SIZE (2)
 
 // UART Properties
 #define UART_BUFFER_SIZE 64
@@ -28,10 +28,8 @@
 
 // Event/Error Logic
 LOCAL TEvt global_events;
-LOCAL UChar uart_error;
-LOCAL UChar cmd_error;
-
-//LOCAL Char err_temp[6] = {'#',' ','\0'};
+LOCAL Char uart_error;
+LOCAL Char cmd_error;
 
 
 /*
@@ -61,11 +59,12 @@ LOCAL Void (*func_ptr)(Void);
 LOCAL UInt mem_addr_idx;
 LOCAL UInt blocks;
 LOCAL Char *mem_addr_ptr;
+LOCAL Char *write_str_ptr;
 LOCAL Char rw_buf[RW_BUFF_SIZE + 1];
 
 
 // UART Logic
-//LOCAL const Char new_line[4] = {'\n', '\r', '>', '\0'};
+LOCAL const Char new_line[4] = {'\n', '\r', '>', '\0'};
 LOCAL const Char* print_ptr;
 LOCAL Char uart_buffer[UART_BUFFER_SIZE + 1];
 LOCAL Char rx_byte;
@@ -154,16 +153,18 @@ GLOBAL Void Observer_init(Void) {
 
     dict_idx = 0;
 
+    mem_addr_ptr = NULL;
     mem_addr_idx = 0;
     blocks = 0;
     rw_buf[1] = '\0';
+    rw_buf[2] = '\0';
 
     timeout_counter = 0;
     buffer_index = 0;
     uart_buffer[0] = '\0';
     rx_byte = '\0';
 
-    //observer_print(new_line);
+    observer_print(new_line);
 
 }
 
@@ -172,16 +173,16 @@ GLOBAL Void Observer_init(Void) {
  */
 
 #pragma FUNC_ALWAYS_INLINE(set_uart_error)
-LOCAL Void set_uart_error(UChar err) {
-  if (err == NO_ERR || uart_error > err) {
+LOCAL Void set_uart_error(Char err) {
+  if (err == NO_ERR || uart_error < err) {
     uart_error = err;
     SETBIT(global_events, UART_ERR);
   }
 }
 
 #pragma FUNC_ALWAYS_INLINE(set_cmd_error)
-LOCAL Void set_cmd_error(UChar err) {
-  if (err == NO_ERR || cmd_error > err) {
+LOCAL Void set_cmd_error(Char err) {
+  if (err == NO_ERR || cmd_error < err) {
     cmd_error = err;
     SETBIT(global_events, CMD_ERR);
   }
@@ -210,13 +211,11 @@ LOCAL int observer_print(const char * str) {
 LOCAL Void read_mem(Void) {
 
     if (mem_addr_idx > (blocks - 1)) {
-        //uart_buffer[mem_addr_idx++] = '\0';
-        //observer_print(uart_buffer);
-        TGLBIT(global_events, RST);
+        SETBIT(global_events, RST);
         return;
     }
 
-    if (blocks == 0) {
+    if (mem_addr_ptr EQ NULL) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer + 4, " ");
         Char *block_str = strtok(NULL, " ");
@@ -226,20 +225,13 @@ LOCAL Void read_mem(Void) {
     }
 
     rw_buf[0] = *((volatile Char *)mem_addr_ptr + mem_addr_idx);
-    if (!isalnum(rw_buf[0])) {
+    if (!IS_ALNUM(rw_buf[0])) {
         rw_buf[0] = ' ';
     }
     observer_print(rw_buf);
-/*
-    Char tmp_char = *((volatile Char *)mem_addr_ptr + mem_addr_idx);
-    if (tmp_char EQ '\0') {
-        tmp_char = ' ';
-    }
 
-    uart_buffer[mem_addr_idx] = tmp_char;
-*/
     mem_addr_idx++;
-    TGLBIT(global_events, CMD_RUN);
+    SETBIT(global_events, CMD_RUN);
 
     return;
 }
@@ -248,29 +240,31 @@ LOCAL Void read_mem(Void) {
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL Void write_mem(Void) {
 
-/*
-    if (mem_addr_idx < RW_BUFFER_SIZE || mem_addr_idx > (blocks * 8)) {
-        observer_print(uart_buffer);
-        TGLBIT(global_events, RST);
+
+    if (*((volatile Char *)write_str_ptr + mem_addr_idx) EQ '\0') {
+        SETBIT(global_events, RST);
+        return;
     }
 
-    if (blocks == 0) {
+    if (mem_addr_ptr EQ NULL) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer + 4, " ");
+        write_str_ptr = strtok(NULL, " ");
+
         mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
-
-        Char *token = strtok(NULL, " ");
-        if (token != NULL) {
-            strncpy(uart_buffer, token, RW_BUFFER_SIZE - 1);
-            uart_buffer[buffer_index] = '\0';
-        }
-
-        blocks = (strlen(uart_buffer) + 7) / 8;
     }
 
-    *((volatile Char *)mem_addr_ptr + (mem_addr_idx*8)) = uart_buffer[mem_addr_idx];
+    rw_buf[0] = *((volatile Char *)write_str_ptr + mem_addr_idx);
+
+    if (!IS_ALNUM(rw_buf[0])) {
+        rw_buf[0] = ' ';
+    }
+    observer_print(rw_buf);
+
+    *((volatile Char *)mem_addr_ptr + mem_addr_idx) = rw_buf[0];
     mem_addr_idx++;
-*/
+    SETBIT(global_events, CMD_RUN);
+
     return;
 }
 
@@ -278,7 +272,7 @@ LOCAL Void write_mem(Void) {
 #pragma FUNC_ALWAYS_INLINE(set_interrupt)
 LOCAL Void set_interrupt(Void) {
     observer_print("execute set_interrupt");
-    TGLBIT(global_events, RST);
+    SETBIT(global_events, RST);
 
     // Some Code goes in there
 
@@ -323,10 +317,10 @@ __interrupt Void UCA0_ISR(Void) {
 
             // Check on end of word
             if (rx_byte EQ '\r' ) {
-                observer_print("\n\r>");
+                observer_print(new_line);
                 SETBIT(global_events, CMD_RDY);         // Command ready
                 CLRBIT(global_events, TIMEOUT_FLAG);    // Clear Time-Out-Flag
-                SETBIT(TB0CTL, TBIFG);                  // Set ISR Interrupt Flag
+                //SETBIT(TB0CTL, TBIFG);                  // Set ISR Interrupt Flag
                 return;
             }
 
@@ -341,9 +335,9 @@ __interrupt Void UCA0_ISR(Void) {
             }
 
             // Checks if rx_byte is a alphanumeric letter
-            if (!isalnum(rx_byte)
+            if (!IS_ALNUM(rx_byte)
                     AND rx_byte NE ' ') {
-                //set_uart_error(CHARACTOR_ERROR);
+                observer_print("?");
                 return;
             }
 
@@ -361,10 +355,9 @@ __interrupt Void UCA0_ISR(Void) {
             observer_print(&uart_buffer[buffer_index - 1]);
 
             // Set Time-Out-Flag
-            SETBIT(global_events, TIMEOUT_FLAG);
-
-
-
+            if (!TSTBIT((global_events & TIMEOUT_FLAG), TIMEOUT_FLAG)) {
+                SETBIT(global_events, TIMEOUT_FLAG);
+            }
             break;
 
         case USCI_UART_UCTXIFG:     // Interrupt Vector 4: Data ready to write
@@ -425,34 +418,31 @@ __interrupt Void TIMER0_B1_ISR(Void) {
     // Get Events
     TEvt local_event = global_events & MASK;
     CLRBIT(global_events, MASK);
-/*
+
     // Error Handling
     if (local_event & UART_ERR) {
-        err_temp[1] = uart_error;
-        observer_print(err_temp);
-        err_temp[1] = ' ';
+        rw_buf[0] = '#';
+        rw_buf[1] = uart_error;
+        observer_print(rw_buf);
+        rw_buf[1] = '\0';
         uart_error = NO_ERR;
-        TGLBIT(global_events, RST);
+        SETBIT(global_events, RST);
     }
-*/
+
     if (local_event & CMD_ERR) {
-        observer_print((cmd_error == NO_CMD)            ? "#1\n\r>"    // no command to compute
-                    :  (cmd_error == UNKNOWN_CMD)       ? "#2\n\r>"    // unknown command
-                    :  (cmd_error == INV_PTR)           ? "#3\n\r>"    // Invalid function pointer
-                    :  (cmd_error == INV_ADDR)          ? "#4\n\r>"    // Invalid memory address
-                    :  (cmd_error == INV_BLCK)          ? "#5\n\r>"    // Invalid block-size
-                    :  (cmd_error == INV_STR)           ? "#6\n\r>"    // Invalid string
-                    : "" );
+        rw_buf[0] = '#';
+        rw_buf[1] = cmd_error;
+        observer_print(rw_buf);
+        rw_buf[1] = '\0';
         cmd_error = NO_ERR;
-        TGLBIT(global_events, RST);
+        SETBIT(global_events, RST);
     }
 
     // Command computation
     if (local_event & CMD_RDY) {
 
         if (uart_buffer[0] EQ '\0') {
-            set_cmd_error(NO_CMD);
-            TGLBIT(global_events, RST);
+            SETBIT(global_events, RST);
             return;
         }
 
@@ -460,7 +450,7 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         if (Observer_func_dict[dict_idx].func EQ NULL) {
             dict_idx = 0;
             set_cmd_error(UNKNOWN_CMD);
-            TGLBIT(global_events, RST);
+            SETBIT(global_events, RST);
             return;
         }
 
@@ -468,11 +458,11 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         if (strncmp(uart_buffer, Observer_func_dict[dict_idx].key, 3) == 0) {
             // Extract functionpointer
             func_ptr = Observer_func_dict[dict_idx].func;
-            TGLBIT(global_events, CMD_RUN);
+            SETBIT(global_events, CMD_RUN);
             return;
         }
         dict_idx++;
-        TGLBIT(global_events, CMD_RDY);
+        SETBIT(global_events, CMD_RDY);
     }
 
     if (local_event & CMD_RUN) {
@@ -485,22 +475,19 @@ __interrupt Void TIMER0_B1_ISR(Void) {
     }
 
     if (local_event & RST) {
-        // Display Memory Content
-        observer_print(uart_buffer);
-
         // Reset buffer and pointer
+        mem_addr_ptr = 0;
+
         blocks = 0;
         mem_addr_idx = 0;
+        rw_buf[0] = ' ';
 
         buffer_index = 0;
         uart_buffer[0] = '\0';
         dict_idx = 0;
+
         return;
     }
 
     CLRBIT(TB0CTL, TBIFG);
-}
-
-GLOBAL Void Observer (Void) {
-
 }

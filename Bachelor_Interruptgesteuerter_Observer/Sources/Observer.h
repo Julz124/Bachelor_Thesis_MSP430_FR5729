@@ -54,21 +54,23 @@ typedef UInt TEvt;
 #define NO_ERR              0x00       // no error
 #define TIME_OUT            'A'       // time out
 #define BUFFER_ERROR        'B'       // buffer error (e.g. to many bytes received)
-#define CHARACTOR_ERROR     'C'       // character error (e.g. wrong character received)
-#define FROVPAR_ERROR       'D'       // frame overrun or parity error
-#define BREAK_ERROR         'E'       // break error (lost communication)
-#define PRINT_ERROR         'F'       // unable to print on UART
+#define FROVPAR_ERROR       'C'       // frame overrun or parity error
+#define BREAK_ERROR         'D'       // break error (lost communication)
+#define PRINT_ERROR         'E'       // unable to print on UART
 
 /*
  * Command Error
  */
-#define NO_CMD              '5'       // no command to compute
-#define UNKNOWN_CMD         '4'       // unknown command
-#define INV_PTR             '3'       // Invalid function pointer
-#define INV_ADDR            '2'       // Invalid memory address
-#define INV_BLCK            '1'       // Invalid block-size
-#define INV_STR             '0'       // Invalid string
+#define UNKNOWN_CMD         '1'       // unknown command
+#define INV_PTR             '2'       // Invalid function pointer
+#define INV_ADDR            '3'       // Invalid memory address
+#define INV_BLCK            '4'       // Invalid block-size
+#define INV_STR             '5'       // Invalid string
 
+/*
+ * Custom Makros
+ */
+#define IS_ALNUM(ch) (between('0', (ch), '9') || between('A', (ch), 'Z') || between('a', (ch), 'z'))
 
 // Struct to combine key and function pointer
 //typedef Void (*ObserverFunc)(Void);

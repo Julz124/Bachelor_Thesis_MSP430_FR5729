@@ -218,7 +218,7 @@ LOCAL Void read_mem(Void) {
     if (mem_addr_ptr EQ NULL) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer + 4, " ");
-        Char *block_str = strtok(NULL, " ");
+        Char *block_str = mem_addr_str + strlen(mem_addr_str) + 1;
 
         mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
         blocks = (UInt)atoi(block_str);
@@ -240,25 +240,25 @@ LOCAL Void read_mem(Void) {
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL Void write_mem(Void) {
 
-
-    if (*((volatile Char *)write_str_ptr + mem_addr_idx) EQ '\0') {
-        SETBIT(global_events, RST);
-        return;
-    }
-
     if (mem_addr_ptr EQ NULL) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer + 4, " ");
-        write_str_ptr = strtok(NULL, " ");
+        write_str_ptr = mem_addr_str + strlen(mem_addr_str) + 1;
 
         mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
     }
 
     rw_buf[0] = *((volatile Char *)write_str_ptr + mem_addr_idx);
 
+    if (rw_buf[0] EQ '\0') {
+        SETBIT(global_events, RST);
+        return;
+    }
+
     if (!IS_ALNUM(rw_buf[0])) {
         rw_buf[0] = ' ';
     }
+
     observer_print(rw_buf);
 
     *((volatile Char *)mem_addr_ptr + mem_addr_idx) = rw_buf[0];

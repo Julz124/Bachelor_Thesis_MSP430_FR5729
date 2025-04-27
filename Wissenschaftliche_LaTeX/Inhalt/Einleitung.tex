@@ -1,0 +1,45 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root =  ../Bachelorarbeit.tex
+
+\chapter{Einleitung}
+\label{cha:Einleitung}
+
+
+\section{Das Ziel dieser Arbeit}
+\label{sec:ZielDerArbeit}
+
+Diese Bachelor-Thesis befasst sich mit der Entwicklung einer \Fachbegriff[Ein Mechanismus zur ereignisbasierten Unterbrechung des normalen Programmablaufs]{interruptgesteuerten} Benutzerschnittstelle auf einem \FachbegriffSpezialB{lowpowermcu}{Ein Mikrocontroller, der für energieeffiziente Anwendungen optimiert ist}{Typischerweise eingesetzt in batteriebetriebenen Embedded-Systemen}{Low-Power-Mikrocontroller}{Low-Power-Mikrocontroller}, zur \"Uberwachung und Manipulation von \Fachbegriff[Speicherzellen, die flüchtig sind und ihre Inhalte beim Ausschalten verlieren]{Registern} und Speicherzellen in \Fachbegriff[Random Access Memory, ein flüchtiger Speicher]{RAM} und \Fachbegriff[Ferroelectric RAM, ein nichtflüchtiger Speicher mit schneller Zugriffsgeschwindigkeit]{FRAM}.
+
+Im Zuge des Arbeitsauftrags wird ein unabh\"angiges \Fachbegriff[Eine funktionale Einheit innerhalb eines größeren Systems, die separat entwickelt und gewartet werden kann]{Modul} entwickelt, welches nach Wunsch aktiviert oder deaktiviert wird.
+
+\section{Die Umgebung, in der die Arbeit entstand}
+\label{sec:EntstehungsUmgebungArbeit}
+
+Die Entwicklung der Software geschah in Absprache mit Herr Prof. Dr. Irenäus Schoppa, welcher ein zusätzliches Tool für Studenten im Praktikum von Microprozessorsysteme benötigt.
+
+Als Entwicklungsbasis kam der in \Fachbegriff[Microprozessorsysteme]{MIPS} herangezogene MSP430FR5729 von Texas Instruments zum Einsatz, welcher bereits ein ausgereifter und etablierter \Fachbegriff[Low-Power-Mikrocontroller]{LP-MCU} ist. Viele grundlegenden Technologien, die diesem Prozessor zugrunde liegen, werden in dieser Arbeit wissentlich nicht behandelt, um den Rahmen nicht zu sprengen und sich auf das wesentliche zu konzentrieren.
+
+
+\section{Der Aufbau dieser Arbeit}
+\label{sec:AufbauDieserArbeit}
+
+\begin{description}
+
+	\item[Aktueller Wissensstand:] Der aktuelle Wissensstand beschreibt, auf welchem Wissensniveau sich der Autor im Moment der Aufnahme der Arbeit befand.
+	
+	\item[Methoden und Herangehensweisen:] Im Kapitel »Methoden und Herangehensweisen« werden die zur Planung verwendeten Methoden erl\"autert. Die grundlegenden Eigenschaften und der Aufbau des Softwareentwicklungsprozesses werden erkl\"art. Zudem werden die benötigten Dokumentationen spezifiziert.
+	
+	\item[Die Konzeptionierung des Moduls:] Dieses Kapitel umfasst die Dokumentation der gesamten Planungsphase des Observer-Moduls. Hier wird eine \"Ubersicht \"uber die bereits vorhandene L\"osung geschaffen und anschlie{\ss}end die zur Planung erforderlichen Dokumente angefertigt.
+	
+	\item[Die Entwicklung des Observers:] Dieses Kapitel enth\"alt die Dokumentation der tats\"achlichen Programmierung der Software. Hier werden die Voraussetzungen zur Implementation gekl\"art und der Verlauf der Entwicklung anhand von Beispielen schrittweise abgearbeitet.
+	
+	\item[Fazit und kritische Bewertung:] Im Fazit werden die gemachten Erfahrungen und die Ergebnisse der Planung und Entwicklung abschlie{\ss}end zusammengefasst und kritisch bewertet. Zus\"atzlich wird ein kleiner Ausblick auf Erweiterungsm\"oglichkeiten und m\"ogliche Optimierungsschritte unternommen.
+
+\end{description}
+
+
+\section{Viele Informationen, wenige Quellen \dots}
+\label{sec:Quellenlage}
+
+Grunds\"atzlich war es einfach geeignete Quellen zu den Themen rund um die Technologien zu finden, da -- wie bereits erw\"ahnt -- die Entwicklungsplattform und der Microcontroller weitesgehend etabliert sind. Allerdings können alle wichtigen Informationen aus erster Hand, von dem Hersteller entnommen werden, weshalb andere Quellen unn\"otig erscheinen.
+

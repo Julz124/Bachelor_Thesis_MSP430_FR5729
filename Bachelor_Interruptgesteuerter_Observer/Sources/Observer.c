@@ -16,12 +16,12 @@
 #define ISR_TIMER (96 - 1)
 
 // Observer Function Dictionary Length
-#define OBS_FUNCT_CMDS (3)
+#define OBS_FUNCT_CMDS (3 + 1)
 
-#define RW_BUFF_SIZE (2)
+#define RW_BUFF_SIZE (2 + 1)
 
 // UART Properties
-#define UART_BUFFER_SIZE 64
+#define UART_BUFFER_SIZE (64 + 1)
 #define TIMEOUT_THRESHOLD 1500  // 15s = 1500 * 10ms
 #define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
 
@@ -41,7 +41,7 @@ LOCAL Void write_mem(Void);         // Writes to memory cell(s)
 LOCAL Void set_interrupt(Void);     // Set interrupt breakpoint
 
 // Function Logic
-LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS + 1] = {
+LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
     {"rdm", read_mem},       // read_mem function
     {"wrm", write_mem},      // write_mem function
     {"inr", set_interrupt},  // interrupt function
@@ -57,7 +57,7 @@ LOCAL UInt mem_addr_idx;
 LOCAL UInt blocks;
 LOCAL Char *mem_addr_ptr;
 LOCAL Char *write_str_ptr;
-LOCAL Char rw_buf[RW_BUFF_SIZE + 1];
+LOCAL Char rw_buf[RW_BUFF_SIZE];
 LOCAL Char *rw_buf_ptr;
 
 /*
@@ -66,7 +66,7 @@ LOCAL Char *rw_buf_ptr;
 
 LOCAL const Char new_line[4] = {'\n', '\r', '>', '\0'};
 LOCAL const Char* print_ptr;
-LOCAL Char uart_buffer[UART_BUFFER_SIZE + 1];
+LOCAL Char uart_buffer[UART_BUFFER_SIZE];
 LOCAL Char *uart_buffer_ptr;
 LOCAL Char rx_byte;
 LOCAL Char buffer_index;

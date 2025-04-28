@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <intrinsics.h>     // __disable_interrupt, __enable_interrupt
 #include "..\base.h"
 #include "Observer.h"
 
@@ -25,6 +26,10 @@
 #define TIMEOUT_THRESHOLD 1500  // 15s = 1500 * 10ms
 #define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
 
+// Software Debugger Constants
+#define MAX_BREAKPOINTS 5
+#define BREAKPOINT_INSTRUCTION_CALL 0x1380  // Opcode for CALL #absolute_addr
+#define BREAKPOINT_INSTRUCTION_SIZE 4       // Size of the instruction we replace/insert (must match the CALL instruction size)
 
 // Event/Error Logic
 LOCAL TEvt global_events;
@@ -36,20 +41,33 @@ LOCAL Char cmd_error;
  * Main-Functionality Logic
  */
 
-LOCAL Void read_mem(Void);          // Reads from memory cell(s)
-LOCAL Void write_mem(Void);         // Writes to memory cell(s)
-LOCAL Void set_interrupt(Void);     // Set interrupt breakpoint
+LOCAL Void read_mem(Void);              // Reads from memory cell(s)
+LOCAL Void write_mem(Void);             // Writes to memory cell(s)
+LOCAL Void set_breakpoint(Void);        // Set breakpoint
+LOCAL Void continue_breakpoint(Void);   // Continue breakpoint
 
 // Function Logic
 LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
-    {"rdm", read_mem},       // read_mem function
-    {"wrm", write_mem},      // write_mem function
-    {"inr", set_interrupt},  // interrupt function
+    {"rdm", read_mem},              // read_mem function
+    {"wrm", write_mem},             // write_mem function
+    {"sbr", set_breakpoint},        // set breakpoint
+    {"cbr", continue_breakpoint},   // continue breakpoint
     {"", NULL}
 };
 
 LOCAL UInt dict_idx;
 LOCAL Void (*func_ptr)(Void);
+
+// Software Debugger
+typedef struct {
+    Bool active;
+    UInt addr;                                          // Address of the breakpoint
+    Char original_bytes[BREAKPOINT_INSTRUCTION_SIZE];   // Original instruction bytes
+} BreakpointInfo;
+
+LOCAL BreakpointInfo breakpoints[MAX_BREAKPOINTS];
+LOCAL UInt curr_brp_addr;                            // Address of the currently active breakpoint
+LOCAL Bool brp_flag;
 
 
 // Buffer and Pointer
@@ -161,6 +179,15 @@ GLOBAL Void Observer_init(Void) {
     *(rw_buf_ptr + 1) = '\0';
     *(rw_buf_ptr + 2) = '\0';
 
+    // Initialize breakpoint structures
+    for (int i = 0; i < MAX_BREAKPOINTS; i++) {
+        breakpoints[i].active = FALSE;
+        breakpoints[i].addr = 0;
+    }
+
+    brp_flag = FALSE;
+    curr_brp_addr = 0;
+
 
     timeout_counter = 0;
     buffer_index = 0;
@@ -203,6 +230,30 @@ LOCAL int observer_print(const char * str) {
     SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
     SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
     return 0;
+}
+
+// Blocking receive UART-Char Routine
+LOCAL Void observer_getchar_blocking(Void) {
+    while (!TSTBIT(UCA0IFG, UCRXIFG)) {}
+
+    // USCI Break received
+    if (TSTBIT(UCA0STATW, UCBRK)) {
+       Char ch = UCA0RXBUF;
+       set_uart_error(BREAK_ERROR);
+       return;
+    }
+
+    // USCI RX Error Flag
+    if (TSTBIT(UCA0STATW, UCRXERR)) {
+       Char ch = UCA0RXBUF;
+       set_uart_error(FROVPAR_ERROR);
+       return;
+    }
+
+    // Read character
+    rx_byte = UCA0RXBUF;
+
+    return;
 }
 
 /*
@@ -252,6 +303,12 @@ LOCAL Void write_mem(Void) {
         mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
     }
 
+    if (between("0x000000", mem_addr_ptr, "0x0001FF")
+            || between("0x000C00", mem_addr_ptr, "0x000FFF")) {
+        set_cmd_error(INV_ADDR);
+        return;
+    }
+
     *rw_buf_ptr = *((volatile Char *)write_str_ptr + mem_addr_idx);
 
     if (*rw_buf_ptr EQ '\0') {
@@ -272,14 +329,70 @@ LOCAL Void write_mem(Void) {
     return;
 }
 
-// Set interrupt breakpoint
-#pragma FUNC_ALWAYS_INLINE(set_interrupt)
-LOCAL Void set_interrupt(Void) {
-    observer_print("execute set_interrupt");
-    SETBIT(global_events, RST);
+// Set breakpoint
+#pragma FUNC_ALWAYS_INLINE(set_breakpoint)
+LOCAL Void set_breakpoint(Void) {
 
-    // Some Code goes in there
+    return;
+}
 
+// Continue breakpoint
+#pragma FUNC_ALWAYS_INLINE(continue_breakpoint)
+LOCAL Void continue_breakpoint(Void) {
+
+    return;
+}
+
+// Handle breakpoint
+#pragma FUNC_ALWAYS_INLINE(breakpoint_handler)
+LOCAL Void breakpoint_handler(Void) {
+
+    UInt return_addr;
+
+    return_addr = *(UInt*)__get_SP_register;        // Get return address from stack R1 (Stack Pointer)
+
+    curr_brp_addr = return_addr - BREAKPOINT_INSTRUCTION_SIZE;   // Calculate BP address
+
+    brp_flag = TRUE;
+
+    observer_print("\nBreakpoint @");
+    char temp_buf[8];
+    ltoa(curr_brp_addr, temp_buf, 16);
+    observer_print(temp_buf);
+    observer_print("\n(c)ontinue>");
+
+    while(rx_byte != 'c') {
+        observer_getchar_blocking();
+
+        if (rx_byte != 'c' && rx_byte != 0 && rx_byte != '\r' && rx_byte != '\n') {
+           observer_print("\nUnknown cmd. (c)ontinue>");
+        }
+    }
+
+    // Restore Original Instruction (CRITICAL)
+    int i;
+    Bool restored = FALSE;
+    __disable_interrupt(); // --- Start Critical Section ---
+    for (i = 0; i < MAX_BREAKPOINTS; i++) {
+        if (breakpoints[i].active && breakpoints[i].addr == curr_brp_addr) {
+            volatile Char* pMem = (volatile Char*)curr_brp_addr;
+             for(int j=0; j < BREAKPOINT_INSTRUCTION_SIZE; j++) {
+                 *(pMem + j) = breakpoints[i].original_bytes[j];
+             }
+            restored = TRUE;
+            break; // Assume only one match
+        }
+    }
+    __enable_interrupt(); // --- End Critical Section ---
+
+    if (!restored) {
+        observer_print("\nERROR: BP restore failed!");
+        // Error Warning?
+        // Reset Microcontroller?
+    }
+
+    brp_flag = FALSE;
+    curr_brp_addr = 0;
 
     return;
 }
@@ -436,7 +549,6 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         *rw_buf_ptr = '#';
         *(rw_buf_ptr + 1) = cmd_error;
         observer_print(rw_buf_ptr);
-        *(rw_buf_ptr + 1) = '\0';
         cmd_error = NO_ERR;
         SETBIT(global_events, RST);
     }
@@ -453,7 +565,6 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         if (Observer_func_dict[dict_idx].func EQ NULL) {
             dict_idx = 0;
             set_cmd_error(UNKNOWN_CMD);
-            SETBIT(global_events, RST);
             return;
         }
 
@@ -466,6 +577,7 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         }
         dict_idx++;
         SETBIT(global_events, CMD_RDY);
+
     }
 
     if (local_event & CMD_RUN) {

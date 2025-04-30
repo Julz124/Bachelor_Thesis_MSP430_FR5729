@@ -27,8 +27,7 @@
 #define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
 
 // Software Debugger Constants
-#define MAX_BREAKPOINTS 5
-#define BREAKPOINT_INSTRUCTION_CALL 0x1380  // Opcode for CALL #absolute_addr
+#define BREAKPOINT_INSTRUCTION_CALL 0x13B0  // Opcode for CALLA #absolute_addr (o. 13B0)
 #define BREAKPOINT_INSTRUCTION_SIZE 4       // Size of the instruction we replace/insert (must match the CALL instruction size)
 
 // Event/Error Logic
@@ -45,6 +44,7 @@ LOCAL Void read_mem(Void);              // Reads from memory cell(s)
 LOCAL Void write_mem(Void);             // Writes to memory cell(s)
 LOCAL Void set_breakpoint(Void);        // Set breakpoint
 LOCAL Void continue_breakpoint(Void);   // Continue breakpoint
+LOCAL Void breakpoint_handler(Void);    // Continue breakpoint
 
 // Function Logic
 LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
@@ -58,16 +58,11 @@ LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
 LOCAL UInt dict_idx;
 LOCAL Void (*func_ptr)(Void);
 
-// Software Debugger
-typedef struct {
-    Bool active;
-    UInt addr;                                          // Address of the breakpoint
-    Char original_bytes[BREAKPOINT_INSTRUCTION_SIZE];   // Original instruction bytes
-} BreakpointInfo;
 
-LOCAL BreakpointInfo breakpoints[MAX_BREAKPOINTS];
-LOCAL UInt curr_brp_addr;                            // Address of the currently active breakpoint
-LOCAL Bool brp_flag;
+// Software Debugger
+LOCAL UInt *brp_addr_ptr;                                          // Address of the breakpoint
+LOCAL UInt brp_og_cmd_1;
+LOCAL UInt brp_og_cmd_2;
 
 
 // Buffer and Pointer
@@ -180,14 +175,9 @@ GLOBAL Void Observer_init(Void) {
     *(rw_buf_ptr + 2) = '\0';
 
     // Initialize breakpoint structures
-    for (int i = 0; i < MAX_BREAKPOINTS; i++) {
-        breakpoints[i].active = FALSE;
-        breakpoints[i].addr = 0;
-    }
-
-    brp_flag = FALSE;
-    curr_brp_addr = 0;
-
+    brp_addr_ptr = NULL;
+    brp_og_cmd_1 = 0x0000;
+    brp_og_cmd_2 = 0x0000;
 
     timeout_counter = 0;
     buffer_index = 0;
@@ -333,6 +323,27 @@ LOCAL Void write_mem(Void) {
 #pragma FUNC_ALWAYS_INLINE(set_breakpoint)
 LOCAL Void set_breakpoint(Void) {
 
+    Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
+    brp_addr_ptr = (UInt *)strtol(mem_addr_str, NULL, 0);
+
+    /*
+    if (brp_addr_ptr EQ NULL || (*brp_addr_ptr % 2 NE 0)) {
+        set_cmd_error(INV_ADDR);
+        return;
+    }
+*/
+    __disable_interrupt();
+
+    // Save original instruction bytes (4 bytes for CALL #addr)
+    brp_og_cmd_1 = *(volatile UInt *)brp_addr_ptr;
+    brp_og_cmd_2 = *((volatile UInt *)brp_addr_ptr + 1);
+
+    // Write the breakpoint instruction (CALL #breakpoint_handler)
+    *(volatile UInt *)brp_addr_ptr = BREAKPOINT_INSTRUCTION_CALL;       // Write opcode
+    *((volatile UInt *)brp_addr_ptr + 1) = (UInt)&breakpoint_handler;   // Write handler address
+
+    __enable_interrupt(); // --- End Critical Section ---
+
     return;
 }
 
@@ -348,51 +359,23 @@ LOCAL Void continue_breakpoint(Void) {
 LOCAL Void breakpoint_handler(Void) {
 
     UInt return_addr;
-
-    return_addr = *(UInt*)__get_SP_register;        // Get return address from stack R1 (Stack Pointer)
-
-    curr_brp_addr = return_addr - BREAKPOINT_INSTRUCTION_SIZE;   // Calculate BP address
-
-    brp_flag = TRUE;
-
-    observer_print("\nBreakpoint @");
-    char temp_buf[8];
-    ltoa(curr_brp_addr, temp_buf, 16);
-    observer_print(temp_buf);
-    observer_print("\n(c)ontinue>");
+    return_addr = __get_SP_register();          // Get return address from stack R1 (Stack Pointer)
 
     while(rx_byte != 'c') {
+
         observer_getchar_blocking();
 
-        if (rx_byte != 'c' && rx_byte != 0 && rx_byte != '\r' && rx_byte != '\n') {
-           observer_print("\nUnknown cmd. (c)ontinue>");
-        }
+        /* Handling Read and Write Memory */
+
     }
 
     // Restore Original Instruction (CRITICAL)
-    int i;
-    Bool restored = FALSE;
     __disable_interrupt(); // --- Start Critical Section ---
-    for (i = 0; i < MAX_BREAKPOINTS; i++) {
-        if (breakpoints[i].active && breakpoints[i].addr == curr_brp_addr) {
-            volatile Char* pMem = (volatile Char*)curr_brp_addr;
-             for(int j=0; j < BREAKPOINT_INSTRUCTION_SIZE; j++) {
-                 *(pMem + j) = breakpoints[i].original_bytes[j];
-             }
-            restored = TRUE;
-            break; // Assume only one match
-        }
-    }
+
+    *(volatile UInt*)return_addr = brp_og_cmd_1;
+    *((volatile UInt*)return_addr + 1) = brp_og_cmd_2;
+
     __enable_interrupt(); // --- End Critical Section ---
-
-    if (!restored) {
-        observer_print("\nERROR: BP restore failed!");
-        // Error Warning?
-        // Reset Microcontroller?
-    }
-
-    brp_flag = FALSE;
-    curr_brp_addr = 0;
 
     return;
 }
@@ -577,7 +560,6 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         }
         dict_idx++;
         SETBIT(global_events, CMD_RDY);
-
     }
 
     if (local_event & CMD_RUN) {

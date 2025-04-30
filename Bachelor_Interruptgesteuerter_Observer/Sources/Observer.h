@@ -51,21 +51,24 @@ typedef UInt TEvt;
 /*
  * UART Error
  */
-#define NO_ERR              0x00       // no error
-#define TIME_OUT            'A'       // time out
-#define BUFFER_ERROR        'B'       // buffer error (e.g. to many bytes received)
-#define FROVPAR_ERROR       'C'       // frame overrun or parity error
-#define BREAK_ERROR         'D'       // break error (lost communication)
-#define PRINT_ERROR         'E'       // unable to print on UART
+#define NO_ERR              0x00    // no error
+#define TIME_OUT            'A'     // time out
+#define BUFFER_ERROR        'B'     // buffer error (e.g. to many bytes received)
+#define FROVPAR_ERROR       'C'     // frame overrun or parity error
+#define BREAK_ERROR         'D'     // break error (lost communication)
+#define PRINT_ERROR         'E'     // unable to print on UART
 
 /*
  * Command Error
  */
-#define UNKNOWN_CMD         '1'       // unknown command
-#define INV_PTR             '2'       // Invalid function pointer
-#define INV_ADDR            '3'       // Invalid memory address
-#define INV_BLCK            '4'       // Invalid block-size
-#define INV_STR             '5'       // Invalid string
+#define UNKNOWN_CMD         '1'     // unknown command
+#define INV_PTR             '2'     // Invalid function pointer
+#define INV_ADDR            '3'     // Invalid memory address
+#define INV_BLCK            '4'     // Invalid block-size
+#define INV_STR             '5'     // Invalid string
+#define BRP_SET             '6'     // Breakpoint already set
+#define BRP_MAX             '7'     // Max available Breakpoints set
+#define BRP_RES             '8'     // Breakpoint reset failed
 
 /*
  * Custom Makros

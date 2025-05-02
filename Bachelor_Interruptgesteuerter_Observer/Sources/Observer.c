@@ -43,7 +43,7 @@ LOCAL Char cmd_error;
 LOCAL Void read_mem(Void);              // Reads from memory cell(s)
 LOCAL Void write_mem(Void);             // Writes to memory cell(s)
 LOCAL Void set_breakpoint(Void);        // Set breakpoint
-LOCAL Void continue_breakpoint(Void);   // Continue breakpoint
+LOCAL Void cancel_breakpoint(Void);   // Continue breakpoint
 LOCAL Void breakpoint_handler(Void);    // Continue breakpoint
 
 // Function Logic
@@ -51,7 +51,7 @@ LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
     {"rdm", read_mem},              // read_mem function
     {"wrm", write_mem},             // write_mem function
     {"sbr", set_breakpoint},        // set breakpoint
-    {"cbr", continue_breakpoint},   // continue breakpoint
+    {"cbr", cancel_breakpoint},   // continue breakpoint
     {"", NULL}
 };
 
@@ -348,8 +348,8 @@ LOCAL Void set_breakpoint(Void) {
 }
 
 // Continue breakpoint
-#pragma FUNC_ALWAYS_INLINE(continue_breakpoint)
-LOCAL Void continue_breakpoint(Void) {
+#pragma FUNC_ALWAYS_INLINE(cancel_breakpoint)
+LOCAL Void cancel_breakpoint(Void) {
 
     return;
 }

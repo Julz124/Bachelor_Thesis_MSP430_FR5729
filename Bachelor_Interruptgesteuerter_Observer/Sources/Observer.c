@@ -375,9 +375,18 @@ LOCAL Void breakpoint_handler(Void) {
     *(volatile UInt*)return_addr = brp_og_cmd_1;
     *((volatile UInt*)return_addr + 1) = brp_og_cmd_2;
 
+    // *(volatile UInt*)brp_addr_ptr = brp_og_cmd_1;
+    // *((volatile UInt*)brp_addr_ptr + 1) = brp_og_cmd_2;
+
     __enable_interrupt(); // --- End Critical Section ---
 
-    return;
+    return; // RETA to top of stack (Address from SP)
+
+    /*
+     * Problem is __enable_interrutp();
+     * after interrupt enabling, no RETA if BR within ISR
+     * Solution: Restore original bytes on stack -> Breakpoint removed
+     */
 }
 
 /*
@@ -561,6 +570,7 @@ __interrupt Void TIMER0_B1_ISR(Void) {
         dict_idx++;
         SETBIT(global_events, CMD_RDY);
     }
+
 
     if (local_event & CMD_RUN) {
         // Check if function pointer is available

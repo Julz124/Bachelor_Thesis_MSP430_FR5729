@@ -10,43 +10,31 @@
 #ifndef OBSERVER_H_
 #define OBSERVER_H_
 
-typedef UInt TEvt;
+typedef UChar TEvt;
 
 #define CMD_LENGTH (3 + 1)
 
 /*
  * Event initialization
  */
-#define NO_EVTS   0x0000
-#define EVT_1     0x0001
-#define EVT_2     0x0002
-#define EVT_3     0x0004
-#define EVT_4     0x0008
-#define EVT_5     0x0010
-#define EVT_6     0x0020
-#define EVT_7     0x0040
-#define EVT_8     0x0080
-#define EVT_9     0x0100
-#define EVT_10    0x0200
-#define EVT_11    0x0400
-#define EVT_12    0x0800
-#define EVT_13    0x1000
-#define EVT_14    0x2000
-#define EVT_15    0x4000
-#define EVT_16    0x8000
-#define ALL_EVTS  0xFFFF
+#define NO_EVTS   0x00
+#define EVT_1     0x01
+#define EVT_2     0x02
+#define EVT_3     0x04
+#define EVT_4     0x08
+#define EVT_5     0x10
+#define EVT_6     0x20
+#define EVT_7     0x40
+#define EVT_8     0x80
+#define ALL_EVTS  0xFF
 
 /*
  * Event allocation
  */
-#define TIMEOUT_FLAG    EVT_1   // Timeout flag for timeout counter
+#define UART_ERR        EVT_1   // UART error
+#define CMD_ERR         EVT_2   // Command error
 
-#define CMD_RDY         EVT_2   // Command event
-#define CMD_RUN         EVT_3   // Command running
-#define RST             EVT_4   // Reset Register
-
-#define UART_ERR        EVT_5   // UART error
-#define CMD_ERR         EVT_6   // Command error
+#define WRT_UART        EVT_3   // Write to UART
 
 /*
  * UART Error

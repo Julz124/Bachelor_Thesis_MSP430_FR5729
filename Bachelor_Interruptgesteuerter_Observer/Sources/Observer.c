@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <intrinsics.h>     // __disable_interrupt, __enable_interrupt
 #include "..\base.h"
 #include "Observer.h"
 
@@ -27,13 +26,20 @@
 #define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
 
 // Software Debugger Constants
-#define BREAKPOINT_INSTRUCTION_CALL 0x13B0  // Opcode for CALLA #absolute_addr (o. 13B0)
-#define BREAKPOINT_INSTRUCTION_SIZE 4       // Size of the instruction we replace/insert (must match the CALL instruction size)
+//#define BREAKPOINT_INSTRUCTION_CALL 0x3C00  // Opcode for JMP #absolute_addr
 
 // Event/Error Logic
 LOCAL TEvt global_events;
 LOCAL Char uart_error;
 LOCAL Char cmd_error;
+
+/*
+ * State Machine
+ */
+LOCAL Void (*state_ptr)(Void);
+LOCAL Void state_0(Void);
+LOCAL Void state_1(Void);
+LOCAL Void state_2(Void);
 
 
 /*
@@ -42,28 +48,29 @@ LOCAL Char cmd_error;
 
 LOCAL Void read_mem(Void);              // Reads from memory cell(s)
 LOCAL Void write_mem(Void);             // Writes to memory cell(s)
+/*
 LOCAL Void set_breakpoint(Void);        // Set breakpoint
 LOCAL Void cancel_breakpoint(Void);   // Continue breakpoint
 LOCAL Void breakpoint_handler(Void);    // Continue breakpoint
+*/
 
 // Function Logic
 LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
     {"rdm", read_mem},              // read_mem function
     {"wrm", write_mem},             // write_mem function
-    {"sbr", set_breakpoint},        // set breakpoint
-    {"cbr", cancel_breakpoint},   // continue breakpoint
+    //{"sbr", set_breakpoint},        // set breakpoint
+    //{"cbr", cancel_breakpoint},   // continue breakpoint
     {"", NULL}
 };
 
 LOCAL UInt dict_idx;
-LOCAL Void (*func_ptr)(Void);
 
-
+/*
 // Software Debugger
 LOCAL UInt *brp_addr_ptr;                                          // Address of the breakpoint
 LOCAL UInt brp_og_cmd_1;
 LOCAL UInt brp_og_cmd_2;
-
+*/
 
 // Buffer and Pointer
 LOCAL UInt mem_addr_idx;
@@ -174,16 +181,20 @@ GLOBAL Void Observer_init(Void) {
     *(rw_buf_ptr + 1) = '\0';
     *(rw_buf_ptr + 2) = '\0';
 
+    /*
     // Initialize breakpoint structures
     brp_addr_ptr = NULL;
     brp_og_cmd_1 = 0x0000;
     brp_og_cmd_2 = 0x0000;
+    */
 
     timeout_counter = 0;
     buffer_index = 0;
     uart_buffer_ptr = uart_buffer;
     *uart_buffer_ptr = '\0';
     rx_byte = '\0';
+
+    state_ptr = NULL;
 
     observer_print(new_line);
 
@@ -216,12 +227,14 @@ LOCAL int observer_print(const char * str) {
         set_uart_error(PRINT_ERROR);
         return -1;
     }
+    SETBIT(global_events, WRT_UART);
     print_ptr = str;
     SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
     SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
     return 0;
 }
 
+/*
 // Blocking receive UART-Char Routine
 LOCAL Void observer_getchar_blocking(Void) {
     while (!TSTBIT(UCA0IFG, UCRXIFG)) {}
@@ -245,18 +258,18 @@ LOCAL Void observer_getchar_blocking(Void) {
 
     return;
 }
+*/
 
 /*
  * Main-Functionality Logic
  */
-
 
 // Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(read_mem)
 LOCAL Void read_mem(Void) {
 
     if (mem_addr_idx > (blocks - 1)) {
-        SETBIT(global_events, RST);
+        state_ptr = &state_2;
         return;
     }
 
@@ -276,9 +289,6 @@ LOCAL Void read_mem(Void) {
     observer_print(rw_buf_ptr);
 
     mem_addr_idx++;
-    SETBIT(global_events, CMD_RUN);
-
-    return;
 }
 
 // Reads from memory cell(s)
@@ -302,7 +312,7 @@ LOCAL Void write_mem(Void) {
     *rw_buf_ptr = *((volatile Char *)write_str_ptr + mem_addr_idx);
 
     if (*rw_buf_ptr EQ '\0') {
-        SETBIT(global_events, RST);
+        state_ptr = &state_2;
         return;
     }
 
@@ -314,11 +324,11 @@ LOCAL Void write_mem(Void) {
 
     *((volatile Char *)mem_addr_ptr + mem_addr_idx) = *rw_buf_ptr;
     mem_addr_idx++;
-    SETBIT(global_events, CMD_RUN);
 
     return;
 }
 
+/*
 // Set breakpoint
 #pragma FUNC_ALWAYS_INLINE(set_breakpoint)
 LOCAL Void set_breakpoint(Void) {
@@ -326,12 +336,13 @@ LOCAL Void set_breakpoint(Void) {
     Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
     brp_addr_ptr = (UInt *)strtol(mem_addr_str, NULL, 0);
 
-    /*
     if (brp_addr_ptr EQ NULL || (*brp_addr_ptr % 2 NE 0)) {
         set_cmd_error(INV_ADDR);
         return;
     }
-*/
+
+    // --- Start Critical Section ---
+    unsigned short status_register = __get_SR_register();
     __disable_interrupt();
 
     // Save original instruction bytes (4 bytes for CALL #addr)
@@ -342,7 +353,8 @@ LOCAL Void set_breakpoint(Void) {
     *(volatile UInt *)brp_addr_ptr = BREAKPOINT_INSTRUCTION_CALL;       // Write opcode
     *((volatile UInt *)brp_addr_ptr + 1) = (UInt)&breakpoint_handler;   // Write handler address
 
-    __enable_interrupt(); // --- End Critical Section ---
+    // --- End Critical Section ---
+    __set_interrupt_state(status_register);
 
     return;
 }
@@ -358,6 +370,11 @@ LOCAL Void cancel_breakpoint(Void) {
 #pragma FUNC_ALWAYS_INLINE(breakpoint_handler)
 LOCAL Void breakpoint_handler(Void) {
 
+
+    // --- Start Critical Section ---
+    unsigned short status_register = __get_SR_register();
+    __disable_interrupt();
+
     UInt return_addr;
     return_addr = __get_SP_register();          // Get return address from stack R1 (Stack Pointer)
 
@@ -365,12 +382,9 @@ LOCAL Void breakpoint_handler(Void) {
 
         observer_getchar_blocking();
 
-        /* Handling Read and Write Memory */
+        // Handling Read and Write Memory
 
     }
-
-    // Restore Original Instruction (CRITICAL)
-    __disable_interrupt(); // --- Start Critical Section ---
 
     *(volatile UInt*)return_addr = brp_og_cmd_1;
     *((volatile UInt*)return_addr + 1) = brp_og_cmd_2;
@@ -378,16 +392,13 @@ LOCAL Void breakpoint_handler(Void) {
     // *(volatile UInt*)brp_addr_ptr = brp_og_cmd_1;
     // *((volatile UInt*)brp_addr_ptr + 1) = brp_og_cmd_2;
 
-    __enable_interrupt(); // --- End Critical Section ---
+
+    // --- End Critical Section ---
+    __set_interrupt_state(status_register);
 
     return; // RETA to top of stack (Address from SP)
-
-    /*
-     * Problem is __enable_interrutp();
-     * after interrupt enabling, no RETA if BR within ISR
-     * Solution: Restore original bytes on stack -> Breakpoint removed
-     */
 }
+*/
 
 /*
  * UART ISR
@@ -427,9 +438,8 @@ __interrupt Void UCA0_ISR(Void) {
             // Check on end of word
             if (rx_byte EQ '\r' ) {
                 observer_print(new_line);
-                SETBIT(global_events, CMD_RDY);         // Command ready
-                CLRBIT(global_events, TIMEOUT_FLAG);    // Clear Time-Out-Flag
-                //SETBIT(TB0CTL, TBIFG);                  // Set ISR Interrupt Flag
+                state_ptr = &state_1;
+                SETBIT(TB0CTL, TBIFG);      // Set ISR Interrupt Flag
                 return;
             }
 
@@ -464,8 +474,8 @@ __interrupt Void UCA0_ISR(Void) {
             observer_print(uart_buffer_ptr + (buffer_index - 1));
 
             // Set Time-Out-Flag
-            if (!TSTBIT((global_events & TIMEOUT_FLAG), TIMEOUT_FLAG)) {
-                SETBIT(global_events, TIMEOUT_FLAG);
+            if (!state_ptr) {
+                state_ptr = &state_0;
             }
             break;
 
@@ -491,12 +501,16 @@ __interrupt Void UCA0_ISR(Void) {
                return;
             }
 
+            // Clear Write to UART Flag
+            CLRBIT(global_events, WRT_UART);
+
             // Disable UART Transmit Interrupt
             CLRBIT(UCA0IE, UCTXIE);
             Char ch = UCA0RXBUF;
 
             // Enable UART Receive Interrupt
             SETBIT(UCA0IE, UCRXIE);
+
             break;
 
     }
@@ -507,94 +521,87 @@ __interrupt Void UCA0_ISR(Void) {
  * Command ISR
  */
 
-#pragma vector = TIMER0_B1_VECTOR
-__interrupt Void TIMER0_B1_ISR(Void) {
+#pragma FUNC_ALWAYS_INLINE(state_0)
+LOCAL Void state_0(Void) {
 
-    // UART Time-Out counter logic
-    if (TSTBIT(global_events & TIMEOUT_FLAG, TIMEOUT_FLAG)) {
-        timeout_counter++;
-    }
+    timeout_counter++;
 
     // Timeout Handling
     if (timeout_counter >= TIMEOUT_THRESHOLD) {
         timeout_counter = 0;  // Reset counter
-        CLRBIT(global_events, TIMEOUT_FLAG);
         set_uart_error(TIME_OUT);
-        buffer_index = 0;
-        *uart_buffer_ptr = '\0';
+        state_ptr = &state_2;
+    }
+}
+
+#pragma FUNC_ALWAYS_INLINE(state_1)
+LOCAL Void state_1(Void) {
+
+    if (*uart_buffer_ptr EQ '\0') {
+        state_ptr = &state_2;
+        // clearbit oszilloskop
+        return;
     }
 
-    // Get Events
-    TEvt local_event = global_events & MASK;
-    CLRBIT(global_events, MASK);
+    // Reset dict_ptr and set error
+    if (Observer_func_dict[dict_idx].func EQ NULL) {
+        dict_idx = 0;
+        set_cmd_error(UNKNOWN_CMD);
+        return;
+    }
+
+    // Compare buffer with dict entry
+    if (strncmp(uart_buffer, Observer_func_dict[dict_idx].key, 3) == 0) {
+        // Extract functionpointer
+        state_ptr = Observer_func_dict[dict_idx].func;
+        return;
+    }
+    dict_idx++;
+}
+
+// Reset buffer and pointer
+#pragma FUNC_ALWAYS_INLINE(state_2)
+LOCAL Void state_2(Void) {
+
+    mem_addr_ptr = 0;
+
+    blocks = 0;
+    mem_addr_idx = 0;
+    *rw_buf_ptr = ' ';
+    *(rw_buf_ptr + 1) = '\0';
+
+    buffer_index = 0;
+    *uart_buffer_ptr = '\0';
+    dict_idx = 0;
+
+    state_ptr = NULL;
+}
+
+#pragma vector = TIMER0_B1_VECTOR
+__interrupt Void TIMER0_B1_ISR(Void) {
 
     // Error Handling
-    if (local_event & UART_ERR) {
+    if (global_events & UART_ERR) {
         *rw_buf_ptr = '#';
         *(rw_buf_ptr + 1) = uart_error;
         observer_print(rw_buf_ptr);
         uart_error = NO_ERR;
-        SETBIT(global_events, RST);
+        CLRBIT(global_events, UART_ERR);
+        state_ptr = &state_2;
     }
 
-    if (local_event & CMD_ERR) {
+    if (global_events & CMD_ERR) {
         *rw_buf_ptr = '#';
         *(rw_buf_ptr + 1) = cmd_error;
         observer_print(rw_buf_ptr);
         cmd_error = NO_ERR;
-        SETBIT(global_events, RST);
+        CLRBIT(global_events, UART_ERR);
+        state_ptr = &state_2;
     }
 
-    // Command computation
-    if (local_event & CMD_RDY) {
-
-        if (*uart_buffer_ptr EQ '\0') {
-            SETBIT(global_events, RST);
-            return;
-        }
-
-        // Reset dict_ptr and set error
-        if (Observer_func_dict[dict_idx].func EQ NULL) {
-            dict_idx = 0;
-            set_cmd_error(UNKNOWN_CMD);
-            return;
-        }
-
-        // Compare buffer with dict entry
-        if (strncmp(uart_buffer, Observer_func_dict[dict_idx].key, 3) == 0) {
-            // Extract functionpointer
-            func_ptr = Observer_func_dict[dict_idx].func;
-            SETBIT(global_events, CMD_RUN);
-            return;
-        }
-        dict_idx++;
-        SETBIT(global_events, CMD_RDY);
-    }
-
-
-    if (local_event & CMD_RUN) {
-        // Check if function pointer is available
-        if (!func_ptr) {
-            set_cmd_error(INV_PTR);
-        }
-        // execute function routine
-        func_ptr();
-    }
-
-    if (local_event & RST) {
-        // Reset buffer and pointer
-        mem_addr_ptr = 0;
-
-        blocks = 0;
-        mem_addr_idx = 0;
-        *rw_buf_ptr = ' ';
-        *(rw_buf_ptr + 1) = '\0';
-
-        buffer_index = 0;
-        *uart_buffer_ptr = '\0';
-        dict_idx = 0;
-
-        return;
+    // execute main function routine
+    if (state_ptr AND !TSTBIT(global_events & WRT_UART, WRT_UART)) {
+        state_ptr();
     }
 
     CLRBIT(TB0CTL, TBIFG);

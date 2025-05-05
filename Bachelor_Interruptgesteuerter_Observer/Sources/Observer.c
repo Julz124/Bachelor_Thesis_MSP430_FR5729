@@ -23,7 +23,6 @@
 // UART Properties
 #define UART_BUFFER_SIZE (64 + 1)
 #define TIMEOUT_THRESHOLD 1500  // 15s = 1500 * 10ms
-#define MASK (CMD_RDY | CMD_RUN | RST | UART_ERR | CMD_ERR)
 
 // Software Debugger Constants
 //#define BREAKPOINT_INSTRUCTION_CALL 0x3C00  // Opcode for JMP #absolute_addr

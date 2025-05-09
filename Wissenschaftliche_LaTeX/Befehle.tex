@@ -14,6 +14,7 @@
 \newcommand{\Vgl}{Vgl.\ }
 \newcommand{\bzw}{bzw.\ }
 \newcommand{\evtl}{evtl.\ }
+\newcommand{\ggf}{ggf.\ }
 
 \newcommand{\Abbildung}[1]{Abbildung~\ref{fig:#1}}
 
@@ -37,6 +38,8 @@
 
 % verschiedene Befehle um Wörter semantisch auszuzeichnen -----------------------------------------------
 \newcommand{\NeuerBegriff}[1]{\textbf{#1}}
+
+\newcommand{\Abkuerzung}[2]{\textit{#2}\nomenclature{#2}{#1}}
 
 \newcommand{\Fachbegriff}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\textit{#2}\xspace}{\textit{#2}\xspace\footnote{#1}\nomenclature{#2}{#1}}}
 

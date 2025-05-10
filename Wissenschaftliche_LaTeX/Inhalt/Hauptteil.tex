@@ -31,28 +31,30 @@ Abbildung \Abbildung{BlockDiagramm_msp430} zeigt ein vollst\"andiges Block Diagr
 \subsection{Timer und Interrupt Service Routinen (ISR)}
 \label{TIMER&ISR}
 
-Timer und Interrupt Service Routinen (ISRs) stellen fundamentale Bausteine moderner eingebetteter Systeme dar. Sie erm\"oglichen pr\"azise Zeitsteuerungen, die Reaktion auf externe Ereignisse und somit die Realisierung komplexer, Zeitkritischer Systeme. Im Folgenden wird die Timer-Architektur des MSP430FR5729 und die zugeh\"origen ISR-Mechanismen detailliert betrachtet.
+Timer und Interrupt Service Routinen (\Abkuerzung{Interrupt Service Routine}{ISR}) stellen fundamentale Bausteine moderner eingebetteter Systeme dar. Sie erm\"oglichen pr\"azise Zeitsteuerungen, die Reaktion auf externe Ereignisse und somit die Realisierung komplexer, Echtzeitsysteme. Im Folgenden wird die Timer-Architektur des MSP430FR5729 und die zugeh\"origen ISR-Mechanismen detailliert betrachtet.
 
 Der MSP430FR5729 verf\"ugt \"uber insgesamt f\"unf 16-Bit-Timer, wobei zwei dem Typ A und drei dem Typ B angeh\"oren. Beide Typen erm\"oglichen vielseitige Zeitsteuerungsfunktionen, weisen jedoch spezifische Unterschiede in ihren Konfigurationsm\"oglichkeiten auf.
 
-Beide Timer-Typen verf\"ugen \"uber einen gemeinsamen 16-Bit-Z\"ahler sowie bis zu sieben Capture/Compare-Register. Diese Register erm\"oglichen die Implementierung verschiedenster Funktionen. Die Capture-Funktionalit\"at dient dazu, den aktuellen Z\"ahlerwert bei einem externen oder internen Ereignis pr\"azise zu erfassen. Dies ist beispielsweise n\"utzlich f\"ur die Messung von Pulsweiten oder Frequenzen. Die Compare-Funktionalit\"at hingegen erlaubt den Vergleich des aktuellen Z\"ahlerstandes mit einem in den Compare-Registern hinterlegten Wert. Bei einer \"ubereinstimmung kann eine konfigurierbare Aktion ausgel\"ost werden, wie beispielsweise das Setzen oder R\"ucksetzen eines Ausgangspins oder das Generieren eines Interrupts. Die vielseitigen Einstellungsm\"oglichkeiten dieser Register erlauben die Realisierung komplexer Zeitsteuerungsaufgaben. \Zitat[S. 333, Kap. 11 \& S. 355, Kap. 12 ]{ti:slau272d}
+Beide Timer-Typen verf\"ugen \"uber einen gemeinsamen 16-Bit-Z\"ahler sowie bis zu sieben Capture/Compare-Register. Diese Register erm\"oglichen die Implementierung verschiedenster Funktionen. Die Capture-Funktionalit\"at dient dazu, den aktuellen Z\"ahlerwert bei einem externen oder internen Ereignis pr\"azise zu erfassen. Dies ist beispielsweise n\"utzlich f\"ur die Messung von Pulsweiten oder Frequenzen. Die Compare-Funktionalit\"at hingegen erlaubt den Vergleich des aktuellen Z\"ahlerstandes mit einem in den Compare-Registern hinterlegten Wert. Bei einer \"ubereinstimmung kann eine konfigurierbare Aktion ausgel\"ost werden, wie beispielsweise das Setzen oder R\"ucksetzen eines Ausgangspins oder das Generieren eines Interrupts. Die vielseitigen Einstellungsm\"oglichkeiten dieser Register erlauben die Realisierung komplexer Zeitsteuerungsaufgaben. \Zitat[S. 333, Kap. 11 \& S. 355, Kap. 12 ]{ti:slau272d}, \Zitat[S. 287, Kap. 8.3 \& S. 194, Kap. 6.8.2]{davies:msp430}
 
-Die Timer des Typs B weisen im Vergleich zu den Timern des Typs A erweiterte Konfigurationsm\"oglichkeiten auf. Ein wesentlicher Unterschied zu einem Timer des Typs A besteht in der Konfigurierbarkeit der Timer-L\"ange auf 8, 10, 12 oder 16 Bit, was eine flexible Anpassung der Z\"ahlaufl\"osung und der \"uberlaufperiode f\"ur unterschiedliche Aufl\"osungen erm\"oglicht. Weiterhin sind alle Capture/Compare-Bl\"ocke doppelt gepuffert. Diese doppelte Pufferung erlaubt das Laden neuer Vergleichswerte, w\"ahrend eines aktiven Z\"ahlzyklus, wodurch unerw\"unschte Effekte oder Inkonsistenzen in den Ausgangssignalen vermieden werden. Zudem k\"onnen alle Ausg\"ange des Timers B auf einen hochohmigen Zustand umgeschaltet werden, was in bestimmten Applikationen vorteilhaft sein kann. Ein weiterer wichtiger Unterschied besteht darin, dass die Capture/Compare-Eing\"ange nicht synchronisiert sind und somit asynchron zu dem internen Takt des Timers operieren k\"onnen, was in bestimmten Szenarien die Erfassung externer Ereignisse erleichtert. \Zitat[S. 356, Kap. 12.1.1]{ti:slau272d}
+Die Timer des Typs B weisen im Vergleich zu den Timern des Typs A erweiterte Konfigurationsm\"oglichkeiten auf. Ein wesentlicher Unterschied zu einem Timer des Typs A besteht in der Konfigurierbarkeit der Timer-L\"ange auf 8, 10, 12 oder 16 Bit, was eine flexible Anpassung der Z\"ahlaufl\"osung und der \"uberlaufperiode f\"ur unterschiedliche Aufl\"osungen erm\"oglicht. Weiterhin sind alle Capture/Compare-Bl\"ocke doppelt gepuffert. Diese doppelte Pufferung erlaubt das Laden neuer Vergleichswerte, w\"ahrend eines aktiven Z\"ahlzyklus, wodurch unerw\"unschte Effekte oder Inkonsistenzen in den Ausgangssignalen vermieden werden. Zudem k\"onnen alle Ausg\"ange des Timers B auf einen hochohmigen Zustand umgeschaltet werden, was in bestimmten Applikationen vorteilhaft sein kann. Ein weiterer wichtiger Unterschied besteht darin, dass die Capture/Compare-Eing\"ange nicht synchronisiert sind und somit asynchron zu dem internen Takt des Timers operieren k\"onnen, was in bestimmten Szenarien die Erfassung externer Ereignisse erleichtert. \Zitat[S. 356, Kap. 12.1.1]{ti:slau272d}, \Zitat[S. 353, Kap. 8.9]{davies:msp430}
 
 F\"ur die pr\"azise Steuerung und Ereignisbehandlung bieten die Timer verschiedene Betriebsarten, die im Folgenden n\"aher erl\"autert werden.
 
-\subsubsection{Count-Mode}
+\subsubsection{Timer Zählweisen}
 \label{Timer_CountMode}
 
-Der Count-Mode, oder Z\"ahlmodus, bestimmt die interne Z\"ahlweise des Timers. Die Timer unterst\"utzen typischerweise mehrere Varianten dieses Modus, um unterschiedlichen Anforderungen gerecht zu werden.
+Der Z\"ahlmodus, bestimmt die interne Z\"ahlweise des Timers. Die Timer unterst\"utzen typischerweise mehrere Varianten dieses Modus, um unterschiedlichen Anforderungen gerecht zu werden.
 
 \begin{itemize}
-	\item \textbf{Up Mode:} Im Up Mode (Additive Z\"ahlweise) beginnt der Z\"ahler bei Null und inkrementiert seinen Wert mit jedem Taktimpuls der gew\"ahlten \Fachbegriff[Eine Referenz auf ein periodisches Zeitsignal um zeitliche Abl\"aufe zu synchronisieren; typischerweise in Form von Quarzoszillatoren oder externen Taktsignalen.]{Clock-Source}. Er erreicht einen vordefinierten Maximalwert, der im Compare-Register gespeichert ist, und beginnt dann wieder von Null zu z\"ahlen. Ein \"uberlauf-Interrupt wird generiert, sobald der Z\"ahler den Wert von CCR0 erreicht. Dieser Modus eignet sich ideal f\"ur die Erzeugung periodischer Ereignisse oder die Messung von Zeitintervallen bis zu einem bestimmten Grenzwert. Beispielsweise kann durch die Wahl einer geeigneten Clock-Source und eines passenden Wertes im Compare-Register eine pr\"azise Zeitbasis f\"ur periodische Aufgaben geschaffen werden. \Zitat[S. 337, Kap. 11.2.3.1 \& S. 359, Kap. 12.2.3.1]{ti:slau272d}
+	\item \textbf{Up Mode:} Im Up Mode (Additive Z\"ahlweise) beginnt der Z\"ahler bei Null und inkrementiert seinen Wert mit jedem Taktimpuls der gew\"ahlten \Fachbegriff[Eine Referenz auf ein periodisches Zeitsignal um zeitliche Abl\"aufe zu synchronisieren; typischerweise in Form von Quarzoszillatoren oder externen Taktsignalen.]{Clock-Source}. Er erreicht einen vordefinierten Maximalwert, der im Compare-Register gespeichert ist, und beginnt dann wieder von Null zu z\"ahlen. Ein \"uberlauf-Interrupt wird generiert, sobald der Z\"ahler den Wert von CCR0 erreicht. Dieser Modus eignet sich ideal f\"ur die Erzeugung periodischer Ereignisse oder die Messung von Zeitintervallen bis zu einem bestimmten Grenzwert. Beispielsweise kann durch die Wahl einer geeigneten Clock-Source und eines passenden Wertes im Compare-Register eine pr\"azise Zeitbasis f\"ur periodische Aufgaben geschaffen werden. \Zitat[S. 337, Kap. 11.2.3.1 \& S. 359, Kap. 12.2.3.1]{ti:slau272d},\Zitat[S. 330, Kap. 8.6]{davies:msp430}
 	
-	\item \textbf{Continuous Mode:} Der Continuous Mode l\"asst den Z\"ahler von Null bis zum maximal m\"oglichen Wert (FFFFh f\"ur 16-Bit-Timer) z\"ahlen und anschlie{\ss}end wieder bei Null beginnen. Ein \"uberlauf-Interrupt wird generiert, wenn der Z\"ahler vom Wert von FFFFh auf 0 \"uberl\"auft. \Zitat[S. 338, Kap. 11.2.3.2 \& S. 360, Kap. 12.2.3.2]{ti:slau272d} Dieser Modus ist besonders n\"utzlich, wenn l\"angere, voneinander unabh\"angige Zeitintervalle zu messen oder wenn eine freilaufende Zeitbasis ben\"otigt wird, um Ereignisse in Bezug auf den Z\"ahlerstand, ohne einen periodischen Neustart durch das Compare-Register, zu erfassen. \Zitat[S. 338, Kap. 11.2.3.3 \& S. 360, Kap. 12.2.3.3]{ti:slau272d}
+	\item \textbf{Continuous Mode:} Der Continuous Mode l\"asst den Z\"ahler von Null bis zum maximal m\"oglichen Wert (FFFFh f\"ur 16-Bit-Timer) z\"ahlen und anschlie{\ss}end wieder bei Null beginnen. Ein \"uberlauf-Interrupt wird generiert, wenn der Z\"ahler vom Wert von FFFFh auf 0 \"uberl\"auft. \Zitat[S. 338, Kap. 11.2.3.2 \& S. 360, Kap. 12.2.3.2]{ti:slau272d} Dieser Modus ist besonders n\"utzlich, wenn l\"angere, voneinander unabh\"angige Zeitintervalle zu messen oder wenn eine freilaufende Zeitbasis ben\"otigt wird, um Ereignisse in Bezug auf den Z\"ahlerstand, ohne einen periodischen Neustart durch das Compare-Register, zu erfassen. \Zitat[S. 338, Kap. 11.2.3.3 \& S. 360, Kap. 12.2.3.3]{ti:slau272d}, \Zitat[S. 318, Kap. 8.5]{davies:msp430}
 
-	\item \textbf{Up/Down Mode:} Der Up/Down Mode (Auf-/Abw\"artsz\"ahlmodus) kombiniert das Auf- und Abz\"ahlen. Der Z\"ahler beginnt bei Null, z\"ahlt Zyklisch bis zum festgelegten Wert im Compare-Register und dann wieder bis Null herunter. Ein \"uberlauf-Interrupt wird generiert, wenn der Z\"ahler den Wert von CCR0 erreicht, und ein weiterer Interrupt (sofern aktiviert) kann beim Erreichen von Null gesetzt werden. \Zitat[S. 339, Kap. 11.2.3.4 \& S. 361, Kap. 12.2.3.4]{ti:slau272d} Dieser Modus erzeugt eine symmetrische \Fachbegriff[Ein Verfahren zur Steuerung der Leistungszufuhr, bei dem die mittlere Ausgangsleistung durch Variieren des Abtastverh\"altnisses eines Rechtecksignals reguliert wird.]{Pulsweitenmodulation (PWM)} und wird h\"aufig in Anwendungen zur Motorsteuerung oder zur Erzeugung pr\"aziser analoger Ausgangssignale eingesetzt. \Zitat[S. 340, Kap. 11.2.3.5 \& S. 362, Kap. 12.2.3.5]{ti:slau272d}
+	\item \textbf{Up/Down Mode:} Der Up/Down Mode (Auf-/Abw\"artsz\"ahlmodus) kombiniert das Auf- und Abz\"ahlen. Der Z\"ahler beginnt bei Null, z\"ahlt Zyklisch bis zum festgelegten Wert im Compare-Register und dann wieder bis Null herunter. Ein \"uberlauf-Interrupt wird generiert, wenn der Z\"ahler den Wert von CCR0 erreicht, und ein weiterer Interrupt (sofern aktiviert) kann beim Erreichen von Null gesetzt werden. \Zitat[S. 339, Kap. 11.2.3.4 \& S. 361, Kap. 12.2.3.4]{ti:slau272d} Dieser Modus erzeugt eine symmetrische \Fachbegriff[Ein Verfahren zur Steuerung der Leistungszufuhr, bei dem die mittlere Ausgangsleistung durch Variieren des Abtastverh\"altnisses eines Rechtecksignals reguliert wird.]{Pulsweitenmodulation (PWM)} und wird h\"aufig in Anwendungen zur Motorsteuerung oder zur Erzeugung pr\"aziser analoger Ausgangssignale eingesetzt. \Zitat[S. 340, Kap. 11.2.3.5 \& S. 362, Kap. 12.2.3.5]{ti:slau272d},\Zitat[S. 349, Kap. 8.7]{davies:msp430}
 \end{itemize}
+
+\Zitat[S. 291, Kap. 8.3.1]{davies:msp430}
 
 Die Wahl eines geeigneten Modus h\"angt stark von der spezifischen Anwendung ab. F\"ur einfache Zeitmessungen oder periodische Aufgaben ist der Up Mode oft ausreichend, w\"ahrend der Continuous Mode f\"ur l\"angere Intervalle oder als Basis f\"ur komplexere Zeitsteuerungen dient. Der Up/Down Mode hingegen findet seine Anwendung prim\"ar in der Erzeugung von Steuersignalen.
 
@@ -73,7 +75,7 @@ Die Timer des MSP430FR5729 unterst\"utzen verschiedene Capture-Modi. Diese legen
 
 Sofern ein Interrupt im entsprechenden Capture-Register aktiviert ist, kann dieser auch Interrupts ausl\"osen. In der zugeh\"origen ISR kann der erfasste Z\"ahlerwert aus dem Capture-Register gelesen und weiterverarbeitet werden. Mehrere Capture-Register innerhalb eines Timers erm\"oglichen die Erfassung und Auswertung mehrerer aufeinanderfolgender Ereignisse, ohne dass der vorherige Wert \"uberschrieben wird.
 
-Die Konfiguration des Capture Mode umfasst die Auswahl des ausl\"osenden Ereignisses (Flanke) sowie \ggf die Aktivierung des Capture-Interrupts. Die erfassten Zeitstempel im Capture-Register erlauben pr\"azise Messungen und die Analyse externer Signale in eingebetteten Systemen. \Zitat[S. 340, Kap. 11.2.4.1 \& S. 362, Kap. 12.2.4.1]{ti:slau272d}
+Die Konfiguration des Capture Mode umfasst die Auswahl des ausl\"osenden Ereignisses (Flanke) sowie \ggf die Aktivierung des Capture-Interrupts. Die erfassten Zeitstempel im Capture-Register erlauben pr\"azise Messungen und die Analyse externer Signale in eingebetteten Systemen. \Zitat[S. 340, Kap. 11.2.4.1 \& S. 362, Kap. 12.2.4.1]{ti:slau272d}, \Zitat[S. 300, Kap. 8.4]{davies:msp430}
 
 \subsubsection{Compare-Mode}
 \label{Timer_CompareMode}
@@ -96,22 +98,26 @@ Die Compare-Modi bieten verschiedene M\"oglichkeiten, wie der Ausgangspin bei ei
 	\item \textbf{Set/Reset:} In Kombination mit dem Compare-Register 0 (CCR0) kann ein PWM-Signal erzeugt werden. Beispielsweise kann der Ausgang bei Erreichen des CCR0-Wertes gesetzt und bei Erreichen des CCRn-Wertes zur\"uckgesetzt werden (oder umgekehrt), wodurch die Pulsweite durch den Wert in CCRn bestimmt wird.
 \end{itemize}
 
-\"ahnlich wie beim Capture Mode erm\"oglicht ein Interrupt der CPU, auf pr\"azise Zeitpunkte zu reagieren und entsprechende Aktionen auszuf\"uhren. Der Compare Mode ist somit ein vielseitiges Werkzeug zur Erzeugung von Steuersignalen, zur Implementierung von Zeitverz\"ogerungen oder zur Synchronisation interner Operationen mit einer pr\"azisen Zeitbasis.
+\"ahnlich wie beim Capture Mode erm\"oglicht ein Interrupt der CPU, auf pr\"azise Zeitpunkte zu reagieren und entsprechende Aktionen auszuf\"uhren. Der Compare Mode ist somit ein vielseitiges Werkzeug zur Erzeugung von Steuersignalen, zur Implementierung von Zeitverz\"ogerungen oder zur Synchronisation interner Operationen mit einer pr\"azisen Zeitbasis. \Zitat[S. 342, Kap. 11.2.4.2 \& S. 364, Kap. 12.2.4.2]{ti:slau272d}, \Zitat[S. 352, Kap. 8.8]{davies:msp430}
 
-Nachdem die verschiedenen Betriebsarten des Timers betrachtet wurden, ist es wichtig zu verstehen, wie die zugeh\"origen Register konfiguriert werden, um die gew\"unschte Funktionalit\"at zu erzielen. \Zitat[S. 342, Kap. 11.2.4.2 \& S. 364, Kap. 12.2.4.2]{ti:slau272d}
+Nachdem die verschiedenen Betriebsarten des Timers betrachtet wurden, ist es wichtig zu verstehen, wie die zugeh\"origen Register konfiguriert werden, um die gew\"unschte Funktionalit\"at zu erzielen.
+
 
 \subsubsection{Einstellungen der Capture and Compare Register}
+\label{CC_Register}
+
 Die Funktionalit\"at der Capture- und Compare-Einheiten wird ma{\ss}geblich durch die Konfiguration ihrer zugeh\"origen Register bestimmt. Hierzu geh\"oren die Aktivierung und Deaktivierung von Interrupts, die Auswahl des Ausgangsmodus (nur f\"ur Compare) sowie die Festlegung des ausl\"osenden Ereignisses.
 
 F\"ur jedes Capture/Compare-Register kann individuell festgelegt werden, ob ein Interrupt ausgel\"ost werden soll, wenn ein entsprechendes Ereignis eintritt. Dies geschieht \"uber spezifische \NeuerBegriff{Interrupt-Enable-Bits} im jeweiligen Capture/Compare-Control-Register (TAxCCTLn oder TBxCCTLn). Durch das Setzen des CCIE-Bits auf Eins oder Null, kann die Generierung eines Interrupts bei einem Capture- oder Compare-Ereignis aktiviert \bzw deaktiviert werden.
 
 Wie bereits im Abschnitt \ref{Timer_CompareMode} zum Compare Mode beschrieben, legen die Output Mode Bits (OUTMOD) fest, wie der zugeh\"orige Ausgangspin bei einer \"ubereinstimmung des Z\"ahlerstandes mit dem Compare-Registerwert beeinflusst wird. Die Auswahl des passenden Output Mode ist entscheidend f\"ur die Erzeugung der gew\"unschten Ausgangssignale, wie beispielsweise bei der Pulsweitenmodulation.
 
-Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Operation wird ebenfalls \"uber Bits im TAxCCTLn- oder TBxCCTLn-Register gesteuert. F\"ur den Capture Mode wird hier beispielsweise mit dem CM-Bit festgelegt, ob die Erfassung bei einer steigenden, fallenden oder beiden Flanken des Eingangssignals erfolgen soll. Im Compare Mode definiert diese Einstellung, unter welchen Bedingungen die Vergleichsoperation als erfolgreich betrachtet wird und die entsprechende Aktion (Interrupt, Ausgangssignal\"anderung) ausgel\"ost wird. Dies kann beispielsweise ein reiner Vergleich oder auch ein Vergleich in Kombination mit dem \"uberlauf des Z\"ahlers im Up Mode sein. \Zitat[S. 351, Kap. 11.3.3 \& S. 375, Kap. 12.3.3]{ti:slau272d}
+Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Operation wird ebenfalls \"uber Bits im TAxCCTLn- oder TBxCCTLn-Register gesteuert. F\"ur den Capture Mode wird hier beispielsweise mit dem CM-Bit festgelegt, ob die Erfassung bei einer steigenden, fallenden oder beiden Flanken des Eingangssignals erfolgen soll. Im Compare Mode definiert diese Einstellung, unter welchen Bedingungen die Vergleichsoperation als erfolgreich betrachtet wird und die entsprechende Aktion (Interrupt, Ausgangssignal\"anderung) ausgel\"ost wird. Dies kann beispielsweise ein reiner Vergleich oder auch ein Vergleich in Kombination mit dem \"uberlauf des Z\"ahlers im Up Mode sein. \Zitat[S. 351, Kap. 11.3.3 \& S. 375, Kap. 12.3.3]{ti:slau272d}, \Zitat[S. 292, Kap. 8.3.2]{davies:msp430}
 
 Die sorgf\"altige Konfiguration dieser Einstellungen in den Capture/Compare-Registern ist unerl\"asslich, um den Timer pr\"azise an die Anforderungen der jeweiligen Applikation anzupassen.
 
 Ein weiterer fundamentaler Aspekt der Timer-Konfiguration ist \ua die Wahl der Taktquelle, welche die Zeitbasis f\"ur den Z\"ahler und somit f\"ur alle zeitgesteuerten Operationen des Timers bestimmt.
+
 
 \subsubsection{Timer Control-Register}
 \label{TimerControlRegister}
@@ -125,6 +131,46 @@ Die Timer-Frequenz bestimmt wiederum die Zeitbasis des Timers. Eine h\"ohere Tim
 Ein weiteres Steuerbits wie das \NeuerBegriff{Mode Control-Bit (MC)} steuert die bereits in Kapitel \ref{Timer_CountMode} erl\"auterten Z\"ahl-Modi und das TAIE-/TBIE-Bit steuert, ob Interrupts Ein- oder Ausgeschaltet sind.
 
 Die Auswahl der Clock-Source, des Prescalers und weiteren Steuerbits ist daher entscheidend, um die gew\"unschte Zeitbasis, Aufl\"osung und Verhalten f\"ur den zu konfigurierenden Timer zu erreichen um die Anforderungen der jeweiligen Anwendung optimal zu erf\"ullen.
+
+
+\subsection{Fazit und Einsatzmöglichkeiten}
+\label{TimerEinsatzmöglichkeiten}
+
+Die detaillierte Auseinandersetzung mit der Timer-Architektur des MSP430FR5729 hat die Flexibilit\"at und Leistungsf\"ahigkeit dieser Peripheriekomponente verdeutlicht. Die Unterscheidung zwischen Timer des Typs A und B, die verschiedenen Betriebsarten (Count, Capture, Compare) sowie die vielf\"altigen Einstellm\"oglichkeiten der Capture/Compare-Register und die Auswahl der Taktquelle eröffnen ein breites Spektrum an Anwendungsm\"oglichkeiten in eingebetteten Systemen.
+
+Analog zur \"Ubersicht "What Timer Where?" von John H. Davies lassen sich die primären Einsatzgebiete der Timer des MSP430FR5729 wie folgt zusammenfassen:
+
+\begin{itemize}
+	\item \textbf{Zeitmessung und Zeitbasis:} Unabh\"angig vom Timer-Typ können alle als eine präzise Zeitbasis dienen. Durch die Wahl einer geeigneten Clock-Source und eines passenden Prescalers lassen sich genaue Zeitintervalle festlegen. Dies ist fundamental für das Zeitmanagement innerhalb des Mikrocontrollers und die Synchronisation mit externen als auch Internen Ereignissen. Timer A eignet sich hierbei oft für grundlegende Zeitsteuerungsaufgaben, w\"ahrend die flexiblere Konfigurierbarkeit des Timers vom Typ B wie \zB verschiedene Bit-Längen (\ref{TIMER&ISR}) eine feinere Anpassung an spezifische Zeitmessanforderungen erlaubt.
+
+	\item \textbf{Ereigniserfassung (Capture):} Die Capture-Funktionalit\"at erm\"oglicht die pr\"azise Erfassung des Zeitpunkts externer Ereignisse. Dies ist unerl\"asslich für Anwendungen wie die Messung von Pulsweiten, die Frequenzmessung von Signalen oder die Erfassung der Ankunftszeit von Informationen in Kommunikationsprotokollen. Die M\"oglichkeit, sowohl steigende, fallende Flanken oder auch beide zu erfassen, erweitert den Anwendungsbereich in verschiedenen Szenarien deutlich.
+
+	\item \textbf{Signalerzeugung (Compare/PWM):} Die Compare-Einheiten in Verbindung mit den verschiedenen Ausgangsmodi erlauben die Generierung pr\"aziser Ausgangssignale. Dies ist besonders relevant für die Pulsweitenmodulation, die zur Steuerung von Motoren, zur Dimmung von LEDs oder zur Erzeugung analog wirkender Signale eingesetzt wird. Der Up/Down Mode des Count-Modus in Kombination mit den Compare-Registern des Timer B bietet hierbei besonders flexible M\"oglichkeiten zur Erzeugung verschiedenster PWM-Signale.
+
+	\item \textbf{Interrupt-Steuerung:} Sowohl Capture- als auch Compare-Ereignisse k\"onnen Interrupts ausl\"osen. Dies ermöglicht eine effiziente Reaktion des Mikrocontrollers auf zeitgesteuerte Ereignisse oder externe Signale, ohne die kontinuierliche abfrage des Timer-Status. Die pr\"azise Interrupt-Generierung tr\"agt maßgeblich zur Realisierung reaktiver und effizienter eingebetteter (Echtzeit-) Systeme bei.
+\end{itemize}
+
+Zusammenfassend l\"asst sich der grundlegende Aufbau eines Timers, vereinfacht nach dem Vorbild von Abbildung 8.5 aus Davies' Buch, wie folgt darstellen:
+
+Ein Timer besteht im Kern aus einem Z\"ahler (\ref{Timer_CountMode}), der durch eine ausgew\"ahlte Clock-Source (\ref{TimerControlRegister}) in definierten Schritten inkrementiert oder dekrementiert wird. Dieser Z\"ahler l\"auft gem\"a{\ss} der gew\"ahlten Betriebsart.
+
+Zus\"atzlich verf\"ugt der Timer \"uber Sieben Capture/Compare-Kan\"ale. Jeder Kanal beinhaltet mindestens ein Capture/Compare-Register und eine zugeh\"orige Steuereinheit.
+
+Im Capture Mode (\ref{Timer_CaptureMode}) wird der aktuelle Wert des Z\"ahlers in das CCRx-Register geschrieben, wenn ein durch die Steuereinheit ausgew\"ahltes Ereignis (\zB Flanke an einem Eingangspin) eintritt.
+
+Im Compare Mode (\ref{Timer_CompareMode}) wird der aktuelle Wert des Z\"ahlers kontinuierlich mit dem Wert im CCRx-Register verglichen. Bei einer \"Ubereinstimmung l\"ost die Steuereinheit eine konfigurierte Aktion aus, wie beispielsweise das Setzen/R\"ucksetzen/Toggeln eines zugeh\"origen Ausgangspins oder die Generierung eines Interrupts, sofern dieser in der Steuereinheit aktiviert wurde.
+
+Die Steuereinheit erm\"oglicht die Konfiguration des jeweiligen Kanals, einschließlich der Auswahl des Capture/Compare-Modus, des ausl\"osenden Ereignisses, des Ausgangsmodus und der Aktivierung/Deaktivierung des Interrupts.
+
+Die Darstellung \Abbildung{BlockDiagramm_Timer} des Timer B als Block Diagram verbildlicht die grundlegenden Komponenten eines Timer-Kanals und deren Zusammenspiel. Die flexiblen Konfigurationsm\"oglichkeiten dieser einzelnen Bl\"ocke erm\"oglichen die Realisierung einer Vielzahl von Zeitsteuerungs- und Signalverarbeitungsaufgaben in eingebetteten Systemen mit dem MSP430FR5729.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{../Bilder/BlockDiagram_TimerB.png}
+	\caption{Timer B Block \& Capture/Compare Channel 1\\\Zitat[S. 355, Kap. 8.9]{davies:msp430}}
+	\label{fig:BlockDiagramm_Timer}
+\end{figure}
+
 
 \subsection{Enhanced Universal Serial Communication Interface (eUSCI)}
 \label{eUSCI}

@@ -36,9 +36,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
-% Caption (Bildunterschrift) zentriert und in kleinerer Schriftgröße -----------------------------------
+% Caption (Bildunterschrift) zentriert und in kleinerer Schriftgröße
 \usepackage[font=small,labelfont=bf,labelsep=colon]{caption}
 \captionsetup[figure]{justification=centering}
+
 
 % Meta-Informationen -----------------------------------------------------------------------------------
 %   Informationen über das Dokument, wie z.B. Titel, Autor, Matrikelnr. etc
@@ -70,6 +71,9 @@
 
 % eigene LaTeX-Befehle ---------------------------------------------------------------------------------
 \include{Befehle}
+
+% .bib einladen ---------------------------------------------------------------------------------
+\addbibresource{Bibliographie.bib}
 
 
 % Das eigentliche Dokument -----------------------------------------------------------------------------
@@ -129,9 +133,9 @@
 %   Das Literaturverzeichnis wird aus der BibTeX-Datenbank "Bibliographie.bib"
 %   erstellt.
 % ------------------------------------------------------------------------------------------------------
-\bibliography{Bibliographie} % Aufruf: bibtex Masterarbeit
-\bibliographystyle{natdin} % DIN-Stil des Literaturverzeichnisses
-
+%\bibliography{Bibliographie} % Aufruf: bibtex Masterarbeit
+%\bibliographystyle{plainnat} % DIN-Stil des Literaturverzeichnisses
+\printbibliography
 
 % Restliche Verzeichnisse ------------------------------------------------------------------------------
 \listoffigures{} % Abbildungsverzeichnis

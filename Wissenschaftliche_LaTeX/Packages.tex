@@ -184,8 +184,20 @@
 
 
 % natbib einbinden -----------------------------------------------------------------------
-\usepackage[square,numbers,sort&compress]{natbib}
+%\usepackage[numbers]{natbib}
 
+% csquotes einbinden ---------------------------------------------------------------------
+\usepackage{csquotes}
+
+% biblatex einbinden ---------------------------------------------------------------------
+\usepackage[
+	style=numeric,
+	backend=biber,
+	citestyle=numeric,
+	sorting=ynt
+]{biblatex}
+
+\usepackage{ifthen}
 
 % PDF-Optionen -------------------------------------------------------------------------
 \usepackage[
@@ -209,7 +221,7 @@
     %menucolor=black, % Acrobat-Menüpunkte
     %urlcolor=black, 
 %
-    backref,
+    %backref,
     plainpages=false, % zur korrekten Erstellung der Bookmarks
     pdfpagelabels, % zur korrekten Erstellung der Bookmarks
     hypertexnames=false, % zur korrekten Erstellung der Bookmarks

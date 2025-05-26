@@ -244,21 +244,21 @@ Die Darstellung \Abbildung{BlockDiagramm_Timer} des Timer B als Block Diagram ve
 \section{Enhanced Universal Serial Communication Interface (eUSCI)}
 \label{eUSCI}
 
-Das eUSCI ist eine vielschichtige und flexible Serielle Peripheriekomponente des MSP430FR5729. Sie erm\"oglicht die Kommunikation mit externen Ger\"aten und Systemen \"uber eine Vielzahl an Schnittstellen und Protokollen. Auch essentielle Bausteine wie Sensoren, Aktoren und Speichermedien werden \"uber diese Art mit dem System verbunden. Dieses Kapitel beleuchtet die Architektur, verschiedene Betriebsmodi und Konfigurationsm\"oglichkeiten der Bereitgestellten Kommunikationstechnologien.
+Das eUSCI ist eine vielseitige und flexible serielle Peripheriekomponente des MSP430FR5729. Sie erm\"oglicht die Kommunikation mit externen Ger\"aten und Systemen \"uber zahlreiche Schnittstellen und Protokollen. Auch essentielle Bausteine wie Sensoren, Aktoren und Speichermedien werden \"uber diese Art mit dem System verbunden. Dieses Kapitel beleuchtet die Architektur, verschiedene Betriebsmodi und Konfigurationsm\"oglichkeiten der bereitgestellten Kommunikationstechnologien.
 
-Der MSP430FR5729 verf\"ugt \"uber zwei Kommunikationskan\"ale welche in den folgenden Kapiteln n\"aher betrachtet werden. 
+Der MSP430FR5729 verf\"ugt \"uber zwei Kommunikationskan\"ale, die in den folgenden Kapiteln n\"aher betrachtet werden. 
 
 \subsection{\"Uberblick \"uber die eUSCI-Architektur}
 \label{eUSCI_Architektur}
 
-In der Theorie fu{\ss}t jede Form der Seriellen Kommunikation auf einem Taktgeber. Der zentrale Unterschied zwischen den jeweiligen Protokollen liegt darin, zu welchem Zeitpunkt der Taktgeber dem Sender gestattet, das n\"achste Bit auf einen Ausgangskanal zu schreiben, beziehungsweise dem Empf\"anger erm\"oglicht, das kommende Bit zu lesen. Dabei gibt es Synchrone und Asynchrone Ans\"atze, weshalb gleich zwei Kommunikationskan\"ale bereitgestellt werden. \Zitat[S. 494, Kap. 10]{davies:msp430}
+Jede Form der Seriellen Kommunikation basiert auf einem Taktgeber. Der zentrale Unterschied zwischen Protokollen liegt im Timing: Wann gestattet der Taktgeber dem Sender das Schreiben des n\"achsten Bits auf einen Ausgangskanal und dem Empf\"anger das Lesen des kommenden Bits. Dabei gibt es Synchrone und Asynchrone Ans\"atze, weshalb zwei Kommunikationskan\"ale bereitgestellt werden. \Zitat[S. 494, Kap. 10]{davies:msp430}
 
-Bei dem MSP430FR5729 ist der Kommunikationskanal vom Typ-B f\"ur Synchrone Daten\"ubertragung optimiert, w\"ahrend Kanal A vorrangig f\"ur asynchrone \"Ubertragungsverfahren vorgesehen ist. \Zitat[S. 496, Kap. 10.1.2]{davies:msp430}
+Beim MSP430FR5729 ist der Kommunikationskanal vom Typ-B f\"ur Synchrone Daten\"ubertragung optimiert, w\"ahrend Kanal A vorrangig f\"ur asynchrone \"Ubertragungsverfahren vorgesehen ist. \Zitat[S. 496, Kap. 10.1.2]{davies:msp430}
 
-Der wesentliche Unterschied zwischen diesen beiden \"Ubertragungsarten besteht darin, ob das Taktsignal ebenfalls mit \"ubertragen wird. Bei der synchronen Kommunikation, wie sie etwa mit den Protokollen SPI oder I$^{2}$C erfolgt, wird dieses Taktsignal explizit mitgef\"uhrt. Im Gegensatz dazu kommt das UART-Protokoll ohne ein separates Taktsignal aus da Sender und Empf\"anger \"uber eine gemeinsame Baudrate synchronisiert sind. \Zitat[S. 494, Kap. 10]{davies:msp430}
+Der wesentliche Unterschied zwischen diesen beiden \"Ubertragungsarten besteht darin, ob das Taktsignal ebenfalls mit \"ubertragen wird. Bei der synchronen Kommunikation, wie sie etwa mit den Protokollen SPI oder I$^{2}$C erfolgt, wird dieses Taktsignal explizit mitgef\"uhrt. Im Gegensatz dazu kommt das UART-Protokoll ohne ein separates Taktsignal aus, da Sender und Empf\"anger \"uber eine gemeinsame Baudrate synchronisiert sind. \Zitat[S. 494, Kap. 10]{davies:msp430}
 
 \newpage
-Entsprechend ist der Univers\"alle Kommunikationskanal vom Typ B (\Abkuerzung{enhanced Universal Serial Communication Interface Type B}{eUSCI\_B}) speziell auf die Anforderungen synchroner Protokolle wie SPI und I$^{2}$C ausgelegt. Das \Abkuerzung{enhanced Universal Serial Communication Interface Type A}{eUSCI\_A}-Modul hingegen unterst\"utzt prim\"ar die UART-Kommunikation, kann jedoch dar\"uber hinaus auch eine asynchrone Variante des SPI-Protokolls abbilden. \Zitat[S. 496, Kap. 10.1.2]{davies:msp430}
+Entsprechend ist der univers\"alle Kommunikationskanal vom Typ B (\Abkuerzung{enhanced Universal Serial Communication Interface Type B}{eUSCI\_B}) speziell auf die Anforderungen synchroner Protokolle wie SPI und I$^{2}$C ausgelegt. Das \Abkuerzung{enhanced Universal Serial Communication Interface Type A}{eUSCI\_A}-Modul hingegen unterst\"utzt prim\"ar die UART-Kommunikation, kann jedoch dar\"uber hinaus auch eine asynchrone Variante des SPI-Protokolls abbilden. \Zitat[S. 496, Kap. 10.1.2]{davies:msp430}
 
 \begin{table}[h!]
 	\small
@@ -279,13 +279,14 @@ Entsprechend ist der Univers\"alle Kommunikationskanal vom Typ B (\Abkuerzung{en
 	\label{tab:eusci-vergleich}
 \end{table}
 
-\Tabelle{eusci-vergleich} fasst nochmals alle Eigenschaften beider Kan\"ale zusammen und stellt sie gegen\"uber. Wobei Tiefgreifendere, Protokoll-Spezifische Funktionen in den entsprechenden Unterkapiteln n\"aher betrachtet werden.
+\Tabelle{eusci-vergleich} fasst nochmals alle Eigenschaften beider Kan\"ale zusammen und stellt sie gegen\"uber. Wobei Tiefgreifenderep protokollspezifische Funktionen in den entsprechenden Unterkapiteln n\"aher betrachtet werden.
 
 \subsection{Einordnung vorhandener Kommunikationsschnittstellen}
+\label{Einordnung_Schnittstellen}
 
-Die vorliegende Arbeit befasst sich mit der Entwicklung einer interruptgesteuerten Benutzerschnittstelle. Die Evaluation einer daf\"ur geeigneten Schnittstelle zur Interaktion mit externen \Abkuerzung{Personal Computer}{PC} Systemen bestimmt ma{\ss}geblich den weiteren verlauf der Evaluation und des Projekts. Daher ist eine einf\"uhrende Einordnung der zur Verf\"ugung stehenden seriellen Protokollen erforderlich, um im weiteren Verlauf gezielt auf jene Technologie eingehen zu k\"onnen, die im Kontext der Arbeit von praktischer Relevanz ist.
+Die vorliegende Arbeit befasst sich mit der Entwicklung einer interruptgesteuerten Benutzerschnittstelle. Die Evaluation einer daf\"ur geeigneten Schnittstelle zur Interaktion mit externen \Abkuerzung{Personal Computer}{PC} Systemen bestimmt ma{\ss}geblich den weiteren Verlauf der Evaluation und des Projekts. Daher ist eine einf\"uhrende Einordnung der zur Verf\"ugung stehenden seriellen Protokolle erforderlich, um im weiteren Verlauf gezielt auf jene Technologie eingehen zu k\"onnen, die im Kontext der Arbeit von praktischer Relevanz ist.
 
-Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich besonders gut f\"ur den Datenaustausch zwischen einem Microcontroller und seinen Peripherieger\"aten oder weiteren Microcontrollern im Master-Slave-Verh\"altnis. Welche der beiden Technologien im jeweiligen Anwendungsfall zum Einsatz kommt, h\"angt unter anderem von der Anzahl der beteiligten Ger\"ate sowie der Distanz zu den Kommunikationspartnern ab. Weitere technische Unterschiede dieser Protokolle sind in \Tabelle{synchrone_protokolle} aufgelistet.
+Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich besonders gut f\"ur den Datenaustausch zwischen einem Microcontroller und seinen Peripherieger\"aten oder weiteren Mikrocontrollern im Master-Slave-Verh\"altnis. Welche der beiden Technologien im jeweiligen Anwendungsfall zum Einsatz kommt, h\"angt unter anderem von der Anzahl der beteiligten Ger\"ate sowie der Distanz zu den Kommunikationspartnern ab. Weitere technische Unterschiede dieser Protokolle sind in \Tabelle{synchrone_protokolle} aufgelistet.
 
 \begin{table}[h!]
 	\small
@@ -309,13 +310,13 @@ Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich b
 
 Zusammenfassend l\"asst sich feststellen, dass sich die synchrone Daten\"ubertragung nur bedingt f\"ur die Kommunikation mit einem auf Windows oder Linux basierenden System eignet. Im Gegensatz dazu sind asynchrone Protokolle wie UART f\"ur diese Art der Anwendung deutlich besser geeignet. 
 
-Das UART-Protokoll zeichnet sich nicht nur durch eine einfache Implementierung aus, sondern ist auch \"au{\ss}erst robust und ressourcenschonend -Eigenschaften, die insbesondere bei modularen, \Fachbegriff[Automatische Erkennung und Integration von Komponenten in ein System ohne manuelle Konfiguration]{Plug-and-Play}-f\"ahigen Systemkomponenten entscheidend sind. Der Verzicht auf eine gemeinsame Taktleitung erlaubt eine Punkt-zu-Punkt-Verbindung mit vergleichsweise geringen Hardwareanforderungen. 
+Das UART-Protokoll zeichnet sich nicht nur durch eine einfache Implementierung aus, sondern ist auch \"au{\ss}erst robust und ressourcenschonend -- Eigenschaften, die insbesondere bei modularen, \Fachbegriff[Automatische Erkennung und Integration von Komponenten in ein System ohne manuelle Konfiguration]{Plug-and-Play}-f\"ahigen Systemkomponenten entscheidend sind. Der Verzicht auf eine gemeinsame Taktleitung erlaubt eine Punkt-zu-Punkt-Verbindung mit vergleichsweise geringen Hardwareanforderungen. 
 
-Diese Vorteile gelten gleicherma{\ss}en f\"ur die gegen\"uberliegende Seite der Schnittstelle: Alle g\"angigen Betriebssysteme wie Windows, Lunix oder macOS stellen standardm\"aßig Treiber f\"u die asynchrone serielle Daten\"ubertragung bereit. Unter Windows erfolgt dies beispielsweise \"uber sogenannte \NeuerBegriff{COM-Ports}, w\"ahrend unter Linux Schnittstellen wie \NeuerBegriff{/dev/ttySx} oder \NeuerBegriff{/dev/ttyUSBx} verwendet werden.
+Diese Vorteile gelten gleicherma{\ss}en f\"ur die gegen\"uberliegende Seite der Schnittstelle: Alle g\"angigen Betriebssysteme wie Windows, Linux oder macOS stellen standardm\"aßig Treiber f\"ur die asynchrone serielle Daten\"ubertragung bereit. Unter Windows erfolgt dies beispielsweise \"uber sogenannte \NeuerBegriff{COM-Ports}, w\"ahrend unter Linux Schnittstellen wie \NeuerBegriff{/dev/ttySx} oder \NeuerBegriff{/dev/ttyUSBx} verwendet werden.
 
-Im falle des MSP430FR5729 erfolgt die UART-Kommunikation zus\"atzlich interruptgesteuert. Dies erlaubt es, eingehende Daten \"uber eine eigens definierte ISR zu verarbeiten, was eine latenzarme, gleichzeitig jedoch energieeffiziente Verarbeitung erm\"oglicht.\Zitat[S. 574, Kap. 10.12]{davies:msp430}
+Im Falle des MSP430FR5729 erfolgt die UART-Kommunikation zus\"atzlich interruptgesteuert. Dies erlaubt es, eingehende Daten \"uber eine eigens definierte ISR zu verarbeiten, was eine latenzarme, gleichzeitig jedoch energieeffiziente Verarbeitung erm\"oglicht.\Zitat[S. 574, Kap. 10.12]{davies:msp430}
 
-Aus diesen Gr\"unden stellt UART die technisch sinnvollste Wahl f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC mit Windows, Linux oder macOS dar. Das Protokoll erlaubt eine minimalinvasive, betriebssystemkompatible und energieeffiziente Verbindung. Im weiteren Verlauf wird die asynchrone universelle serielle Schnittstelle mit dem UART Protokoll n\"aher elaboriert.\AI
+Aus diesen Gr\"unden stellt UART die technisch sinnvollste Wahl f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC mit Windows, Linux oder macOS dar. Das Protokoll erlaubt eine minimalinvasive, betriebssystemkompatible und energieeffiziente Verbindung. Im weiteren Verlauf wird die asynchrone universelle serielle Schnittstelle mit dem UART Protokoll detaillierter betrachtet.\AI
 
 \subsection{eUSCI\_A Modul: UART-Modus (Asynchrone Kommunikation)}
 \label{eUSCI_UART}
@@ -325,7 +326,7 @@ F\"ur ein tiefgreifendes Verst\"andnis des Zusammenspiels zwischen dem Interface
 \subsubsection{Informations\"ubertragung}
 \label{UART_uebertragung}
 
-Die Baudrate, wie in Kapitel \ref{eUSCI_Architektur} bereits er\"ortert, fungiert als entscheidender Synchronisationsmechanismus f\"ur asynchrone Daten\"ubertragungen. Dies impliziert, dass Sender und Empf\"anger sich zwar nicht an ein pr\"azises Timing f\"ur die \"ubertragung einzelner Bits halten m\"ussen, jedoch eine \"Ubereinstimmung hinsichtlich der Frequenz f\"ur die \"Ubertragung ganzer Bl\"ocke (typischerweise Bytes oder Zeichen) erforderlich ist. \Abbildung{uart_send} visualisiert beispielhaft die \"ubertragung zweier Bl\"ocke, die jeweils durch ein Start-Bit (\Abkuerzung{Start-Bit}{ST}) eingeleitet und durch ein Stop-Bit (\Abkuerzung{Stop-Bit}{SP}) abgeschlossen werden. Durch die Verwendung dieser Rahmenbits ergibt sich bei einer Konfiguration von acht Datenbits eine Netto-Datenrate von 8/10 der Brutto-\"Ubertragungsrate. Das bedeutet dass von zehn \"ubertragenen Bits acht Bits die eigentliche Nutzinformation darstellt. Es gibt auch die M\"oglichkeit, flexibel auf unterschiedliche Baudraten zu reagieren. \"Uber die Automatische Baudraten-Erkennung, erl\"autert in \ref{auto_baud}, kann mit mehreren Kommunikationspartnern unterschiedlicher Baudraten Kommuniziert werden.
+Die Baudrate, wie in Kapitel \ref{eUSCI_Architektur} bereits er\"ortert, fungiert als entscheidender Synchronisationsmechanismus f\"ur asynchrone Daten\"ubertragungen. Dies impliziert, dass Sender und Empf\"anger sich zwar nicht an ein pr\"azises Timing f\"ur die \"Ubertragung einzelner Bits halten m\"ussen, jedoch eine \"Ubereinstimmung hinsichtlich der Frequenz zur \"Ubertragung ganzer Bl\"ocke -- typischerweise Bytes oder Zeichen -- erforderlich ist. \Abbildung{uart_send} visualisiert beispielhaft die \"Ubertragung zweier Bl\"ocke, die jeweils durch ein Start-Bit (\Abkuerzung{Start-Bit}{ST}) eingeleitet und durch ein Stop-Bit (\Abkuerzung{Stop-Bit}{SP}) abgeschlossen werden. Durch die Verwendung dieser Rahmenbits ergibt sich bei einer Konfiguration von acht Datenbits eine Netto-Datenrate von 8/10 der Brutto-\"Ubertragungsrate. Das bedeutet, dass von zehn \"ubertragenen Bits acht Bits die eigentliche Nutzinformation darstellt. Es gibt auch die M\"oglichkeit, flexibel auf unterschiedliche Baudraten zu reagieren. \"Uber die Automatische Baudraten-Erkennung, erl\"autert in Kapitel \ref{auto_baud}, kann mit mehreren Kommunikationspartnern unterschiedlicher Baudraten kommuniziert werden.
 
 \begin{figure}[h!]
 	\centering
@@ -334,12 +335,12 @@ Die Baudrate, wie in Kapitel \ref{eUSCI_Architektur} bereits er\"ortert, fungier
 	\label{fig:uart_send}
 \end{figure}
 
-Die einzelnen Bits innerhalb eines Datenblocks werden mittels des \Fachbegriff[Bin\"ares Leitungscodierungsverfahren, bei dem der Signalpegel w\"ahrend eines Bitintervalls konstant bleibt und nicht zwischen den Bits auf einen Nullpegel zur\"uckkehrt]{non-return to zero} (\Abkuerzung{non-return to zero}{NRZ}) verfahren kodiert und \"ubertragen. Eine Typische Baudrate f\"ur eingebettete Systeme betr\"agt 9600 Baud, obgleich auch h\"ohere Frequenzen zur beschleunigten Daten\"ubertragung Anwendung finden k\"onnen.
+Die einzelnen Bits innerhalb eines Datenblocks werden mittels des \Fachbegriff[Bin\"ares Leitungscodierungsverfahren, bei dem der Signalpegel w\"ahrend eines Bitintervalls konstant bleibt und nicht zwischen den Bits auf einen Nullpegel zur\"uckkehrt]{Non-Return-to-Zero} (\Abkuerzung{non-return to zero}{NRZ})-Verfahrens kodiert und \"ubertragen. Eine typische Baudrate f\"ur eingebettete Systeme betr\"agt 9600 Baud, obgleich auch h\"ohere Frequenzen zur beschleunigten Daten\"ubertragung Anwendung finden k\"onnen.
 
-Die physikalische Verbindung zweier Parteien wird \"ublicherweise \"uber drei Leitungen realisiert. Eine Leitung f\"ur jede Kommunikationsrichtung (\Abkuerzung{Transmit Data}{TxD} zu \Abkuerzung{Receive Data}{RxD}) und eine f\"ur die gemeinsame Masse. Dies erm\"oglicht eine \NeuerBegriff{Vollduplex-Kommunikation}, bei der beide Seiten gleichzeitig und unabh\"angig voneinander Daten Senden und Empfangen k\"onnen. Voraussetzungen hierf\"ur sind separate Sende- und Empfang-Schieberegister sowie dedizierte Puffer (\Fachbegriff[Empfangspuffer f\"ur UART Kommunikation]{UCAxRXBUF} und \Fachbegriff[Sendepuffer f\"ur UART Kommunikation]{UCAxTXBUF}) f\"ur beide Kommunikationsrichtungen in der Hardware des Interfaces. \Zitat[S. 499, Kap. 18.4.6 \& 18.4.7]{ti:slau272d}
+Die physikalische Verbindung zweier Parteien wird \"ublicherweise \"uber drei Leitungen realisiert. Eine Leitung f\"ur jede Kommunikationsrichtung (\Abkuerzung{Transmit Data}{TxD} zu \Abkuerzung{Receive Data}{RxD}) und eine f\"ur die gemeinsame Masse. Dies erm\"oglicht eine \NeuerBegriff{Vollduplex-Kommunikation}, bei der beide Seiten gleichzeitig und unabh\"angig voneinander Daten senden und empfangen k\"onnen. Voraussetzungen hierf\"ur sind separate Sende-/Empfangsschieberegister sowie dedizierte Puffer -- UCAxRXBUF als Empfangs- und UCAxTXBUF als Sendepuffer -- f\"ur beide Kommunikationsrichtungen in der Hardware des Interfaces. \Zitat[S. 499, Kap. 18.4.6 \& 18.4.7]{ti:slau272d}
 
 \newpage
-Der Typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie folgt:
+Der typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie folgt:
 
 \begin{enumerate}
 	\item Beginn der Zeitmessung mit der fallender Flanke, die das Startbit einleitet.
@@ -349,7 +350,7 @@ Der Typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie fol
 	\item Abschlie{\ss}ende Abtastung nach einer weiteren Bitperiode zur \"Uberpr\"ufung des Stopbits (High-Pegel erwartet). Liegt stattdessen ein Low-Pegel vor, wird ein Framing-Fehler erkannt.
 \end{enumerate}
 
-\Abbildung{uart_uebertragung} visualisiert diesen Empfangsprozess unter Verwendung einer sogenannten \Fachbegriff[Bestimmt den Zeitpunkt der Abtastung eingehender Bits; sie wird \"ublicherweise aus einer \"ubergeordneten Taktquelle (\zB SMCLK) abgeleitet und beeinflusst ma{\ss}geblich die Genauigkeit der Daten\"ubertragung.]{sampling clock}. Diese Abtastfrequenz ist \"ublicherweise um den Faktor 16 h\"oher als die konfigurierte Baudrate. Das Oversampling (\"Ubertastung) ist notwendig um das eintreffende Start-Bit zuverl\"assig und zeitnah auch zwischen den regul\"aren Bit-Takten detetktieren zu k\"onnen.
+\Abbildung{uart_uebertragung} visualisiert diesen Empfangsprozess unter Verwendung einer sogenannten \Fachbegriff[Bestimmt den Zeitpunkt der Abtastung eingehender Bits; sie wird \"ublicherweise aus einer \"ubergeordneten Taktquelle (\zB SMCLK) abgeleitet und beeinflusst ma{\ss}geblich die Genauigkeit der Daten\"ubertragung.]{sampling clock}. Diese Abtastfrequenz ist \"ublicherweise um den Faktor 16 h\"oher als die konfigurierte Baudrate. Das Oversampling (\"Ubertastung) ist notwendig um das eintreffende Start-Bit zuverl\"assig und zeitnah auch zwischen den regul\"aren Bit-Takten detektieren zu k\"onnen.
 
 \begin{figure}[h!]
 	\centering
@@ -358,16 +359,16 @@ Der Typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie fol
 	\label{fig:uart_uebertragung}
 \end{figure}
 
-Die interne \NeuerBegriff{Bit-Clock} (\Abkuerzung{Bit-Clock}{BITCLK}) des Empf\"angers wird mit der fallenden Flanke des eingegangenen Start-Bits synchronisiert und operiert mit der Frequenz der eingestellten Baudrate. Da die fallende Flanke des Start-Bits zu einem beliebigen Zeitpunkt relativ zur Sampling Clock auftreten kann, entsteht ein initialer Synchronisationsfehler von bis zu einer halben Periode der Sampling Clock. Die in \Abbildung{uart_uebertragung} dargestellten Szenarien, bezeichnet als \"Input 1\" und \"Input 2\", illustrieren die hieraus resultierende minimale und maximale zeitliche Verschiebung bei der Detektion der Startbit-Flanke, abh\"angig vom Phasenverh\"altnis zwischen dem Datensignal und der Sampling Clock.\Zitat[S. 476, kap. 18.2, S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{ti:slau272d, davies:msp430}
+Die interne \NeuerBegriff{Bit-Clock} (\Abkuerzung{Bit-Clock}{BITCLK}) des Empf\"angers wird mit der fallenden Flanke des eingegangenen Start-Bits synchronisiert und operiert mit der Frequenz der eingestellten Baudrate. Da die fallende Flanke des Start-Bits zu einem beliebigen Zeitpunkt relativ zur Sampling Clock auftreten kann, entsteht ein initialer Synchronisationsfehler von bis zu einer halben Periode der Sampling Clock. Die in \Abbildung{uart_uebertragung} dargestellten Szenarien, bezeichnet als \glqq Input 1\grqq und \glqq Input 2\grqq, illustrieren die hieraus resultierende minimale und maximale zeitliche Verschiebung bei der Detektion der Startbit-Flanke, abh\"angig vom Phasenverh\"altnis zwischen dem Datensignal und der Sampling Clock.\Zitat[S. 476, kap. 18.2, S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{ti:slau272d, davies:msp430}
 
 \subsubsection{Datenintegrit\"at, Fehlererkennung und weitere technischen Details}
 \label{datenintegritaet}
 
-Zur Sicherstellung der Datenintegrit\"at kann eine Fehlererkennung, beispielsweise \"uber ein Parit\"atsbit, eingesetzt werden. Ein UART-Datenpaket (Frame) besteht somit typischerweise aus einem Start-Bit, sieben oder acht Datenbits, optional einem Parit\"atsbit (konfigurierbar f\"ur gerade oder ungerate Parit\"at) und einem oder (seltener) mehreren Stop-Bits. 
+Zur Sicherstellung der Datenintegrit\"at kann eine Fehlererkennung, beispielsweise \"uber ein Parit\"atsbit, eingesetzt werden. Ein UART-Datenpaket (Frame) besteht somit typischerweise aus einem Start-Bit, sieben oder acht Datenbits, optional einem Parit\"atsbit (konfigurierbar f\"ur gerade oder ungerade Parit\"at) und einem oder (seltener) mehreren Stop-Bits. 
 
 Die Implementierung komplexerer Fehlererkennung oder gar Fehlerkorrekturmechanismen, wie \zB Pr\"ufsummen (Checksum), obliegt \"ublicherweise der \"ubergeordneten Protokollebene, die auf der UART-Kommunikation aufsetzt. Dar\"uber hinaus ist f\"ur eine erfolgreiche Kommunikation die eindeutige Festlegung der Bitreihenfolge essentiell. Die \Abkuerzung{Least Significant Bit}{LSB}-first-Konvention ist De-facto-Standard.\Zitat[S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{davies:msp430}
 
-Die Automatische Fehlererkennung des Interfaces erlaubt es dem Benutzer, schnell und ohne gron{\ss}en Implementierungsaufwand auf Grenzf\"alle und \"Ubertragungsfehler zu reagieren. \Tabelle{uart_error_flags} schl\"usselt alle wichtigen Fehler-Flags, mit ihren zugeh\"origen Beschreibungen auf.
+Die Automatische Fehlererkennung des Interfaces erlaubt es dem Benutzer, schnell und ohne gro{\ss}en Implementierungsaufwand auf Grenzf\"alle und \"Ubertragungsfehler zu reagieren. \Tabelle{uart_error_flags} schl\"usselt alle wichtigen Fehler-Flags mit ihren zugeh\"origen Beschreibungen auf.
 
 \begin{table}[h!]
 	\small
@@ -386,7 +387,7 @@ Die Automatische Fehlererkennung des Interfaces erlaubt es dem Benutzer, schnell
 \end{table}
 
 \newpage
-Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefasst. Eine minnimale Konfiguration der Schnittstelle auf den UART-Betrieb wird in \ref{eUSCI_Konfiguration} detailliert beschrieben.
+Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefasst. Eine minimale Konfiguration der Schnittstelle auf den UART-Betrieb wird in \ref{eUSCI_Konfiguration} detailliert beschrieben.
 
 \begin{table}[h!]
 	\small
@@ -414,7 +415,7 @@ Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefas
 \subsubsection{Automatische Baudraten-Erkennung}
 \label{auto_baud}
 
-Neben der Einrichtung einer statischen Baudrate kann die automatische Baudraten-Erkennung selbstst\"andig, \"uber eine \NeuerBegriff{Break/Sync Sequenz}, die vom Sender verwendete Baudrate ermitteln. Diese Synchronisations-Sequenz besteht aus einem \NeuerBegriff{Break} und einem \NeuerBegriff{Sync} Feld. Der Bereich der erkennbaren Baudraten liegt, im Oversampling-Modus zwischen 244 Baud (im niedrigfrequenz-Modus beginnend ab 15 Baud) und einem Megabaud. Ein Break beinhaltet zwischen 11 und 21 \"ubertragenen 0en, w\"ahrenddessen alle weiteren empfangenen 0en einen \NeuerBegriff{Break Timeout}-Fehler ausl\"osen. Aus Konformit\"atsgr\"unden sollte das UART Protokoll auf acht Datenbits, mit LSB first, keiner Parit\"at und einem Stop-Bit konfiguriert werden. In \Abbildung{auto_baud} ist die beschriebene Break/Sync-Sequenz dargestellt.
+Neben der Einrichtung einer statischen Baudrate kann die automatische Baudraten-Erkennung selbstst\"andig, \"uber eine \NeuerBegriff{Break/Sync Sequenz}, die vom Sender verwendete Baudrate ermitteln. Diese Synchronisations-Sequenz besteht aus einem \NeuerBegriff{Break} und einem \NeuerBegriff{Sync} Feld. Der Bereich der erkennbaren Baudraten liegt im Oversampling-Modus zwischen 244 Baud (im niedrigfrequenz-Modus beginnend ab 15 Baud) und einem Megabaud. Ein Break beinhaltet zwischen 11 und 21 \"ubertragenen Nullen, w\"ahrenddessen alle weiteren empfangenen 0en einen \NeuerBegriff{Break Timeout}-Fehler ausl\"osen. Aus Konformit\"atsgr\"unden sollte das UART Protokoll auf acht Datenbits, mit LSB-first, keiner Parit\"at und einem Stop-Bit konfiguriert werden. In \Abbildung{auto_baud} ist die beschriebene Break/Sync-Sequenz dargestellt.
 
 \begin{figure}[h!]
 	\centering
@@ -423,9 +424,9 @@ Neben der Einrichtung einer statischen Baudrate kann die automatische Baudraten-
 	\label{fig:auto_baud}
 \end{figure}
 
-Der Synchronisations-Prozess beginnt mit der \"Ubertragung des Hexadezimalen Werts 55. Die Zeit zwischen der ersten und letzten fallenden Flanke wird gemessen, um die vom Sender verwendete Baudrate zu ermitteln. Grafisch dargestellt in \Abbildung{sync_field}. Falls die m\"oglich messbare Zeit \"uberschritten wird erscheint ein \NeuerBegriff{Sync Timeout}-Fehler. Falls die Messung erfolgreich war, kann nach dem setzen des \NeuerBegriff{Receive Interrupt Flags} die Information ausgelesen werden. 
+Der Synchronisations-Prozess beginnt mit der \"Ubertragung des hexadezimalen Wertes 0x55. Die Zeit zwischen der ersten und letzten fallenden Flanke wird gemessen, um die vom Sender verwendete Baudrate zu ermitteln. Dies ist grafisch in \Abbildung{sync_field} dargestellt. Falls die maximal messbare Zeit \"uberschritten wird tritt ein \NeuerBegriff{Sync-Timeout}-Fehler auf. Falls die Messung erfolgreich war, kann nach dem setzen des \NeuerBegriff{Receive Interrupt Flags} die Information ausgelesen werden. 
 
-Nach jedem empfangenen Zeichen ist zu beachten, das \NeuerBegriff{UCDORM}-Bit zur\"uckzusetzen. Ist dieses Bit gesetzt, werden alle Zeichen empfangen, nicht aber in das Puffer-Register der Schnittstelle geschrieben.\Zitat[S. 481, Kap. 18.3.4]{ti:slau272d}
+Nach jedem empfangenen Zeichen ist zu beachten, das \NeuerBegriff{UCDORM}-Bit zur\"uckzusetzen, da bei gesetztem Bit zwar alle Zeichen empfangen, aber nicht in das Puffer-Register der Schnittstelle geschrieben werden. \Zitat[S. 481, Kap. 18.3.4]{ti:slau272d}
 
 \begin{figure}[h!]
 	\centering
@@ -438,26 +439,26 @@ Nach jedem empfangenen Zeichen ist zu beachten, das \NeuerBegriff{UCDORM}-Bit zu
 \subsection{eUSCI-Konfiguration}
 \label{eUSCI_Konfiguration}
 
-Die Initialisierung und Konfiguration des eUSCI\_A-Moduls f\"ur den UART-Betrieb erfordert eine genaue Abfolge von Schritten zum setzen von verschiedenen Bits und Werten in die daf\"ur vorgesehene Register. Der Prozess beginnt mit dem setzen des \Code{UCSWRST}-Bits. Dieses Bit erm\"oglicht die Konfiguration der Schnittstelle und schließt unerw\"unschtes verhalten aus. Dabei wird das \Code{UCTXIFG}-Bit, zum freigeben der Konfiguration, gesetzt. Zudem werden diverse Interrupt-Enable-Bits wie \Code{UCRXIE} und \Code{UCTXIE} sowie Status- und Fehlerflags (\Code{UCRXIFG, UCRXERR, UCBRK, UCPE, UCOE, UCFE, UCSTOE, UCBTOE}) im \Code{UCAxSTATW}-Register und \Code{UCAxIFG}-Register gel\"oscht oder in einen definierten Anfangszustand gebracht. Dies versetzt das eUSCI\_A-Modul in einen sicheren Reset-Zustand.\Zitat[S. 478, Kap. 18.3.1]{ti:slau272d}
+Die Initialisierung und Konfiguration des eUSCI\_A-Moduls f\"ur den UART-Betrieb erfordert eine genaue Abfolge von Schritten zum Setzen von verschiedenen Bits und Werten in die daf\"ur vorgesehene Register. Der Prozess beginnt mit dem setzen des \Code{UCSWRST}-Bits. Dieses Bit erm\"oglicht die Konfiguration der Schnittstelle und schließt unerw\"unschtes Verhalten aus. Dabei wird das \Code{UCTXIFG}-Bit, zum freigeben der Konfiguration, gesetzt. Zudem werden diverse Interrupt-Enable-Bits wie \Code{UCRXIE} und \Code{UCTXIE} sowie Status- und Fehlerflags (\Code{UCRXIFG, UCRXERR, UCBRK, UCPE, UCOE, UCFE, UCSTOE, UCBTOE}) im \Code{UCAxSTATW}- und \Code{UCAxIFG}-Register gel\"oscht oder in einen definierten Anfangszustand gebracht. Dies versetzt das eUSCI\_A-Modul in einen sicheren Reset-Zustand.\Zitat[S. 478, Kap. 18.3.1]{ti:slau272d}
 
-Nachdem das Modul sicher im Reset-Zustand initialisiert wurde, k\"onnen weitere spezifische Konfigurationsparameter f\"ur den UART-Betrieb gesetzt werden. Hierzu z\"ahlen insbesondere die folgenden Kontrollbits im \Code{UCAxCTLWn}-Register, welche die grundlegenden Betriebscharakteristika des UART-Modus definieren:
+Nachdem das Modul sicher im Reset-Zustand initialisiert wurde, k\"onnen weitere spezifische Konfigurationsparameter f\"ur den UART-Betrieb gesetzt werden. Hierzu z\"ahlen insbesondere die folgenden Kontrollbits im \Code{UCAxCTLWn}-Register, welche die grundlegenden Betriebscharakteristika des UART-Modus definieren, wie beispielsweise:
 
 \begin{itemize}
 	\item \textbf{UCPEN:} Aktiviert die Parit\"atspr\"ufung.
 	\item \textbf{UCPAR:} Festlegen einer geraden oder ungeraden Parit\"at.
-	\item \textbf{UCMSB:} LSB oder MSB-first.
-	\item \textbf{UC7BIT:} Konfiguriert die Datenl\"ange auf 7 oder 8-Bit.
+	\item \textbf{UCMSB:} Legt die Bitreihenfolge fest (LSB- oder MSB-first).
+	\item \textbf{UC7BIT:} Konfiguriert die Datenl\"ange auf 7 oder 8 Bit.
 	\item \textbf{UCSPB:} Anzahl der Stop-Bits.
 	\item \textbf{UCMODEx:} W\"ahlt den UART-Modus. (\zB 0 f\"ur Normal-Betrieb, 3 f\"ur  automatische Baudratenerkennung)
 	\item \textbf{UCSYNC:} F\"ur den asynchronen UART-Betrieb muss dieses Bit auf 0 gesetzt werden.
 	\item \textbf{UCSSELx:} Taktquelle f\"ur Baudratengenerator.
 \end{itemize}
 
-\"Uber die genannten grundlegenden Einstellungen hinaus existieren weitere spezifischere Kontrollbits. Beispielsweise ist das \Code{UCRXEIE}-Bit zum freigeben des Fehler-Interrupts und das \Code{UCBRKIE} zum aktivieren der Break-Interrupts zust\"andig. Spezialfunktionen wie der Multiprozessor-Modus, welcher \"uber das \Code{UCTXADDR}-Bit gesteuert wird, oder das Senden eines Break-Zeichens mittels \Code{UCTXBRK} sind f\"ur eine Standard-UART-Konfiguration oft zu vernachl\"assigen, sofern diese Funktionalit\"aten nicht explizit gefordert sind.\Zitat[S. 495, Kap. 18.4.1 \& S. 496, Kap. 18.4.2]{ti:slau272d}
+\"Uber die genannten grundlegenden Einstellungen hinaus existieren weitere spezifischere Kontrollbits. Beispielsweise ist das \Code{UCRXEIE}-Bit zur freigabe des Fehler-Interrupts und das \Code{UCBRKIE} zum aktivieren der Break-Interrupts zust\"andig. Spezialfunktionen wie der Multiprozessor-Modus, welcher \"uber das \Code{UCTXADDR}-Bit gesteuert wird, oder das Senden eines Break-Zeichens mittels \Code{UCTXBRK} sind f\"ur eine Standard-UART-Konfiguration oft zu vernachl\"assigen, sofern diese Funktionalit\"aten nicht explizit gefordert sind.\Zitat[S. 495, Kap. 18.4.1 \& S. 496, Kap. 18.4.2]{ti:slau272d}
 
-Eine weitere essenzielle Konfiguration f\"ur den UART-Betrieb ist die der Baudrate. Diese erfolgt \"uber das \Code{UCAxBRW}-Register und das \Code{UCAxMCTLW}-Register. Die korrekte Wertermittlung f\"ur diese Register ist direkt von der Frequenz der zuvor mittels \Code{UCSSELx} gew\"ahlten Taktquelle sowie der angestrebten Baudrate abh\"angig. Der Family User's Guide des MSP430FR5729 von Texas Intruments liefert, f\"ur die Berechnung dieser Werte, detaillierte Formeln und Beispieltabellen. Das \Code{UCAxBRW}-Register nimmt den ganzzahligen Anteil des Baudratenteilers (Prescaler) auf. Das \Code{UCAxMCTLW}-Register beinhaltet die Konfiguration f\"ur die Modulation der Frequenz, sowie das Bit zum aktivieren des Oversampling-Modus. Durch das \Code{UCBRFx}-Bit wird, in der ersten Modulationsstufe, die Feineinstellung des Prescalers vorgenommen. In der zweiten Modulationsstufe wird durch \Code{UCBRSx} ein Modulationsmuster f\"ur die BITCLK festgelegt. Im letzten Bit-Feld kann nun der Oversampling-Modus aktiviert oder deaktiviert werden.\Zitat[S. 487, Kap. 18.3.10 \& S. 497, Kap. 18.4.3, 18.4.4]{ti:slau272d}
+Eine weitere essenzielle Konfiguration f\"ur den UART-Betrieb ist die der Baudrate. Diese erfolgt \"uber das \Code{UCAxBRW}-Register und das \Code{UCAxMCTLW}-Register. Die korrekte Wertermittlung f\"ur diese Register ist direkt von der Frequenz der zuvor mittels \Code{UCSSELx} gew\"ahlten Taktquelle sowie der angestrebten Baudrate abh\"angig. Der Family User's Guide des MSP430FR5729 von Texas Intruments liefert f\"ur die Berechnung dieser Werte detaillierte Formeln und Beispieltabellen. Das \Code{UCAxBRW}-Register nimmt den ganzzahligen Anteil des Baudratenteilers (Prescaler) auf. Das \Code{UCAxMCTLW}-Register beinhaltet die Konfiguration f\"ur die Modulation der Frequenz, sowie das Bit zur Aktivierung des Oversampling-Modus. Durch das \Code{UCBRFx}-Bit wird, in der ersten Modulationsstufe, die Feineinstellung des Prescalers vorgenommen. In der zweiten Modulationsstufe wird durch \Code{UCBRSx} ein Modulationsmuster f\"ur die BITCLK festgelegt. Im letzten Bitfeld kann nun der Oversampling-Modus aktiviert oder deaktiviert werden.\Zitat[S. 487, Kap. 18.3.10 \& S. 497, Kap. 18.4.3, 18.4.4]{ti:slau272d}
 
-Obwohl weitere spezifische Einstellungen m\"oglich sind, w\"urde deren detaillierte Er\"orterung den Rahmen dieser \"ubersicht \"uberschreiten. Eine unerl\"assliche, abschließende Konfigurationsmaßnahme vor der Inbetriebnahme betrifft jedoch die Port-Pins: Die f\"ur den UART Betrieb verwendeten Pins m\"ussen, \"uber die Function-Select-Register, auf die asynchrone UART-Kommunikation konfiguriert werden. \Zitat[S. 294, Kap. 8.2.5]{ti:slau272d}
+Obwohl weitere spezifische Einstellungen m\"oglich sind, w\"urde deren detaillierte Er\"orterung den Rahmen dieser \"Ubersicht \"uberschreiten. Eine unerl\"assliche, abschließende Konfigurationsmaßnahme vor der Inbetriebnahme betrifft jedoch die Port-Pins: Die f\"ur den UART Betrieb verwendeten Pins m\"ussen, \"uber die Function-Select-Register (PxSEL), auf die asynchrone UART-Kommunikation konfiguriert werden. \Zitat[S. 294, Kap. 8.2.5]{ti:slau272d}
 
 Nach Abschluss aller Konfigurationseinstellungen wird das \Code{UCSWRST}-Bit im \Code{UCAxCTLW0}-Register gel\"oscht (auf 0 zur\"uckgesetzt). Dieser Schritt hebt den Reset-Zustand auf und aktiviert das eUSCI-Modul mit der zuvor definierten Konfiguration. Optional k\"onnen nun die gew\"unschten Interrupts, wie \zB der Sende- (\Code{UCTXIE}), Empfangs- (\Code{UCRXIE}), Transmit-Complete- (\Code{UCTXCPTIE}) oder Start-Bit-Interrupt (\Code{UCSTTIE}), im \Code{UCAxIE}-Register aktiviert werden, um eine ereignisgesteuerte Datenverarbeitung zu erm\"oglichen. \Zitat[S. 502, Kap. 18.4.10]{ti:slau272d}
 	
@@ -466,11 +467,21 @@ Diese sorgf\"altige Konfigurationssequenz ist entscheidend f\"ur die zuverl\"ass
 \subsection{Zusammenfassung}
 \label{eUSCI_Zusammenfassung}
 
-Ein detailliertes Blockdiagram des eUSCI\_A-Moduls, konfiguriert f\"ur den UART-Betrieb ist in \Abbildung{BlockDiagramm_eUSCI_A_UART} dargestellt.
+Die vorangegangenen Kapitel haben die Kommunikationsschnittstelle des MSP430FR5729 im UART-Betriebsmodus detailliert beleuchtet. Im Kern des eUSCI-Moduls steht die serielle Kommunikation mit Peripherieger\"aten oder Systemen. Dazu werden synchrone Protokolle wie SPI und I$^{2}$C und asynchrone Protokolle wie UART bereitgestellt.
+
+Im Rahmen dieser Arbeit kristallisierte sich in \ref{Einordnung_Schnittstellen} heraus, dass sich das asynchrone Kommunikationsprotokoll UART am besten f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC-System geeignet ist. Dabei wurden die Schnittstellen unter den Gesichtspunkten der Implementierung, Robustheit, Interruptf\"ahigkeit und Kompartibilit\"at betrachtet.
+
+Wesentliche Aspekte des UART-Betriebs ist die zuvor angesprochene asynchrone Kommunikation, welche eine ungest\"orte, wechselseitige Kommunikation beider Seiten, \"uber eine Baudraten-Synchronisation, erm\"oglicht. Wichtige Merkmale hierzu sind die Formate der Daten\"ubertragung (\zB acht Datenbits, LSB-first, ein SP) und die der Fehlererkennung (\zB Framing-, Parity-, Overrun-Error).
+
+Die Automatisierte Baudraten-Erkennung schafft, bei verkn\"upfung mehrerer Kommunikationspartner \"uber die gleiche Leitung, eine hohe flexibilit\"at, erh\"oht jedoch die komplexit\"at dabei erheblich. Da allerdings zu diesem Zeitpunkt nicht mehrere Verbindungen unterschiedlicher Baudraten \"uber eine Schnittstelle erfolgen, ist auch diese Funktion nicht vonn\"oten.
+
+Zentrale Schritte zur Konfiguration des eUSCI-Moduls f\"ur den UART-Betrieb ist das einleiten des eUSCI-Reset-Modus, das Setzen und R\"ucksetzen von notwendigen Steuerbits, die Feinabstimmung der gew\"unschten Baudrate \"uber die Prescaler und das aufheben des Reset-Zustandes.
+
+Ein detailliertes Blockdiagramm des eUSCI\_A-Moduls, das f\"ur den UART-Betrieb konfiguriert ist, ist in \Abbildung{BlockDiagramm_eUSCI_A_UART} dargestellt.
 
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/eUSCI_UART.png}
-	\caption{eUSCI Typ A - UART-Modus\\\Zitat[S. 477, Kap. 18.2]{ti:slau272d}}
+	\caption{eUSCI Typ A -- UART-Modus\\\Zitat[S. 477, Kap. 18.2]{ti:slau272d}}
 	\label{fig:BlockDiagramm_eUSCI_A_UART}
 \end{figure}

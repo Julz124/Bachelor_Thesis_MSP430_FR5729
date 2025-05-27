@@ -8,15 +8,48 @@ Nachdem in den vorangegangenen Kapiteln die theoretischen Grundlagen zu Timern, 
 \section{Konzeprionierung Observer-Modul}
 \label{Grundger\"ust_ObserverModul}
 
-Die zentrale Einheit, zur Verarbeitung eingehender Befehle und Steuerung aller Funktionen stellt das \glqq Observer-Modul\grqq dar. Es verbindet die Interrupt-Basierte Abarbeitung und senden von Daten mit dem erhalt externer Steuerbefehle. Die in \ref{TIMER&ISR} und \ref{eUSCI} erarbeiteten Informationen \"uber bereitgestellte Technologien im MSP430FR5729 kommen dort zu tragen. Bis ein Befehl \"uber die Eingabetaste eines PCs best\"atigt wurde, befindet sich das Modul in einem Ruhezustand. Ab dem ersten \Fachbegriff[Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)]{Alphanumerisch}en Zeichen beginnt ein \glqq Time-Out\grqq-Timer, welcher die Eingabe des Befehls nach einer bestimmten Zeit zur\"ucksetzt und einen \glqq Time-Out-Error\grqq ausgibt. Nach erfolgreicher Eingabe und Best\"atigung eines Befehls durch die Eingabetaste, wird der \glqq Time-Out\grqq-Timer deaktiviert und die Befehlsinterpretation gestartet. Nach erfolgreicher Interpretation erfolgt die Ausgabe des Ergebnisses der Befehlsverarbeitung.
+Die zentrale Einheit, zur Verarbeitung eingehender Befehle und Steuerung aller Funktionen stellt das \glqq Observer-Modul\grqq dar. Es verbindet die Interrupt-Basierte Abarbeitung und senden von Daten mit dem erhalt externer Steuerbefehle. Die in \ref{TIMER&ISR} und \ref{eUSCI} erarbeiteten Informationen \"uber bereitgestellte Technologien im MSP430FR5729 kommen dort zu tragen. Bis ein Befehl \"uber die Eingabetaste eines PCs best\"atigt wurde, befindet sich das Modul in einem Ruhezustand. Ab dem ersten \Fachbegriff[Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)]{Alphanumerisch}en Zeichen beginnt ein \glqq Time-Out\grqq-Timer, welcher die Eingabe des Befehls nach einer bestimmten Zeit zur\"ucksetzt und einen \glqq Time-Out-Error\grqq ausgibt. Nach erfolgreicher Eingabe und Best\"atigung eines Befehls durch die Eingabetaste, wird der \glqq Time-Out\grqq-Timer deaktiviert und die Befehlsinterpretation gestartet. Nach erfolgreicher Interpretation erfolgt die Ausgabe des Ergebnisses der Befehlsverarbeitung. Im Prozess auftretende Fehler werden \"uber einen Fehlervektor priorisiert, gespeichert und verarbeitet ausgegeben. Das Modul arbeitet Status-Orientiert auftretende Ereignisse ab.
 
-Ein Funktionsf\"ahiges Modul, welches die daf\"ur notwendigen Hardware-Komponenten -- die ISR und das eUSCI -- integriert, ben\"otigt daher eine umfangreiche, \"offentliche Initialisierungs-Methode, welche von der Hauptroutine aufgerufen wird. Diese beinhaltet die Konfiguration notwendiger Steuerregister, sowie die Initialisierung weiterer Variablen und Datenstrukturen. F\"ur die Befehls-Eingabe sowie die Ergebnis-Ausgabe kann die in \ref{eUSCI_Konfiguration} beschriebene Konfiguration eines f\"ur den UART-Betrieb ausgelegtes eUSCI-Modul \"ubernommen werden. Folgende Einstellungen erweisen sich dabei am vorteilhaftesten:
+Ein Funktionsf\"ahiges Modul, welches die daf\"ur notwendigen Hardware-Komponenten -- die ISR und das eUSCI -- integriert, ben\"otigt eine umfangreiche, \"offentliche Initialisierungs-Methode, welche von der Hauptroutine aufgerufen wird. Diese beinhaltet die Konfiguration notwendiger Steuerregister, sowie die Initialisierung weiterer Variablen und Datenstrukturen. F\"ur die Befehls-Eingabe sowie die Ergebnis-Ausgabe kann die in \ref{eUSCI_Konfiguration} beschriebene Konfiguration eines f\"ur den UART-Betrieb ausgelegtes eUSCI-Modul \"ubernommen werden. Folgende Einstellungen erweisen sich dabei als vorteilhaft:
 \begin{itemize}
-	\item \textbf{:}
-	\item \textbf{:}
+	\item Gerade Parit\"at
+	\item LSB-first
+	\item Acht-Datenbits
+	\item Ein Stoppbit
+	\item UART-Modus
+	\item Asynchroner Modus
+	\item ACLK-Taktquelle
+	\item Aktiver Fehler-Interrupt
+	\item Aktiver Break-Interrupt
+	\item 9600 Baud
+	\item 16-faches Oversampling
+	\item Entprellzeit von rund 100ns
 \end{itemize}
 
+Ereignisse wie die Befehlsverarbeitung, Fehlerausgabe oder der aktive \glqq Time-Out\grqq-Timer werden \"uber eine ISR verarbeitet. Dabei ist es wichtig, eine geeignete Periode zu ermitteln, welche passend f\"ur alle drei Aufgabenfelder ist. Eine h\"aufig in solchen Systemen verwendete Periode ist zehn Millisekunden lang, \dahe einmal alle zehn Millisekunden wird die ISR ausgef\"uhrt. Kapitel \ref{TIMER&ISR} beschreibt die Eckdaten der zur verf\"ugung stehenden Timer des MSP430FR5729. Auf Basis dieser Informationen und dem prim\"aren Einsatzumfeld des Moduls im Fach Microprozessorsysteme scheint ein Timer des Typs B am geeignetsten. Die zu befolgenden Konfigurationsschritte lassen sich aus den Kapiteln \ref{CC_Register} und \ref{TimerControlRegister} herausnehmen. Auch hier bew\"ahrt sich folgende Konfiguration der Capture and Compare-/Control-Register:
+\begin{itemize}
+	\item Compare-Modus
+	\item UP-Modus
+	\item ACKL-Taktquelle
+	\item Beide Input Teiler auf acht
+	\item Compare-Register auf Wert 96 setzen
+	\item Timer-Interrupt Aktivieren
+\end{itemize}
 
+Der Wert des Compare-Registers setzt sich aus der Frequenz der gew\"ahltern Clock-Source in Kombination mit den beiden Input-Teilern zusammen. Um den Wert f\"ur eine Periode von zehn Millisekunden zu erzielen muss die bekannte Frequenz der ACLK mit der gew\"unschten Periode multipliziert und darauf hin durch beide Input-Teiler dividiert werden. Das Ergebnis der Rechnung -- (614.4kHz * 10ms) / 8 / 8 -- lautet 96.
+
+Notwendige Zuweisungen von Variablen zur Pufferung von eingegebenen Zeichen, Speicherung von Events und Fehler-Flags sowie Zeigern und Laufvariablen, f\"ur den schnellen Zugriff auf Elemente innerhalb langer Zeichen-Puffer, und Funktions-Zeigern zur Realisierung Ereignis-Basierter Verarbeitung sind ebenfalls teil dieser Initialisierung.
+
+Dar\"uber hinaus erweist sich der Einsatz eines \Fachbegriff[Datenstruktur, die Schlüssel-Wert-Paare speichert und schnellen Zugriff auf Werte über ihre eindeutigen Schlüssel erlaubt.]{Dictionary}s zur eindeutigen Zuweisung von Befehlen auf ihren Funktions-Zeigern als sehr elegant.
+
+Alle zuvor aufgelisteten Funktionen lassen sich somit in das folgende UML-Diagram aus \Abbildung{UmlDiagram_ObserverModul} \"uberf\"uhren.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\textwidth]{../Bilder/observer_class_diagram.png}
+	\caption{UML-Diagram -- Observer-Modul}
+	\label{fig:UmlDiagram_ObserverModul}
+\end{figure}
 
 \newpage
 \section{Interruptgesteuertes Lesen und Schreiben}

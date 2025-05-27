@@ -12,7 +12,7 @@
 #include "..\base.h"
 #include "Observer.h"
 
-// Zähllänge Timer
+// Zï¿½hllï¿½nge Timer
 #define ISR_TIMER (96 - 1)
 
 // Observer Function Dictionary Length
@@ -145,13 +145,13 @@ GLOBAL Void Observer_init(Void) {
     SETBIT(UCA0CTLW0, UCSWRST);  // UCA0 in Software-Reset versetzen
 
     UCA0CTLW1 = 0x0002;          // Entprellzeit ~100ns
-    UCA0BRW   = 4;               // Baudraten-Prescaler für 9600 Baud (614,4kHz / (16*9600) = 4)
+    UCA0BRW   = 4;               // Baudraten-Prescaler fï¿½r 9600 Baud (614,4kHz / (16*9600) = 4)
     UCA0MCTLW = 0x20 << 8        // zweite Modulationsstufe
               | 0x00 << 4        // erste Modulationsstufe
               | UCOS16;          // 16-faches Oversampling aktivieren
 
-    UCA0CTLW0 = UCPEN            // Parität aktivieren
-              | UCPAR            // Gerade Parität (even)
+    UCA0CTLW0 = UCPEN            // Paritï¿½t aktivieren
+              | UCPAR            // Gerade Paritï¿½t (even)
               | 0                // LSB first
               | 0                // 8 Datenbits
               | 0                // Ein Stoppbit
@@ -576,8 +576,8 @@ LOCAL Void state_2(Void) {
     state_ptr = NULL;
 }
 
-#pragma vector = TIMER0_B1_VECTOR
-__interrupt Void TIMER0_B1_ISR(Void) {
+#pragma vector = TIMER0_B0_VECTOR
+__interrupt Void TIMER0_B0_ISR(Void) {
 
     // Error Handling
     if (global_events & UART_ERR) {

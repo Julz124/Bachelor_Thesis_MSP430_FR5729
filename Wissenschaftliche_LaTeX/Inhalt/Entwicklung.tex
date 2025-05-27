@@ -3,14 +3,27 @@
 
 \chapter{Entwicklung}
 
-Nachdem in den vorangegangenen Kapiteln die theoretischen Grundlagen zu Timern, Interrupt Service Routinen (ISR) und dem Enhanced Universal Serial Communication Interface (eUSCI) des MSP430FR5729 geschaffen wurden, widmet sich dieses Kapitel der Entwicklung und praktischen Implementierung der angestrebten, interruptgesteuerten Benutzerschnittstelle. Aufbauend auf dem erarbeiteten Wissen erfolgt zun\"achst die Konzeptionierung eines Observer-Moduls, das als zentrale Instanz f\"ur die Verarbeitung von Eingaben und die Steuerung von Ausgaben dient. Daraufhin wird das interruptgesteuerte Lesen und Schreiben von Daten \"uber die eUSCI-Schnittstelle detailliert behandelt. Abschlie{\ss}end werden essenzielle Debugging-Methoden erarbeitet, evaluiert und eine m\"ogliche Implementierung von Software-Basierten Breakpoints, beleuchtet, um eine robuste und echtzeitf\"ahige Funktion der entwickelten Komponente sicherzustellen.
+Aufbauend auf den in den vorangegangenen Kapiteln -- \ref{TIMER&ISR} und \ref{eUSCI} -- vermittelten theoretischen Grundlagen zu Timern, Interrupt Service Routinen (ISR) und dem Enhanced Universal Serial Communication Interface des Mikrocontrollers MSP430FR5729, widmet sich dieses Kapitel der konkreten Entwicklung und praktischen Umsetzung der interruptgesteuerten Benutzerschnittstelle.
+
+Zun\"achst erfolgt die systematische Konzeption des Observer-Moduls, das als zentrale Instanz zur Erfassung von Benutzereingaben sowie zur Steuerung der Systemausgaben fungiert. Dieses Modul stellt die Grundlage f\"ur die Interaktion zwischen Benutzer und Mikrocontroller dar und \"ubernimmt die Koordination integrierter Steuerbefehle.
+
+Im weiteren Verlauf wird die interruptgesteuerte Kommunikation \"uber die UART-Schnittstelle konzeptioniert. Hierbei liegt der Fokus auf zuverl\"assigkeit und robustheit sowie deren sicherer Ausgabe unter Echtzeitbedingungen.
+
+Abschlie{\ss}end werden zentrale Debugging-Mechanismen vorgestellt, evaluiert und exemplarisch in Form von softwarebasierten Breakpoints implementiert. Ziel ist es, die Robustheit, Echtzeitf\"ahigkeit sowie den funktionalen Umfang der zu entwickelnden Komponente zu validieren und zu evaluieren.
+
+Die Konzeption und Integration von Breakpoints verfolgt dabei das Ziel, gezielt in den Programmablauf eingreifen zu k\"onnen, ohne den Systemzustand zu beeintr\"achtigen. Insbesondere die Funktionen \Code{read\_mem} und \Code{write\_mem} profitieren hiervon: Wird ein Breakpoint erreicht, k\"onnen diese Befehle kontrolliert und st\"orungsfrei ausgef\"uhrt werden, da das Hauptprogramm w\"ahrenddessen in einen definierten Haltemodus versetzt wird. Auf diese Weise l\"sst sich eine konsistente Speicherzugriffslogik realisieren, die auch w\"ahrend kritischer Zust\"ande wie Laufzeitunterbrechungen zuverl\"assig funktioniert.\AI
 
 \section{Konzeprionierung Observer-Modul}
-\label{Grundger\"ust_ObserverModul}
+\label{ObserverModulKonzept}
 
-Die zentrale Einheit, zur Verarbeitung eingehender Befehle und Steuerung aller Funktionen stellt das \glqq Observer-Modul\grqq dar. Es verbindet die Interrupt-Basierte Abarbeitung und senden von Daten mit dem erhalt externer Steuerbefehle. Die in \ref{TIMER&ISR} und \ref{eUSCI} erarbeiteten Informationen \"uber bereitgestellte Technologien im MSP430FR5729 kommen dort zu tragen. Bis ein Befehl \"uber die Eingabetaste eines PCs best\"atigt wurde, befindet sich das Modul in einem Ruhezustand. Ab dem ersten \Fachbegriff[Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)]{Alphanumerisch}en Zeichen beginnt ein \glqq Time-Out\grqq-Timer, welcher die Eingabe des Befehls nach einer bestimmten Zeit zur\"ucksetzt und einen \glqq Time-Out-Error\grqq ausgibt. Nach erfolgreicher Eingabe und Best\"atigung eines Befehls durch die Eingabetaste, wird der \glqq Time-Out\grqq-Timer deaktiviert und die Befehlsinterpretation gestartet. Nach erfolgreicher Interpretation erfolgt die Ausgabe des Ergebnisses der Befehlsverarbeitung. Im Prozess auftretende Fehler werden \"uber einen Fehlervektor priorisiert, gespeichert und verarbeitet ausgegeben. Das Modul arbeitet Status-Orientiert auftretende Ereignisse ab.
+Die zentrale Einheit zur Verarbeitung eingehender Befehle und zur Steuerung s\"amtlicher Funktionen stellt das \glqq Observer-Modul\grqq dar. Es vereint die interruptbasierte Abarbeitung sowie das Senden von Daten mit dem Empfang externer Steuerbefehle. Die in \ref{TIMER&ISR} und \ref{eUSCI} erl\"auterten Technologien des MSP430FR5729 bilden die technische Grundlage.
 
-Ein Funktionsf\"ahiges Modul, welches die daf\"ur notwendigen Hardware-Komponenten -- die ISR und das eUSCI -- integriert, ben\"otigt eine umfangreiche, \"offentliche Initialisierungs-Methode, welche von der Hauptroutine aufgerufen wird. Diese beinhaltet die Konfiguration notwendiger Steuerregister, sowie die Initialisierung weiterer Variablen und Datenstrukturen. F\"ur die Befehls-Eingabe sowie die Ergebnis-Ausgabe kann die in \ref{eUSCI_Konfiguration} beschriebene Konfiguration eines f\"ur den UART-Betrieb ausgelegtes eUSCI-Modul \"ubernommen werden. Folgende Einstellungen erweisen sich dabei als vorteilhaft:
+Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff[Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)]{alphanumerischen} Zeichen wird ein \glqq Time-Out\grqq-Timer aktiviert. Erfolgt keine abschlie{\ss}ende Eingabe innerhalb eines definierten Zeitintervalls, wird die Eingabe zur\"uckgesetzt und ein \glqq Time-Out-Error\grqq generiert. Nach erfolgreicher Best\"atigung wird der Timer deaktiviert und die Befehlsinterpretation eingeleitet. Das Ergebnis der Verarbeitung wird \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens.
+
+Ein funktionales Modul, welches die daf\"ur ben\"otigten Hardware-Komponenten – insbesondere Interrupt Service Routines (ISR) und das eUSCI-Modul – integriert, erfordert eine \"offentlich zug\"angliche Initialisierungsmethode, die von der Hauptroutine aufgerufen wird. Diese Methode \"ubernimmt die Konfiguration der Steuerregister sowie die Initialisierung ben\"otigter Variablen und Datenstrukturen.
+
+F\"ur die Ein- und Ausgabe \"uber UART kann die in \ref{eUSCI_Konfiguration} beschriebene Konfiguration \"ubernommen werden. Folgende Einstellungen haben sich dabei als vorteilhaft erwiesen:
+
 \begin{itemize}
 	\item Gerade Parit\"at
 	\item LSB-first
@@ -26,23 +39,36 @@ Ein Funktionsf\"ahiges Modul, welches die daf\"ur notwendigen Hardware-Komponent
 	\item Entprellzeit von rund 100ns
 \end{itemize}
 
-Ereignisse wie die Befehlsverarbeitung, Fehlerausgabe oder der aktive \glqq Time-Out\grqq-Timer werden \"uber eine ISR verarbeitet. Dabei ist es wichtig, eine geeignete Periode zu ermitteln, welche passend f\"ur alle drei Aufgabenfelder ist. Eine h\"aufig in solchen Systemen verwendete Periode ist zehn Millisekunden lang, \dahe einmal alle zehn Millisekunden wird die ISR ausgef\"uhrt. Kapitel \ref{TIMER&ISR} beschreibt die Eckdaten der zur verf\"ugung stehenden Timer des MSP430FR5729. Auf Basis dieser Informationen und dem prim\"aren Einsatzumfeld des Moduls im Fach Microprozessorsysteme scheint ein Timer des Typs B am geeignetsten. Die zu befolgenden Konfigurationsschritte lassen sich aus den Kapiteln \ref{CC_Register} und \ref{TimerControlRegister} herausnehmen. Auch hier bew\"ahrt sich folgende Konfiguration der Capture and Compare-/Control-Register:
+Die Verarbeitung von Ereignissen wie Befehlsinterpretation, Fehlerausgabe und Eingabe-Time-Out wird \"uber eine gemeinsame ISR realisiert. Eine daf\"ur typische Periodendauer betr\"agt 10\,ms. Kapitel \ref{TIMER&ISR} beschreibt die verf\"ugbaren Timer des MSP430FR5729. Aufgrund der dort beschriebenen Merkmale eignet sich insbesondere ein Timer vom Typ B f\"ur die Realisierung.
+
+Die relevante Konfiguration der Capture-/Compare-Register basiert auf folgenden Parametern:
+
 \begin{itemize}
 	\item Compare-Modus
 	\item UP-Modus
-	\item ACKL-Taktquelle
-	\item Beide Input Teiler auf acht
-	\item Compare-Register auf Wert 96 setzen
-	\item Timer-Interrupt Aktivieren
+	\item ACKL als Taktquelle
+	\item Input Teiler jeweils auf acht
+	\item Compare-Register auf 96 setzen
+	\item Aktivierter Timer-Interrupt
 \end{itemize}
 
-Der Wert des Compare-Registers setzt sich aus der Frequenz der gew\"ahltern Clock-Source in Kombination mit den beiden Input-Teilern zusammen. Um den Wert f\"ur eine Periode von zehn Millisekunden zu erzielen muss die bekannte Frequenz der ACLK mit der gew\"unschten Periode multipliziert und darauf hin durch beide Input-Teiler dividiert werden. Das Ergebnis der Rechnung -- (614.4kHz * 10ms) / 8 / 8 -- lautet 96.
+Der Wert f\"ur das Compare-Register ergibt sich aus folgender Formel:
 
-Notwendige Zuweisungen von Variablen zur Pufferung von eingegebenen Zeichen, Speicherung von Events und Fehler-Flags sowie Zeigern und Laufvariablen, f\"ur den schnellen Zugriff auf Elemente innerhalb langer Zeichen-Puffer, und Funktions-Zeigern zur Realisierung Ereignis-Basierter Verarbeitung sind ebenfalls teil dieser Initialisierung.
+\[
+\text{Compare-Wert} = \frac{f_\text{ACLK} \cdot T_\text{Periode}}{\text{Teiler}_1 \cdot \text{Teiler}_2} = \frac{614{,}4\,\text{kHz} \cdot 10\,\text{ms}}{8 \cdot 8} = 96
+\]
 
-Dar\"uber hinaus erweist sich der Einsatz eines \Fachbegriff[Datenstruktur, die Schlüssel-Wert-Paare speichert und schnellen Zugriff auf Werte über ihre eindeutigen Schlüssel erlaubt.]{Dictionary}s zur eindeutigen Zuweisung von Befehlen auf ihren Funktions-Zeigern als sehr elegant.
+Weitere Initialisierungen umfassen:
+\begin{itemize}
+	\item Puffervariablen zur Zeichenspeicherung,
+	\item Event- und Fehlerflags,
+	\item Laufvariablen und Zeiger zur schnellen Navigation innerhalb von Eingabepuffern,
+	\item sowie Funktionszeiger f\"ur die Ereignisverarbeitung.
+\end{itemize}
 
-Alle zuvor aufgelisteten Funktionen lassen sich somit in das folgende UML-Diagram aus \Abbildung{UmlDiagram_ObserverModul} \"uberf\"uhren.
+Ein besonderer Vorteil ergibt sich durch den Einsatz eines \Fachbegriff[Datenstruktur, die Schl\"ussel-Wert-Paare speichert und schnellen Zugriff auf Werte \"uber ihre eindeutigen Schl\"ussel erlaubt.]{Dictionary}s, das Befehlen eindeutig Funktionszeiger zuordnet.
+
+Alle beschriebenen Komponenten und ihre funktionale Zuordnung sind in \Abbildung{UmlDiagram_ObserverModul} zusammengefasst.
 
 \begin{figure}[h!]
 	\centering
@@ -50,6 +76,9 @@ Alle zuvor aufgelisteten Funktionen lassen sich somit in das folgende UML-Diagra
 	\caption{UML-Diagram -- Observer-Modul}
 	\label{fig:UmlDiagram_ObserverModul}
 \end{figure}
+
+Ausgehend vom grundlegenden Architekturkonzept des Observer-Moduls erfolgt im Folgenden die detaillierte Implementierung der Funktionen f\"ur das interruptgesteuerte Lesen und Schreiben \"uber die serielle Schnittstelle.\AI
+
 
 \newpage
 \section{Interruptgesteuertes Lesen und Schreiben}
@@ -62,7 +91,7 @@ Alle zuvor aufgelisteten Funktionen lassen sich somit in das folgende UML-Diagra
 
 Im Kontext der Fehlersuche und Programmanalyse in Embedded Systems stellen \Fachbegriff[Bezeichnet in der Softwareentwicklung eine vom Entwickler bewusst gesetzte Unterbrechung im Programmablauf, die typischerweise zur Laufzeit-Debugging-Zwecken verwendet wird. Beim Erreichen dieses Punkts wird die Ausf\"uhrung des Programms angehalten, sodass der aktuelle Zustand (\zB Variableninhalte, Stack, Speicher) analysiert werden kann.]{Breakpoints} ein fundamentales Werkzeug dar. Sie erm\"oglichen es, die Ausf\"uhrung eines Programms an einer vordefinierten Stelle zu unterbrechen, um den internen Zustand des Systems zu inspizieren. Grunds\"atzlich lassen sich zwei prim\"are Arten von Breakpoints unterscheiden: Software-Breakpoints und Hardware-Breakpoints, deren Implementierung und Eigenschaften sich signifikant unterscheiden.
 
-Software-Breakpoints werden zur aktiven Laufzeit des Programms durch einen direkten Eingriff in den ausf\"uhrbaren Code im Speicher des Mikrocontrollers realisiert. An der Zieladresse wird hierbei die urspr\"ungliche Programminstruktion tempor\"ar durch eine Breakpoint-Instruktion oder einen Trap-Befehl ersetzt, der einen Software-Interrupt oder eine Exception ausl\"ost. Sobald der Programmz\"ahler diese modifizierte Stelle erreicht, unterbricht der Mikrocontroller den normalen Programmfluss der Programmzähler stoppt und eine Debug-Routine wird ausgeführt. Der \Fachbegriff[Ein Werkzeug zur schrittweisen Ausf\"uhrung und Analyse von Programmen. Es erlaubt das Setzen von Haltepunkten, das \"uberpr\"ufen von Speicherinhalten und das Nachvollziehen von Kontrollfl\"ussen zur Fehlersuche und -behebung.]{Debugger} kann diesen Zustand erkennen, die urspr\"ungliche Instruktion wiederherstellen und dem Entwickler die Kontrolle \"ubergeben. Durch diesen Mechanismus sind Software-Breakpoints hochflexibel und k\"onnen an nahezu jeder beliebigen Stelle im beschreibbaren Code-Speicher (wie RAM oder FRAM) gesetzt werden.
+Software-Breakpoints werden zur aktiven Laufzeit des Programms durch einen direkten Eingriff in den ausf\"uhrbaren Code im Speicher des Mikrocontrollers realisiert. An der Zieladresse wird hierbei die urspr\"ungliche Programminstruktion tempor\"ar durch eine Breakpoint-Instruktion oder einen Trap-Befehl ersetzt, der einen Software-Interrupt oder eine Exception ausl\"ost. Sobald der Programmz\"ahler diese modifizierte Stelle erreicht, unterbricht der Mikrocontroller den normalen Programmfluss der Programmz\"ahler stoppt und eine Debug-Routine wird ausgef\"uhrt. Der \Fachbegriff[Ein Werkzeug zur schrittweisen Ausf\"uhrung und Analyse von Programmen. Es erlaubt das Setzen von Haltepunkten, das \"uberpr\"ufen von Speicherinhalten und das Nachvollziehen von Kontrollfl\"ussen zur Fehlersuche und -behebung.]{Debugger} kann diesen Zustand erkennen, die urspr\"ungliche Instruktion wiederherstellen und dem Entwickler die Kontrolle \"ubergeben. Durch diesen Mechanismus sind Software-Breakpoints hochflexibel und k\"onnen an nahezu jeder beliebigen Stelle im beschreibbaren Code-Speicher (wie RAM oder FRAM) gesetzt werden.
 
 Die Vorteile des softwarebasierten Ansatzes liegen prim\"ar in der M\"oglichkeit, eine praktisch unbegrenzte Anzahl von Breakpoints im System zu verwenden, sowie in den geringen Anforderungen an zus\"atzliche, dedizierte Hardwarekomponenten auf dem Zielsystem selbst. Die grundlegende F\"ahigkeit, Interrupts oder Exceptions zu behandeln, ist hierf\"ur ausreichend. \Zitat[Kap. 4.7.16]{ti:CCS}
 
@@ -70,7 +99,7 @@ Gegen\"uber den Software-Breakpoints bieten hardwarebasierte Breakpoints den Vor
 
 Um dies jedoch zu erreichen, ben\"otigen Hardware-Breakpoints ein dediziertes Hardwaremodul innerhalb des Mikrocontrollers. Im Falle der MSP430-Mikrocontrollerfamilie ist dies das \NeuerBegriff{Embedded Emulation Module (EEM)} \Zitat[S. 569, Kap. 21]{ti:slau272d}. Dieses Modul beinhaltet spezielle Hardwareregister, typischerweise Adresskomparatoren, welche die Speicheradresse des Befehls halten, an welcher bei \"ubereinstimmung mit dem Programmz\"ahler ein Breakpoint ausgel\"ost werden soll. Da der Breakpoint durch externe Hardwarelogik ausgel\"ost wird und nicht durch eine im Programmablauf ausgef\"uhrte Instruktion, m\"ussen seitens des Breakpoint-Mechanismus selbst keine Registerinhalte oder Stack-Elemente explizit zwischengespeichert und im Nachhinein wiederhergestellt werden. Ganz im Unterschied wie es bei einem durch einen Software-Breakpoint induzierten Interrupt der Fall sein kann. Die Zustandssicherung erfolgt erst durch die Debug-Routine nach erfolgter Unterbrechung. Der wesentliche Nachteil hierbei ist allerdings die strikte Limitierung der Anzahl gleichzeitig setzbarer Hardware-Breakpoints, welche direkt von der Anzahl der im EEM verf\"ugbaren Komparator-Register abh\"angt. F\"ur den MSP430 sind dies oft nur zwei oder drei \Zitat[vgl. Kap. 7.1]{ti:CCS}.
 
-Diese Gegen\"uberstellung offenbart einen klaren \Fachbegriff[Abwägung zwischen zwei konkurrierenden Zielen, Konzepten, oder ähnlichem, bei der die Verbesserung des einen mit der Verschlechterung des anderen einhergeht.]{Trade-off}: Hardware-Breakpoints gl\"anzen durch ihre Transparenz und die F\"ahigkeit, in gesch\"utzten Speicherbereichen zu operieren, sind jedoch eine knappe Ressource. Software-Breakpoints hingegen bieten eine hohe Flexibilit\"at und nahezu unbegrenzte Verf\"ugbarkeit, gehen aber mit einer leichten Modifikation des Programmcodes und potenziellen, wenn auch meist minimalen, Timing-Ver\"anderungen einher. Angesichts der begrenzten Anzahl an Hardware-Breakpoints auf der MSP430-Plattform, die insbesondere bei komplexeren Debugging-Szenarien schnell ersch\"opft sein k\"onnen, erweist sich die Implementierung von Software-Breakpoints als eine pragmatische und oft notwendige Erweiterung der Debugging-M\"oglichkeiten. Um die technischen Rahmenbedingungen f\"ur die Realisierung solcher Software-Breakpoints auf dem MSP430FR5729 sowie die Interaktion mit der Debugging-Infrastruktur genauer zu verstehen, ist eine detaillierte Betrachtung des eingesetzten Debug-Adapters und seiner Funktionsweise unerl\"asslich. 
+Diese Gegen\"uberstellung offenbart einen klaren \Fachbegriff[Abw\"agung zwischen zwei konkurrierenden Zielen, Konzepten, oder \"ahnlichem, bei der die Verbesserung des einen mit der Verschlechterung des anderen einhergeht.]{Trade-off}: Hardware-Breakpoints gl\"anzen durch ihre Transparenz und die F\"ahigkeit, in gesch\"utzten Speicherbereichen zu operieren, sind jedoch eine knappe Ressource. Software-Breakpoints hingegen bieten eine hohe Flexibilit\"at und nahezu unbegrenzte Verf\"ugbarkeit, gehen aber mit einer leichten Modifikation des Programmcodes und potenziellen, wenn auch meist minimalen, Timing-Ver\"anderungen einher. Angesichts der begrenzten Anzahl an Hardware-Breakpoints auf der MSP430-Plattform, die insbesondere bei komplexeren Debugging-Szenarien schnell ersch\"opft sein k\"onnen, erweist sich die Implementierung von Software-Breakpoints als eine pragmatische und oft notwendige Erweiterung der Debugging-M\"oglichkeiten. Um die technischen Rahmenbedingungen f\"ur die Realisierung solcher Software-Breakpoints auf dem MSP430FR5729 sowie die Interaktion mit der Debugging-Infrastruktur genauer zu verstehen, ist eine detaillierte Betrachtung des eingesetzten Debug-Adapters und seiner Funktionsweise unerl\"asslich. 
 
 Dar\"uber hinaus existiert auch noch eine spezielle Art von Breakpoints welcher von einem Speicherzugriff ausgl\"o{\ss}t wird. Watchpoints k\"onnen Grenzf\"alle identifizieren um dadurch invalide Speicheradressen und zugriffe sowie Puffer\"uberl\"aufe zu analysieren. \Zitat[Kap. 7.4.16.2]{ti:CCS}
 
@@ -118,16 +147,16 @@ Vor diesem Hintergrund wird in den folgenden Abschnitten die Konzeptionierung er
 \subsubsection{Verwendung eines Sprungbefehls anstelle einer Trap}
 \label{sec:JumpVsTrap}
 
-Wie in Abschnitt \ref{Hardware_VS_Software_Breakpoints} erl\"autert, basieren klassische software-Breakpoints h\"aufig auf sogenannten Trap-Instruktionen. Das Debugging-Framework der Entwicklungsumgebung unterst\"utzt dies unter anderem \"uber die \NeuerBegriff{General Extension Language} (\Abkuerzung{General Extension Language}{GEL}) – ein Makro- und Skriptsystem, das die Initialisierung von Systemen sowie die Steuerung von Debug-Sitzungen erm\"oglicht. Darüber hinaus erlaubt GEL auch das Setzen von Breakpoints, Speicherzugriffe und die Ablaufkontrolle des Programms \Zitat[Kap. 7.7, 7.7.8.6 \& 7.7.8.7]{ti:CCS}.
+Wie in Abschnitt \ref{Hardware_VS_Software_Breakpoints} erl\"autert, basieren klassische software-Breakpoints h\"aufig auf sogenannten Trap-Instruktionen. Das Debugging-Framework der Entwicklungsumgebung unterst\"utzt dies unter anderem \"uber die \NeuerBegriff{General Extension Language} (\Abkuerzung{General Extension Language}{GEL}) – ein Makro- und Skriptsystem, das die Initialisierung von Systemen sowie die Steuerung von Debug-Sitzungen erm\"oglicht. Dar\"uber hinaus erlaubt GEL auch das Setzen von Breakpoints, Speicherzugriffe und die Ablaufkontrolle des Programms \Zitat[Kap. 7.7, 7.7.8.6 \& 7.7.8.7]{ti:CCS}.
 
-Für diese Arbeit war es jedoch erforderlich, dass bei Ausl\"osen eines Breakpoints benutzerdefinierte Routinen aus dem Observer-Modul aktiv bleiben und verwendet werden k\"onnen (\Vgl Abschnitt \ref{Interruptgesteuertes_Lesen&Schreiben}). Diese Funktionalit\"aten sind mit dem Standardverhalten von GEL-Traps nicht kompatibel, da sie typischerweise nur auf Debugger-seitige Prozesse abzielen und keine Kontextintegration benutzerdefinierter Routinen auf dem Zielsystem erlauben.
+F\"ur diese Arbeit war es jedoch erforderlich, dass bei Ausl\"osen eines Breakpoints benutzerdefinierte Routinen aus dem Observer-Modul aktiv bleiben und verwendet werden k\"onnen (\Vgl Abschnitt \ref{Interruptgesteuertes_Lesen&Schreiben}). Diese Funktionalit\"aten sind mit dem Standardverhalten von GEL-Traps nicht kompatibel, da sie typischerweise nur auf Debugger-seitige Prozesse abzielen und keine Kontextintegration benutzerdefinierter Routinen auf dem Zielsystem erlauben.
 
 Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzichtet und stattdessen ein direkter Sprungbefehl (Jump) auf eine benutzerdefinierte Breakpoint-Handler-Routine implementiert. Dadurch wird sichergestellt, dass das Observer-Modul auch w\"ahrend einer Unterbrechung aktiv bleibt und die Kontrolle \"uber Register- und Speicherzugriffe erhalten bleibt.
 
 \subsubsection{Implementierung erweiterter Software Breakpoints}
 \label{sec:ImplementierungSoftwareBreakpoints}
 
-Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff[Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.]{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf das Code-Segmenten zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven Adressierungsmodus berücksichtigen.
+Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff[Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.]{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf das Code-Segmenten zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven Adressierungsmodus ber\"ucksichtigen.
 
 Die Implementierung gliedert sich in folgende Schritte:
 \begin{enumerate}
@@ -152,11 +181,11 @@ Um die im vorigen Abschnitt \ref{sec:KonzeptionierungSoftwareBreakpoints} skizzi
 Die Manipulation von Befehlen im Stack ist hoch kritisch, da das Hauptprogramm keine Kenntnis vom Observer-Modul hat und eine falsche Adressierung, unterschiedlichen Adressierungs-Modi oder unvollst\"andige Opcode-substituierung zu undefiniertem Verhalten f\"uhren kann. Drei zentrale Aspekte sind dabei zu beachten:
 
 \begin{itemize}
-	\item \textbf{Speicher-Alignment:} MSP430-Instruktionen sind grundsätzlich an geraden Speicheradressen ausgerichtet. Vor jedem Schreib- oder Lesezugriff muss daher sichergestellt werden, dass die Zieladresse eine gerade Adresse ist. Zugriffe auf ungerade Adressen können zu undefiniertem Verhalten führen, sofern keine Fehlerbehandlung erfolgt. Darüber hinaus sind Adressen, die in der Mitte eines Opcodes liegen, ungültig und dürfen nicht als Breakpoint oder adressiert werden.
+	\item \textbf{Speicher-Alignment:} MSP430-Instruktionen sind grunds\"atzlich an geraden Speicheradressen ausgerichtet. Vor jedem Schreib- oder Lesezugriff muss daher sichergestellt werden, dass die Zieladresse eine gerade Adresse ist. Zugriffe auf ungerade Adressen k\"onnen zu undefiniertem Verhalten f\"uhren, sofern keine Fehlerbehandlung erfolgt. Dar\"uber hinaus sind Adressen, die in der Mitte eines Opcodes liegen, ung\"ultig und d\"urfen nicht als Breakpoint oder adressiert werden.
 	
 	\item \textbf{Opcode-L\"angen:} W\"ahrend einzelne Maschinenbefehle in der Regel zwei bis vier Bytes belegen, k\"onnen komplexe Instruktionen – etwa \Code{CMP.B} – bis zu sechs Bytes lang sein, wie in \Abbildung{DisassemblyOpcodeLaengen} zu sehen. \Zitat[S.165, Kap. 4.6.2.32]{ti:slau272d} Diese Variabilit\"at erschwert das gezielte \"Uberschreiben von genau vier Byte, die f\"ur die Jump-Instruktion einschlie{\ss}lich Zieladresse ben\"otigt werden. Unter diesen Randbedingungen besteht die Gefahr, dass entweder zu viele oder zu wenige Bytes \"uberschrieben werden, was zu ung\"ultigen oder unbeabsichtigten Instruktionen f\"uhren kann.
 	
-	\item \textbf{Adressierungs Modus:} Der Speicher, im Umfang von einem Megabyte, kann \"uber sieben unterschiedliche arten Adressiert werden. Wahlweise kommen 16 oder 20-Bit Adressen zum Einsatz. Diese Variabilität der Adressierungsmodi und die damit einhergehenden unterschiedlichen Adressbreiten haben tiefgreifende Konsequenzen.\Zitat[S. 97, Kap. 4.4]{ti:slau272d}
+	\item \textbf{Adressierungs Modus:} Der Speicher, im Umfang von einem Megabyte, kann \"uber sieben unterschiedliche arten Adressiert werden. Wahlweise kommen 16 oder 20-Bit Adressen zum Einsatz. Diese Variabilit\"at der Adressierungsmodi und die damit einhergehenden unterschiedlichen Adressbreiten haben tiefgreifende Konsequenzen.\Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 \end{itemize}
 
 \begin{figure}[h!]

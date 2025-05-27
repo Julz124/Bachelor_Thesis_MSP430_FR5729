@@ -467,17 +467,17 @@ Diese sorgf\"altige Konfigurationssequenz ist entscheidend f\"ur die zuverl\"ass
 \subsection{Zusammenfassung}
 \label{eUSCI_Zusammenfassung}
 
-Die vorangegangenen Kapitel haben die Kommunikationsschnittstelle des MSP430FR5729 im UART-Betriebsmodus detailliert beleuchtet. Im Kern des eUSCI-Moduls steht die serielle Kommunikation mit Peripherieger\"aten oder Systemen. Dazu werden synchrone Protokolle wie SPI und I$^{2}$C und asynchrone Protokolle wie UART bereitgestellt.
+Die vorangegangenen Kapitel haben die Kommunikationsschnittstelle des MSP430FR5729 im UART-Betrieb detailliert beleuchtet. Das eUSCI-Modul dient der serielle Kommunikation mit Peripherieger\"aten oder anderen Systemen. Dazu werden synchrone Protokolle wie SPI und I$^{2}$C und asynchrone Protokolle wie UART bereitgestellt.
 
-Im Rahmen dieser Arbeit kristallisierte sich in \ref{Einordnung_Schnittstellen} heraus, dass sich das asynchrone Kommunikationsprotokoll UART am besten f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC-System geeignet ist. Dabei wurden die Schnittstellen unter den Gesichtspunkten der Implementierung, Robustheit, Interruptf\"ahigkeit und Kompartibilit\"at betrachtet.
+Im Rahmen dieser Arbeit zeigte sich (siehe \ref{Einordnung_Schnittstellen}), dass sich das asynchrone Kommunikationsprotokoll UART am besten f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC-System geeignet ist. Die Bewertung der Schnittstellen erfolgte unter den Gesichtspunkten Implementierungsaufwand, Robustheit, Interruptf\"ahigkeit und Kompatibilit\"at.
 
-Wesentliche Aspekte des UART-Betriebs ist die zuvor angesprochene asynchrone Kommunikation, welche eine ungest\"orte, wechselseitige Kommunikation beider Seiten, \"uber eine Baudraten-Synchronisation, erm\"oglicht. Wichtige Merkmale hierzu sind die Formate der Daten\"ubertragung (\zB acht Datenbits, LSB-first, ein SP) und die der Fehlererkennung (\zB Framing-, Parity-, Overrun-Error).
+Wesentliche Aspekte des UART-Betriebs ist die asynchrone Natur der Kommunikation und die wechselseitige Daten\"ubertragung zwischen zwei Parteien mittels Baudraten-Synchronisation, auch Vollduplex-Kommunikation genannt. Wichtige Merkmale hierzu ist das Datenformat (\zB acht Datenbits, LSB-first, ein SP) und die Mechanismen zur Fehlererkennung (\zB Framing-, Parity-, Overrun-Error).
 
-Die Automatisierte Baudraten-Erkennung schafft, bei verkn\"upfung mehrerer Kommunikationspartner \"uber die gleiche Leitung, eine hohe flexibilit\"at, erh\"oht jedoch die komplexit\"at dabei erheblich. Da allerdings zu diesem Zeitpunkt nicht mehrere Verbindungen unterschiedlicher Baudraten \"uber eine Schnittstelle erfolgen, ist auch diese Funktion nicht vonn\"oten.
+Die automatische Baudraten-Erkennung erh\"oht bei der Verkn\"upfung mehrerer Kommunikationspartner \"uber dieselbe Leitung die Flexibilit\"at, steigert jedoch auch die Komplexit\"at. Da f\"ur die aktuelle Anwendung keine Verbindung mit unterschiedlichen Baudraten \"uber eine einzelne Schnittstelle erforderlich ist, wird diese Funktion nicht ben\"otigt.
 
-Zentrale Schritte zur Konfiguration des eUSCI-Moduls f\"ur den UART-Betrieb ist das einleiten des eUSCI-Reset-Modus, das Setzen und R\"ucksetzen von notwendigen Steuerbits, die Feinabstimmung der gew\"unschten Baudrate \"uber die Prescaler und das aufheben des Reset-Zustandes.
+Die zentralen Schritte zur Konfiguration des eUSCI-Moduls für den UART-Betrieb umfasst das Einleiten des eUSCI-Software-Resets, das Setzen und gegebenenfalls R\"ucksetzen notwendiger Steuerbits in den Kontrollregistern, die Feinabstimmung der gew\"unschten Baudrate \"uber Prescaler-Werte und schließlich das Aufheben des Reset-Zustandes zur Aktivierung des Moduls.
 
-Ein detailliertes Blockdiagramm des eUSCI\_A-Moduls, das f\"ur den UART-Betrieb konfiguriert ist, ist in \Abbildung{BlockDiagramm_eUSCI_A_UART} dargestellt.
+\ref{BlockDiagramm_eUSCI_A_UART} zeigt ein detailliertes Blockdiagramm des eUSCI\_A-Moduls in der konfigurierten UART-Betriebsart.
 
 \begin{figure}[h!]
 	\centering

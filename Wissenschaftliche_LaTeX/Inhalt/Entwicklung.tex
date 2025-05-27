@@ -1,8 +1,21 @@
+% !TEX encoding = UTF-8 Unicode
+% !TEX root =  ../Bachelorarbeit.tex
 
 \chapter{Entwicklung}
 
+Nachdem in den vorangegangenen Kapiteln die theoretischen Grundlagen zu Timern, Interrupt Service Routinen (ISR) und dem Enhanced Universal Serial Communication Interface (eUSCI) des MSP430FR5729 geschaffen wurden, widmet sich dieses Kapitel der Entwicklung und praktischen Implementierung der angestrebten, interruptgesteuerten Benutzerschnittstelle. Aufbauend auf dem erarbeiteten Wissen erfolgt zun\"achst die Konzeptionierung eines Observer-Moduls, das als zentrale Instanz f\"ur die Verarbeitung von Eingaben und die Steuerung von Ausgaben dient. Daraufhin wird das interruptgesteuerte Lesen und Schreiben von Daten \"uber die eUSCI-Schnittstelle detailliert behandelt. Abschlie{\ss}end werden essenzielle Debugging-Methoden erarbeitet, evaluiert und eine m\"ogliche Implementierung von Software-Basierten Breakpoints, beleuchtet, um eine robuste und echtzeitf\"ahige Funktion der entwickelten Komponente sicherzustellen.
+
 \section{Konzeprionierung Observer-Modul}
 \label{Grundger\"ust_ObserverModul}
+
+Die zentrale Einheit, zur Verarbeitung eingehender Befehle und Steuerung aller Funktionen stellt das \glqq Observer-Modul\grqq dar. Es verbindet die Interrupt-Basierte Abarbeitung und senden von Daten mit dem erhalt externer Steuerbefehle. Die in \ref{TIMER&ISR} und \ref{eUSCI} erarbeiteten Informationen \"uber bereitgestellte Technologien im MSP430FR5729 kommen dort zu tragen. Bis ein Befehl \"uber die Eingabetaste eines PCs best\"atigt wurde, befindet sich das Modul in einem Ruhezustand. Ab dem ersten \Fachbegriff[Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)]{Alphanumerisch}en Zeichen beginnt ein \glqq Time-Out\grqq-Timer, welcher die Eingabe des Befehls nach einer bestimmten Zeit zur\"ucksetzt und einen \glqq Time-Out-Error\grqq ausgibt. Nach erfolgreicher Eingabe und Best\"atigung eines Befehls durch die Eingabetaste, wird der \glqq Time-Out\grqq-Timer deaktiviert und die Befehlsinterpretation gestartet. Nach erfolgreicher Interpretation erfolgt die Ausgabe des Ergebnisses der Befehlsverarbeitung.
+
+Ein Funktionsf\"ahiges Modul, welches die daf\"ur notwendigen Hardware-Komponenten -- die ISR und das eUSCI -- integriert, ben\"otigt daher eine umfangreiche, \"offentliche Initialisierungs-Methode, welche von der Hauptroutine aufgerufen wird. Diese beinhaltet die Konfiguration notwendiger Steuerregister, sowie die Initialisierung weiterer Variablen und Datenstrukturen. F\"ur die Befehls-Eingabe sowie die Ergebnis-Ausgabe kann die in \ref{eUSCI_Konfiguration} beschriebene Konfiguration eines f\"ur den UART-Betrieb ausgelegtes eUSCI-Modul \"ubernommen werden. Folgende Einstellungen erweisen sich dabei am vorteilhaftesten:
+\begin{itemize}
+	\item \textbf{:}
+	\item \textbf{:}
+\end{itemize}
+
 
 
 \newpage

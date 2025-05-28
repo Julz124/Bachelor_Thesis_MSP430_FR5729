@@ -47,7 +47,20 @@
 
 \newcommand{\Abkuerzung}[2]{\textit{#2}\nomenclature{#2}{#1}}
 
-\newcommand{\Fachbegriff}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\textit{#2}\xspace}{\textit{#2}\xspace\footnote{#1}\nomenclature{#2}{#1}}}
+%\newcommand{\Fachbegriff}[2][\empty]{%
+%	\ifthenelse{\equal{#1}{\empty}}%
+%	{\textit{#2}\xspace}%
+%	{\textit{#2}\xspace\footnote{#1}\nomenclature{#2}{#1}}%
+%}
+
+\NewDocumentCommand{\Fachbegriff}{m m o}{%
+	\textit{#2}\xspace%
+	\footnote{#1}%
+	\IfNoValueTF{#3}
+	{\nomenclature{#2}{#1}}%
+	{\nomenclature{#3}{#1}}%
+}
+
 
 \newcommand{\FachbegriffSpezialA}[4]{\textit{#4}\footnote{#3}\label{fn:#1}\nomenclature{#4}{#2. Siehe auch Fu{\ss}zeile auf Seite~\pageref{fn:#1}.}}
 

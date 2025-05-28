@@ -8,9 +8,9 @@
 \section{Das Ziel dieser Arbeit}
 \label{sec:ZielDerArbeit}
 
-Diese Bachelor-Thesis befasst sich mit der Entwicklung einer \Fachbegriff[Ein Mechanismus zur ereignisorientierten Unterbrechung des normalen Programmablaufs]{interruptgesteuerten} Benutzerschnittstelle auf einem \Fachbegriff[Ein Mikrocontroller, der f\"ur energieeffiziente Anwendungen optimiert ist. Typischerweise eingesetzt in batteriebetriebenen Embedded-Systemen]{Low-Power-Mikrocontroller}, zur \"Uberwachung und Manipulation von \Fachbegriff[Speicherzellen, die fl\"uchtig sind und ihre Inhalte beim Ausschalten verlieren]{Registern} und Speicherzellen in \Abkuerzung{Random Access Memory}{RAM} und \Abkuerzung{Ferroelectric Random Access Memory}{FRAM}.
+Diese Bachelor-Thesis befasst sich mit der Entwicklung einer \Fachbegriff{Ein Mechanismus zur ereignisorientierten Unterbrechung des normalen Programmablaufs}{interruptgesteuerten}[interruptgesteuert] Benutzerschnittstelle auf einem \Fachbegriff{Ein Mikrocontroller, der f\"ur energieeffiziente Anwendungen optimiert ist. Typischerweise eingesetzt in batteriebetriebenen Embedded-Systemen}{Low-Power-Mikrocontroller}, zur \"Uberwachung und Manipulation von \Fachbegriff{Speicherzellen, die fl\"uchtig sind und ihre Inhalte beim Ausschalten verlieren}{Registern}[Register] und Speicherzellen in \Abkuerzung{Random Access Memory}{RAM} und \Abkuerzung{Ferroelectric Random Access Memory}{FRAM}.
 
-Im Zuge des Arbeitsauftrags wird ein unabh\"angiges \Fachbegriff[Eine funktionale Einheit innerhalb eines gr\"o{\ss}eren Systems, die separat entwickelt und gewartet werden kann]{Modul} entwickelt, welches nach Wunsch aktiviert oder deaktiviert wird.
+Im Zuge des Arbeitsauftrags wird ein unabh\"angiges \Fachbegriff{Eine funktionale Einheit innerhalb eines gr\"o{\ss}eren Systems, die separat entwickelt und gewartet werden kann}{Modul} entwickelt, welches nach Wunsch aktiviert oder deaktiviert wird.
 
 
 \section{Die Umgebung, in der die Arbeit entstand}
@@ -18,7 +18,7 @@ Im Zuge des Arbeitsauftrags wird ein unabh\"angiges \Fachbegriff[Eine funktional
 
 Die Entwicklung der Software geschah in Absprache mit Herr Prof. Dr. Iren\"aus Schoppa, welcher ein zus\"atzliches Tool f\"ur Studenten im Praktikum von Microprozessorsysteme ben\"otigt.
 
-Als Entwicklungsbasis kam der in \Abkuerzung{Microprozessorsysteme}{MIPS} herangezogene MSP430FR5729 von Texas Instruments zum Einsatz, welcher bereits ein ausgereifter und etablierter \Abkuerzung[Low-Power-Mikrocontroller]{LP-MCU} ist. Viele Technologien, die diesem Prozessor zugrunde liegen, werden in dieser Arbeit wissentlich nicht behandelt, um den Rahmen nicht zu sprengen und sich auf das wesentliche zu konzentrieren.
+Als Entwicklungsbasis kam der in \Abkuerzung{Microprozessorsysteme}{MIPS} herangezogene MSP430FR5729 von Texas Instruments zum Einsatz, welcher bereits ein ausgereifter und etablierter \Abkuerzung{Low-Power-Mikrocontroller}{LP-MCU} ist. Viele Technologien, die diesem Prozessor zugrunde liegen, werden in dieser Arbeit wissentlich nicht behandelt, um den Rahmen nicht zu sprengen und sich auf das wesentliche zu konzentrieren.
 
 
 \section{Der Aufbau dieser Arbeit}
@@ -26,13 +26,11 @@ Als Entwicklungsbasis kam der in \Abkuerzung{Microprozessorsysteme}{MIPS} herang
 
 \begin{description}
 
-	\item[Aktueller Wissensstand:] Der aktuelle Wissensstand beschreibt, auf welchem Wissensniveau sich der Autor im Moment der Aufnahme der Arbeit befand.
+	\item[Grundlagen, Technologien und Evaluation:] Im Kapitel \ref{UeberblickEntwicklungsplattform} werden die zur Planung und Umsetzung verwendeten Grundlagen und Technologien erarbeitet. Die grundlegenden Eigenschaften und der Aufbau des Softwareentwicklungsprozesses auf einem LP-MCU werden erkl\"art und die ben\"otigten Dokumentationen referenziert.
 	
-	\item[Methoden, Technologien und Herangehensweise:] Im Kapitel \ref{EntwicklungsplattformMSP430FR5729} werden die zur Planung und Umsetzung verwendeten Technologien und Methoden erl\"autert. Die grundlegenden Eigenschaften und der Aufbau des Softwareentwicklungsprozesses werden erkl\"art. Zudem auch die ben\"otigten Dokumentationen referenziert.
+	\item[Konzeptionierung der Benutzerschnittstelle:] Dieses Kapitel umfasst die Dokumentation der gesamten Planungsphase des Observer-Moduls. Hier wird eine \"Ubersicht \"uber die L\"osungsfindung geschaffen und anschlie{\ss}end die zur Planung erforderlichen Dokumente und Diagramme angefertigt.
 	
-	\item[Die Konzeptionierung des Moduls:] Dieses Kapitel umfasst die Dokumentation der gesamten Planungsphase des Observer-Moduls. Hier wird eine \"Ubersicht \"uber die bereits vorhandene L\"osung geschaffen und anschlie{\ss}end die zur Planung erforderlichen Dokumente angefertigt.
-	
-	\item[Die Entwicklung des Observers:] Dieses Kapitel enth\"alt die Dokumentation der tats\"achlichen Programmierung der Software. Hier werden die Voraussetzungen zur Implementation gekl\"art und der Verlauf der Entwicklung anhand von Beispielen schrittweise abgearbeitet.
+	\item[Die Entwicklung des Observers:] Dieses Kapitel enth\"alt die Dokumentation der tats\"achlichen Programmierung des Software-Moduls. Hier wird die Implementation gekl\"art und der Verlauf der Entwicklung anhand von Beispielen schrittweise abgearbeitet.
 	
 	\item[Fazit und kritische Bewertung:] Im Fazit werden die gemachten Erfahrungen und die Ergebnisse der Planung und Entwicklung abschlie{\ss}end zusammengefasst und kritisch bewertet. Zus\"atzlich wird ein kleiner Ausblick auf Erweiterungsm\"oglichkeiten und m\"ogliche Optimierungsschritte unternommen.
 

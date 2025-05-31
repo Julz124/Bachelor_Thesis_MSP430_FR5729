@@ -594,7 +594,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
         *(rw_buf_ptr + 1) = cmd_error;
         observer_print(rw_buf_ptr);
         cmd_error = NO_ERR;
-        CLRBIT(global_events, UART_ERR);
+        CLRBIT(global_events, CMD_ERR);
         state_ptr = &state_2;
     }
 

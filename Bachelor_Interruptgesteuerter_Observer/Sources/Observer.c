@@ -263,7 +263,7 @@ LOCAL Void observer_getchar_blocking(Void) {
  * Main-Functionality Logic
  */
 
-// Writes to memory cell(s)
+// Reads from memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(read_mem)
 LOCAL Void read_mem(Void) {
 
@@ -290,7 +290,7 @@ LOCAL Void read_mem(Void) {
     mem_addr_idx++;
 }
 
-// Reads from memory cell(s)
+// Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL Void write_mem(Void) {
 

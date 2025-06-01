@@ -34,7 +34,8 @@ Ausgehend vom grundlegenden Architekturkonzept des Observer-Moduls erfolgt im fo
 \label{ZustaendeUndFunktionen}
 
 Der Programmablauf, nach der Initialisierung des Moduls bis zur erfolgreichen Ausgabe einer Information, beschreibt sich wie folgt:
-Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff{Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)}{alphanumerischen}[alphanumerisch] Zeichen wird ein \glqq Time-Out\grqq-Timer aktiviert. Erfolgt keine abschlie{\ss}ende Eingabe innerhalb eines definierten Zeitintervalls, wird diese zur\"uckgesetzt und ein \glqq Time-Out-Error\grqq generiert. Mit erfolgreicher Best\"atigung wird der Timer deaktiviert und die Befehlsinterpretation eingeleitet. Das Ergebnis der Befehlsverarbeitung wird \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens. \Abbildung{StateMachine_ObserverModul} zeigt einen voll Umfassenden \Fachbegriff{Auch endlicher Automat, ist ein mathematisches Modell zur Beschreibung von Systemen mit endlich vielen Zust\"anden, das \"Uberg\"ange zwischen diesen in Abh\"angigkeit von Eingaben definiert; \Vgl Hopcroft, J.E., Motwani, R., Ullman, J.D. (2006): Introduction to Automata Theory, Languages, and Computation.}{Zustandsautomaten}.
+Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff{Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)}{alphanumerischen}[alphanumerisch] Zeichen wird ein \glqq Time-Out\grqq-Timer aktiviert. Dieser Time-Out-Timer bildet den ersten von drei Zust\"anden (\Code{state\_0}). Erfolgt innerhalb eines definierten Zeitintervalls keine abschlie{\ss}ende Eingabe, wird der Vorgang \"uber den Zustand \Code{state\_2} zur\"uckgesetzt, und es wird ein \glqq Time-Out-Error\grqq generiert. bei erfolgreicher Best\"atigung hingegen wird der Timer deaktiviert und \"uber den Zustand \Code{state\_1} die Befehlsinterpretation eingeleitet. In \Code{state\_1} wird ein zum Befehl passender Funktionszeiger dem Statuszeiger zugewiesen. Das Ergebnis der Befehlsverarbeitung wird anschlie{\ss}end \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens. \Abbildung{StateMachine_ObserverModul} zeigt einen voll Umfassenden \Fachbegriff{Auch endlicher Automat, ist ein mathematisches Modell zur Beschreibung von Systemen mit endlich vielen Zust\"anden, das \"Uberg\"ange zwischen diesen in Abh\"angigkeit von Eingaben definiert.}{Zustandsautomaten}[Zustandsautomat].
+Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich in Kapitel \ref{Timer_ISR}.
 
 \begin{figure}[h!]
 	\centering
@@ -155,9 +156,87 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 	\label{fig:activity_diagram_uart_isr_send}
 \end{figure}
 
+
 \newpage
 \section{Interruptgesteuertes Lesen und Schreiben}
 \label{Interruptgesteuertes_Lesen&Schreiben}
+
+Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architektur lassen sich Funktionalit\"aten und weitere Features integrieren. Im Rahmen dieser Arbeit fiel die Wahl f\"ur eine Kernfunktion auf das interruptgesteuerte Lesen und Schreiben von FRAM-Speicherzellen. Die nachfolgenden Abschnitte erarbeiten die Konzeption und Implementierung dieser Speicheroperationen und analysieren potenzielle Limitationen. Ein fundamentales Merkmal hierbei ist, dass die interruptgesteuerten Speicherzugriffe nicht zwingend einen expliziten Haltezustand des Gesamtsystems erfordern –- wie im Kontext der m\"oglichen Debugging-Funktion in Kapitel \ref{Entwicklung} erl\"autert. Die angestrebte Funktionalit\"at kann auch ohne diese Art an erweiterte Systemkontrolle, eigenst\"andig agieren. Ein potenzieller Nachteil dessen ist jedoch in der Datenkonsistenz der Ausgabe: Durch die zustandsorientierte, inkrementelle Verarbeitung der Lese- und Schreibvorg\"ange k\"onnten konkurrierende Prozesse den adressierten Speicherbereich zwischen einzelnen Verarbeitungsschritten modifizieren. Daraus ergibt sich ein weiterer Grund f\"ur die Notwendigkeit, das Grundkonzept des statusorientierten, interruptgesteuerten Betriebs umzusetzen – wie im Folgenden beschrieben.
+
+\subsection{Grundkonzept des statusorientierten, interruptgesteuerten Betriebs}
+\label{konzept_status_&_interrupt}
+
+Die zustandsorientierte Programmierung f\"ur das Observer-Modul setzt die Dekomposition komplexer, sequenzieller Abl\"aufe in kleinere, Verarbeitungseinheiten voraus. Wie bereits in den Kapiteln \ref{ZustaendeUndFunktionen} und \ref{Timer_ISR} dargelegt, repr\"asentieren die Lese- und Schreiboperationen dedizierte Zust\"ande innerhalb der \"ubergeordneten Zustandsmaschine. Diese Unterteilung ist essentiell, um die Reaktionsf\"ahigkeit des Systems auf externe Eingaben und die parallele Bearbeitung anderer systeminterner Aufgaben sicherzustellen. F\"ur die Realisierung der Speicherzugriffe sind neben generischen Zust\"anden -- zur Befehlsverarbeitung und Systeminitialisierung -- spezifische Zust\"ande f\"ur das Lesen und Schreiben erforderlich. Da diese Operationen, insbesondere bei gr\"oßeren Speicherzugriffen, potenziell zeitintensiv sind, ist die \"Uberf\"uhrung in eine zeichenorientierte Verarbeitung, welche periodisch durch die Timer-ISR ausgef\"uhrt wird, notwendig.
+
+Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation ergeben, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
+
+\subsection{Rolle der Interrupt Service Routinen}
+\label{LesenSchreiben_Rolle_ISR}
+
+Die beiden prim\"aren Interrupt Service Routinen des Moduls, die UART-ISR und die Timer-ISR, erf\"ullen dabei kritische Funktionen im gesamten Prozesszyklus der Speicheroperationen –- von der initialen Befehlseingabe \"uber die schrittweise Datenverarbeitung bis hin zur finalen Ergebnisausgabe.
+
+\begin{itemize}
+	\item \textbf{Die UART-ISR:} Agiert als prim\"are Schnittstelle f\"ur die Benutzerinteraktion. Sie ist verantwortlich f\"ur den Empfang vollst\"andiger Befehlsstrings, wie beispielsweise \Code{rdm adresse bytes} zur Anforderung eines Speicherlesevorgangs oder \Code{wrm adresse string} zur Initiierung eines Schreibvorgangs. Dar\"uber hinaus \"ubernimmt die UART-ISR die Ausgabe der aus dem FRAM gelesenen Daten an den Benutzer und quittiert einen erfolgreich abgeschlossenen Schreibvorgang durch erneute Ausgabe des Befehls.
+	
+	\item \textbf{Die Timer-ISR:} Fungiert als periodischer Ausl\"oser und Taktgeber f\"ur die Ausf\"uhrung zustandsbasierter Funktionen. Sie ruft wiederholt die im Funktionszeiger \Code{state\_ptr} referenzierte, aktuell aktive Zustandsfunktion (\zB \Code{read\_mem()} oder \Code{write\_mem()}) auf. Diese Funktion bleibt so lange aktiv, bis ein definierter Endzustand der jeweiligen Operation erreicht ist. Eine weitere wesentliche Aufgabe der Timer-ISR ist die Synchronisation der Speicherzugriffe mit anderen Systemaktivit\"aten; sie stellt unter anderem sicher, dass Lese- und Schreiboperationen nur dann erfolgen, wenn keine konkurrierende UART-\"ubertragung aktiv ist (indiziert durch das Flag \Code{WRT\_UART}).
+	
+\end{itemize}
+
+\subsection{Implementierung der Lese- und Schreibfunktion}
+\label{Implementierung_Lesen_Schreiben}
+
+Die softwaretechnische Realisierung der Lese- und Schreibfunktionen ist bewusst ressourcenschonend und auf Laufzeit optimiert. Diese Funktionen besitzen im Wesentlichen einen definierten Startzustand, einen Endzustand sowie die Logik f\"ur den eigentlichen, inkrementellen Speicherzugriff.
+
+Der Programmablauf der \Code{read\_mem()}-Funktion ist wie folgt strukturiert (siehe auch Quellcodeausschnitt in \Abbildung{read_mem_function}):
+\begin{itemize}
+	\item \textbf{Initiierung:} Die Funktion wird aktiviert, sobald die Befehlsverarbeitungsroutine (\Code{state\_1}) einen \grqq rdm\grqq-Befehl identifiziert und den globalen Zustandszeiger \Code{state\_ptr} auf die Adresse der \Code{read\_mem()}-Funktion setzt. Gleichzeitig werden die f\"ur den Lesevorgang notwendigen Parameter –- die Startadresse (gespeichert in \Code{mem\_addr\_ptr}) und die Anzahl der zu lesenden Bytes (\Code{blocks}) –- aus dem \Code{uart\_buffer} extrahiert und in globalen Variablen zwischengespeichert.
+	
+	\item \textbf{Inkrementelle Ausf\"uhrung:} Bei jedem Aufruf durch die Timer-ISR wird exakt ein Byte aus dem FRAM an der aktuellen Adresse (\Code{mem\_addr\_ptr + mem\_addr\_idx}) gelesen. Der Fortschritt innerhalb des adressierten Speicherbereichs wird mittels der Indexvariable \Code{mem\_addr\_idx} verfolgt, welche nach jedem gelesenen Byte inkrementiert wird.
+	
+	\item \textbf{Datenausgabe:} Das eingelesene Zeichen wird einer Validierung unterzogen (Filterung nicht-alphanumerischer Zeichen, die durch Leerzeichen ersetzt werden) und anschlie{\ss}end im Puffer \Code{rw\_buf} abgelegt. Mittels der Funktion \Code{observer\_print()} erfolgt die unmittelbare Ausgabe dieses Zeichens \"uber die UART-Schnittstelle an die Benutzerkonsole.
+	
+	\item \textbf{Beendigung:} Die Leseoperation gilt als abgeschlossen, sobald der Z\"ahler \Code{mem\_addr\_idx} die vorgegebene Anzahl an zu lesenden Bytes erreicht oder \"uberschritten hat. In diesem Fall wird der \Code{state\_ptr} auf den Zeiger der \Code{state\_2}-Funktion (R\"ucksetz- und Leerlaufzustand) umgelenkt, um das System f\"ur neue Befehle vorzubereiten.
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.75\textwidth]{../Bilder/ObserverModule/read_mem.png}
+	\caption{Implementierungsausschnitt der read\_mem()-Funktion im Observer-Modul}
+	\label{fig:read_mem_function}
+\end{figure}
+
+Analog dazu ist der Programmablauf der \Code{write\_mem()}-Funktion konzipiert (siehe Quellcodeausschnitt in \Abbildung{write_mem_function}):
+\begin{itemize}
+	\item \textbf{Initiierung:} Die Aktivierung erfolgt, wenn die Befehlsverarbeitung (\Code{state\_1}) einen \grqq wrm\grqq-Befehl erkennt und \Code{state\_ptr} auf die \Code{write\_mem()}-Funktion setzt. Die Zieladresse (\Code{mem\_addr\_ptr}) und der zu schreibende String (\Code{write\_str\_ptr}) werden aus dem \Code{uart\_buffer} extrahiert.
+	
+	\item \textbf{Adressvalidierung:} Vor dem eigentlichen Schreibzugriff wird \"uberpr\"uft, ob die angegebene Zieladresse in potenziell schreibgesch\"utzten oder f\"ur andere Zwecke reservierten Speicherbereichen liegt (\zB im Hexadezimalbereich von 0x000000 bis 0x0001FF oder 0x000C00 bis 0x000FFF, mehr Informationen dazu in \Abbildung{memory_map}). Bei Detektion einer ung\"ultigen Adresse wird ein entsprechender Fehlercode (\Code{INV\_ADDR}) gesetzt und die Operation terminiert.
+	
+	\item \textbf{Inkrementelle Ausf\"uhrung:} Bei jedem Aufruf durch die Timer-ISR wird ein einzelnes Zeichen aus dem \Code{write\_str\_ptr} (an der durch \Code{mem\_addr\_idx} indizierten Position) in die entsprechende FRAM-Speicherzelle (\Code{mem\_addr\_ptr + mem\_addr\_idx}) geschrieben. Der Fortschritt wird durch das hochz\"ahlen der \Code{mem\_addr\_idx}-Variable verfolgt.
+	
+	\item \textbf{Datenausgabe/Echo:} Das soeben geschriebene Zeichen wird zur Verifikation in den \Code{rw\_buf} kopiert und mittels \Code{observer\_print()} als Echo an den Benutzer zur\"uckgesendet.
+	
+	\item \textbf{Beendigung:} Die Schreiboperation ist abgeschlossen, sobald das Nullterminierungszeichen (\grq \texttt{\textbackslash 0}\grq) des \Code{write\_str\_ptr} erreicht wurde. Daraufhin wird abermals der \Code{state\_ptr} auf die \Code{state\_2}-Funktion gesetzt, um den Schreibzyklus ordnungsgem\"a{\ss} zu beenden und das Modul in seinen definierten Ausgangszustand zur\"uck zu setzen.
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.75\textwidth]{../Bilder/ObserverModule/write_mem.png}
+	\caption{Implementierungsausschnitt der write\_mem()-Funktion im Observer-Modul}
+	\label{fig:write_mem_function}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.75\textwidth]{../Bilder/memory_map.png}
+	\caption{Memory map des FG4618 \Zitat[S. 603, Fig. 11.1]{davies:msp430}}
+	\label{fig:memory_map}
+\end{figure}
+
+Nach der fachgerechten Implementierung dargestellter Speicherfunktionen ist die Identifikation, Verarbeitung und Signalisierung potenziell auftretender Fehlerzust\"ande ein weiterer unerl\"asslicher Entwicklungsschritt. Dieser Aspekt der Fehlerbehandlung wird im nachfolgenden Kapitel eingehend thematisiert.\AI
+
+\subsection{Fehlerbehandlung der Lese- und Schreibfunktion}
+\label{Fehlerbehandlung_Lesen_Schreiben}
+
 
 
 \newpage

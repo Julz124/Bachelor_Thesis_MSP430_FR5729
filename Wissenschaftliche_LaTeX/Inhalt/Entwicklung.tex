@@ -168,7 +168,7 @@ Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architekt
 
 Die zustandsorientierte Programmierung f\"ur das Observer-Modul setzt die Dekomposition komplexer, sequenzieller Abl\"aufe in kleinere, Verarbeitungseinheiten voraus. Wie bereits in den Kapiteln \ref{ZustaendeUndFunktionen} und \ref{Timer_ISR} dargelegt, repr\"asentieren die Lese- und Schreiboperationen dedizierte Zust\"ande innerhalb der \"ubergeordneten Zustandsmaschine. Diese Unterteilung ist essentiell, um die Reaktionsf\"ahigkeit des Systems auf externe Eingaben und die parallele Bearbeitung anderer systeminterner Aufgaben sicherzustellen. F\"ur die Realisierung der Speicherzugriffe sind neben generischen Zust\"anden -- zur Befehlsverarbeitung und Systeminitialisierung -- spezifische Zust\"ande f\"ur das Lesen und Schreiben erforderlich. Da diese Operationen, insbesondere bei gr\"oßeren Speicherzugriffen, potenziell zeitintensiv sind, ist die \"Uberf\"uhrung in eine zeichenorientierte Verarbeitung, welche periodisch durch die Timer-ISR ausgef\"uhrt wird, notwendig.
 
-Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation ergeben, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
+Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. In Kapitel~\ref{laufzeit} wurden hierzu Laufzeitmessungen unter Realbedingungen genauer untersucht. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation ergeben, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
 
 \subsection{Rolle der Interrupt Service Routinen}
 \label{LesenSchreiben_Rolle_ISR}
@@ -232,10 +232,56 @@ Analog dazu ist der Programmablauf der \Code{write\_mem()}-Funktion konzipiert (
 	\label{fig:memory_map}
 \end{figure}
 
-Nach der fachgerechten Implementierung dargestellter Speicherfunktionen ist die Identifikation, Verarbeitung und Signalisierung potenziell auftretender Fehlerzust\"ande ein weiterer unerl\"asslicher Entwicklungsschritt. Dieser Aspekt der Fehlerbehandlung wird im nachfolgenden Kapitel eingehend thematisiert.\AI
+\newpage
+Im Anschluss an die Implementierung der Speicherfunktionen ist die Analyse der Systemreaktivit\"at von zentraler Bedeutung. Zu diesem Zweck wurden Laufzeitmessungen durchgef\"uhrt. Dieses Kapitel detailliert den methodischen Ansatz zur Laufzeitmessung, die zugrundeliegende Systematik und pr\"asentiert die ermittelten Ergebnisse.
 
-\subsection{Fehlerbehandlung der Lese- und Schreibfunktion}
-\label{Fehlerbehandlung_Lesen_Schreiben}
+\subsection{Untersuchung der Laufzeit unter Realbedingungen}
+\label{laufzeit}
+
+Zur Untermauerung der in Kapitel~\ref{konzept_status_&_interrupt} genannten Vorteile eines statusorientierten Zustandsautomaten hinsichtlich der Systemreaktivit\"at sind Laufzeituntersuchungen unerl\"asslich. Diese Messungen erm\"oglichen eine fundierte Bewertung der Ausf\"uhrungszeiten hinsichtlich genannter Vor- und Nachteile f\"ur andere Softwarekomponenten und Systemzust\"ande.
+
+Die Erfassung und Auswertung der Laufzeiten erfolgte mittels eines Digital-Oszilloskops (Modell: PicoScope 3406D MSO) in Verbindung mit der zugeh\"origen Messsoftware PicoScope 7 T\&M. F\"ur die Aufzeichnung der Signale wurde der digitale Eingang \Code{D1} des Oszilloskops genutzt. Eine einheitliche Abtastrate von 500 \Abkuerzung{Mega-Samples pro Sekunde}{MS/s} (Mega-Samples pro Sekunde) wurde f\"ur alle Messungen verwendet, um eine hohe zeitliche Aufl\"osung sicherzustellen.
+
+Zur Signalisierung der Messintervalle wurden GPIO-Pins von Port 3 des zugrundeliegenden Mikrocontrollers verwendet. Die exakte Zeitmessung einzelner Codeabschnitte erfolgte durch das Setzen eines spezifischen GPIO-Pins (konkret \Code{P3.4}, adressiert \"uber \Code{BIT4} des \Code{P3OUT}-Registers) zu Beginn des zu messenden Abschnitts (\Code{SETBIT(P3OUT, BIT4);}) und dessen unmittelbares Zur\"ucksetzen (\Code{CLRBIT(P3OUT, BIT4);}) an dessen Ende. Dieses Verfahren erm\"oglicht eine pr\"azise Erfassung der Ausf\"uhrungsdauer sowohl einzelner Verarbeitungszyklen als auch kompletter Lese- oder Schreiboperationen.
+
+Die nachfolgende \Tabelle{laufzeitmessungen} fasst die ermittelten Laufzeiten f\"ur repr\"asentative Ereignisse und Funktionen innerhalb des Observer-Moduls zusammen.
+
+\begin{table}[h!]
+	\small
+	\centering
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Ereignis} & \textbf{Funktion} & \textbf{Laufzeit} \\\hline
+		Leerlauf & TIMER0\_B0\_ISR & $\sim$3{,}9~\textmu s \\
+		Time-Out Timer & state\_0 & $\sim$3{,}4~\textmu s \\
+		Befehlsinterpretation & state\_1 & $\sim$70 - 140~ms \\
+		Resetzustand & state\_2 & $\sim$6{,}3~\textmu s \\
+		Leseoperation f\"ur 13 Byte & read\_mem & $\sim$130~ms \\
+		Leseoperation Parameterentnahme & read\_mem & $\sim$240~\textmu s \\
+		Leseoperation pro Byte & read\_mem & $\sim$10~\textmu s (+ $\sim$10~ms ISR Zyklus) \\
+		Schreiboperation f\"ur "test" & write\_mem & $\sim$40~ms \\
+		Schreiboperation Parameterentnahme & write\_mem & $\sim$220~\textmu s \\
+		Schreiboperation pro Byte & write\_mem & $\sim$10~\textmu s (+ $\sim$10~ms ISR Zyklus) \\\hline
+	\end{tabular}
+	\caption{Laufzeitmessungen -- Observer-Modul State-Machine}
+	\label{tab:laufzeitmessungen}
+\end{table}
+
+Ein wesentliches Ergebnis der statusorientierten, zeichenweisen Verarbeitung ist die Freigabe von Rechenzeit zwischen den einzelnen Verarbeitungszyklen f\"ur andere Systemaufgaben. \Abbildung{zeichenorientiertes_lesen} visualisiert diesen Sachverhalt exemplarisch anhand einer Leseoperation. Jeder in der Abbildung dargestellte Impuls repr\"asentiert die Verarbeitungszeit f\"ur ein einzelnes Zeichen. Die dargestellte Operation (\Code{rdm 0x1C00 13}) weist insgesamt 14 solcher Impulse auf. Der initiale Impuls zeigt die l\"angste Dauer, welche aus der einmaligen Initialisierungsphase pro Leseoperation resultiert: Hierbei werden die erforderlichen Parameter (Speicheradresse, Anzahl der Bytes) aus dem \Code{uart\_buffer} extrahiert. Dieser Vorgang involviert rechenzeitintensive String-Operationen wie \Code{strtok()}, \Code{strlen()}, \Code{strtol()} und \Code{atoi()}. Die nachfolgenden Zyklen, welche die eigentliche zeichenweise Leseoperation des Zeichens umfassen, weisen signifikant k\"urzere Ausf\"uhrungszeiten von etwa 10~\textmu s auf. In den Intervallen -- von ca. 10~ms -- zwischen diesen aktiven Verarbeitungsphasen (bedingt durch die Periode der Timer-ISR) steht der Prozessor f\"ur andere Aufgaben -- wie beispielsweise der Ausgabe des gelesenen Zeichens -- zur Verf\"ugung. Der letzte Verarbeitungszyklus (im Beispiel der 14.) dient der Finalisierung der Leseoperation. Er beinhaltet die erfolgreiche Pr\"ufung auf die angeforderte Anzahl an gelesenen Zeichen (Abgleich von \Code{mem\_addr\_idx} mit \Code{blocks} in der Funktion \Code{read\_mem}), und leitet bei Erfolg den \"Ubergang in den R\"ucksetzzustand (\Code{state\_2}) durch Aktualisierung des \Code{state\_ptr} ein.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\textwidth]{../Bilder/BA_MSP430_Observer_Zeitmessungen/ReadMem_Complete_zoomed_rdm_0x1C00_13.png}
+	\caption{Oszillogramm einer vollst\"andigen Speicherleseoperation (\Code{rdm 0x1C00 13})}
+	\label{fig:zeichenorientiertes_lesen}
+\end{figure}
+
+Die Identifikation, Verarbeitung und Signalisierung potenziell auftretender Fehlerzust\"ande ist ein weiterer unerl\"asslicher Entwicklungsschritt. Dieser Aspekt der Fehlerbehandlung wird im nachfolgenden Kapitel eingehend thematisiert.\AI
+
+\newpage
+\section{Fehlerbehandlung}
+\label{Fehlerbehandlung}
+
 
 
 

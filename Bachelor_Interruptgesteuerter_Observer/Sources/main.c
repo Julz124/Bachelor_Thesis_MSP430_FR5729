@@ -70,7 +70,7 @@ LOCAL Void GPIO_init(Void) {
    //                   Port4       Port3
    //               Bit 76543210    76543210
    PBOUT  = VAL_16BIT(0b00000000, 0b00000000); // clear all outputs
-   PBDIR  = VAL_16BIT(0b00000000, 0b00000000); // direction, set outputs
+   PBDIR  = VAL_16BIT(0b00000000, 0b11110000); // direction, set outputs
    PBIFG  = VAL_16BIT(0b00000000, 0b00000000); // clear all interrupt flags
    PBIE   = VAL_16BIT(0b00000000, 0b00000000); // disable all GPIO interrupts
    PBSEL0 = VAL_16BIT(0b00000000, 0b00000000);

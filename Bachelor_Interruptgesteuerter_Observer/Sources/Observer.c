@@ -36,6 +36,7 @@ LOCAL Char cmd_error;
  * State Machine
  */
 LOCAL Void (*state_ptr)(Void);
+LOCAL Void state_dummy(Void);
 LOCAL Void state_0(Void);
 LOCAL Void state_1(Void);
 LOCAL Void state_2(Void);
@@ -193,7 +194,7 @@ GLOBAL Void Observer_init(Void) {
     *uart_buffer_ptr = '\0';
     rx_byte = '\0';
 
-    state_ptr = NULL;
+    state_ptr = &state_dummy;
 
     observer_print(new_line);
 
@@ -267,8 +268,15 @@ LOCAL Void observer_getchar_blocking(Void) {
 #pragma FUNC_ALWAYS_INLINE(read_mem)
 LOCAL Void read_mem(Void) {
 
+    //SETBIT(P3OUT, BIT4);
+    if (TSTBIT(global_events & WRT_UART, WRT_UART)) {
+        //CLRBIT(P3OUT, BIT4);
+        return;
+    }
+
     if (mem_addr_idx > (blocks - 1)) {
         state_ptr = &state_2;
+        //CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -285,14 +293,26 @@ LOCAL Void read_mem(Void) {
     if (!IS_ALNUM(*rw_buf_ptr)) {
         *rw_buf_ptr = ' ';
     }
-    observer_print(rw_buf_ptr);
+
+    print_ptr = rw_buf_ptr;
+    SETBIT(global_events, WRT_UART);
+    SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
+    SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
 
     mem_addr_idx++;
+
+    //CLRBIT(P3OUT, BIT4);
 }
 
 // Writes to memory cell(s)
 #pragma FUNC_ALWAYS_INLINE(write_mem)
 LOCAL Void write_mem(Void) {
+
+    //SETBIT(P3OUT, BIT4);
+    if (TSTBIT(global_events & WRT_UART, WRT_UART)) {
+        //CLRBIT(P3OUT, BIT4);
+        return;
+    }
 
     if (mem_addr_ptr EQ NULL) {
         // Extract useful arguments
@@ -312,6 +332,7 @@ LOCAL Void write_mem(Void) {
 
     if (*rw_buf_ptr EQ '\0') {
         state_ptr = &state_2;
+        //CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -319,12 +340,15 @@ LOCAL Void write_mem(Void) {
         *rw_buf_ptr = ' ';
     }
 
-    observer_print(rw_buf_ptr);
+    print_ptr = rw_buf_ptr;
+    SETBIT(global_events, WRT_UART);
+    SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
+    SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
 
     *((volatile Char *)mem_addr_ptr + mem_addr_idx) = *rw_buf_ptr;
     mem_addr_idx++;
 
-    return;
+    //CLRBIT(P3OUT, BIT4);
 }
 
 /*
@@ -473,7 +497,7 @@ __interrupt Void UCA0_ISR(Void) {
             observer_print(uart_buffer_ptr + (buffer_index - 1));
 
             // Set Time-Out-Flag
-            if (!state_ptr) {
+            if (state_ptr EQ &state_dummy) {
                 state_ptr = &state_0;
             }
             break;
@@ -520,7 +544,8 @@ __interrupt Void UCA0_ISR(Void) {
  * Command ISR
  */
 
-#pragma FUNC_ALWAYS_INLINE(state_0)
+LOCAL Void state_dummy(Void) {}
+
 LOCAL Void state_0(Void) {
 
     timeout_counter++;
@@ -533,12 +558,12 @@ LOCAL Void state_0(Void) {
     }
 }
 
-#pragma FUNC_ALWAYS_INLINE(state_1)
 LOCAL Void state_1(Void) {
+    //SETBIT(P3OUT, BIT4);
 
     if (*uart_buffer_ptr EQ '\0') {
         state_ptr = &state_2;
-        // clearbit oszilloskop
+        CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -546,6 +571,7 @@ LOCAL Void state_1(Void) {
     if (Observer_func_dict[dict_idx].func EQ NULL) {
         dict_idx = 0;
         set_cmd_error(UNKNOWN_CMD);
+        CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -556,31 +582,38 @@ LOCAL Void state_1(Void) {
         return;
     }
     dict_idx++;
+
+    //CLRBIT(P3OUT, BIT4);
 }
 
 // Reset buffer and pointer
-#pragma FUNC_ALWAYS_INLINE(state_2)
 LOCAL Void state_2(Void) {
 
-    mem_addr_ptr = 0;
+    SETBIT(P3OUT, BIT4);
+    if (!TSTBIT(global_events & WRT_UART, WRT_UART)) {
+        mem_addr_ptr = 0;
 
-    blocks = 0;
-    mem_addr_idx = 0;
-    *rw_buf_ptr = ' ';
-    *(rw_buf_ptr + 1) = '\0';
+        blocks = 0;
+        mem_addr_idx = 0;
+        *rw_buf_ptr = ' ';
+        *(rw_buf_ptr + 1) = '\0';
 
-    buffer_index = 0;
-    *uart_buffer_ptr = '\0';
-    dict_idx = 0;
+        buffer_index = 0;
+        *uart_buffer_ptr = '\0';
+        dict_idx = 0;
 
-    state_ptr = NULL;
+        state_ptr = &state_dummy;
+    }
+    CLRBIT(P3OUT, BIT4);
 }
 
-#pragma vector = TIMER0_B0_VECTOR
+#pragma vector = TIMER0_B1_VECTOR
 __interrupt Void TIMER0_B0_ISR(Void) {
 
+    CLRBIT(TB0CTL, TBIFG);
+
     // Error Handling
-    if (global_events & UART_ERR) {
+    if (TSTBIT(global_events & UART_ERR, UART_ERR)) {
         *rw_buf_ptr = '#';
         *(rw_buf_ptr + 1) = uart_error;
         observer_print(rw_buf_ptr);
@@ -589,7 +622,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
         state_ptr = &state_2;
     }
 
-    if (global_events & CMD_ERR) {
+    if (TSTBIT(global_events & CMD_ERR, CMD_ERR)) {
         *rw_buf_ptr = '#';
         *(rw_buf_ptr + 1) = cmd_error;
         observer_print(rw_buf_ptr);
@@ -599,9 +632,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
     }
 
     // execute main function routine
-    if (state_ptr AND !TSTBIT(global_events & WRT_UART, WRT_UART)) {
-        state_ptr();
-    }
-
-    CLRBIT(TB0CTL, TBIFG);
+    //SETBIT(P3OUT, BIT4);
+    state_ptr();
+    //CLRBIT(P3OUT, BIT4);
 }

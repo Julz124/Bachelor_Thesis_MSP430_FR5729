@@ -75,6 +75,6 @@ typedef struct {
 EXTERN Void Observer_init(Void);
 EXTERN Void Observer(Void);
 
-LOCAL Int observer_print(const Char * str);
+LOCAL Void observer_print(const Char * str);
 
 #endif /* OBSERVER_H_ */

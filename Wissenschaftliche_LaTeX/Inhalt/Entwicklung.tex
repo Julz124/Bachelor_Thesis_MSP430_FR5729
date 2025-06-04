@@ -1,6 +1,8 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root =  ../Bachelorarbeit.tex
 
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++%
+
 \chapter{Entwicklung}
 \label{Entwicklung}
 
@@ -14,6 +16,9 @@ Abschlie{\ss}end werden zentrale Debugging-Mechanismen vorgestellt, evaluiert un
 
 Die Integration von Breakpoints erm\"oglicht es, gezielt in den Programmablauf eingreifen zu k\"onnen, ohne den Systemzustand zu beeintr\"achtigen. Insbesondere zu integrierende Funktionen f\"ur das lesen und beschreiben von Speicherzellen profitieren hiervon. Wird ein Breakpoint erreicht, k\"onnen diese Befehle kontrolliert und st\"orungsfrei ausgef\"uhrt werden, da das Hauptprogramm w\"ahrenddessen in einen definierten Haltemodus versetzt wird. Auf diese Weise l\"asst sich eine konsistente Speicherzugriffslogik realisieren, die auch w\"ahrend kritischer Zust\"ande wie Kontextwechsel zuverl\"assig funktioniert.\AI
 
+%====================================================================================================%
+
+\newpage
 \section{Konzeprionierung Observer-Modul}
 \label{ObserverModulKonzept}
 
@@ -28,8 +33,11 @@ Alle gew\"unschten Komponenten und ihre funktionale Zuordnung ist in \Abbildung{
 	\label{fig:UmlDiagram_ObserverModul}
 \end{figure}
 
-Ausgehend vom grundlegenden Architekturkonzept des Observer-Moduls erfolgt im folgenden Oberkapitel -- Kapitel \ref{Interruptgesteuertes_Lesen&Schreiben} -- eine detaillierte erkl\"arung der Implementierung der Funktionen f\"ur das interruptgesteuerte Lesen und Schreiben \"uber die serielle Schnittstelle.
+Ausgehend vom grundlegenden Architekturkonzept des Observer-Moduls erfolgt in einem kommenden Kapitel -- Kapitel \ref{Interruptgesteuertes_Lesen&Schreiben} -- eine detaillierte erkl\"arung der Implementierung der Funktionen f\"ur das interruptgesteuerte Lesen und Schreiben \"uber die serielle Schnittstelle.
 
+%----------------------------------------------------------------------------------------------------%
+
+\newpage
 \subsection{Zustandsautomat und Funktionsumfang}
 \label{ZustaendeUndFunktionen}
 
@@ -43,6 +51,8 @@ Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich 
 	\caption{Zustandsautomat -- Observer-Modul}
 	\label{fig:StateMachine_ObserverModul}
 \end{figure}
+
+%----------------------------------------------------------------------------------------------------%
 
 \newpage
 \subsection{Initialisierung}
@@ -96,6 +106,8 @@ Weitere Initialisierungen umfassen:
 
 Ein besonderer Vorteil ergibt sich durch den Einsatz eines \Fachbegriff{Datenstruktur, die Schl\"ussel-Wert-Paare speichert und schnellen Zugriff auf Werte \"uber ihre eindeutigen Schl\"ussel erlaubt.}{Dictionarys}[Dictionary], das Befehlen eindeutig Funktionszeiger zuordnet.
 
+%----------------------------------------------------------------------------------------------------%
+
 \newpage
 \subsection{Timer ISR}
 \label{Timer_ISR}
@@ -107,55 +119,69 @@ Die Timer-ISR wird periodisch ausgef\"uhrt und fungiert als fundamentaler Taktge
 Der Ablauf der Timer-ISR ist im Aktivit\"atsdiagramm in \Abbildung{activity_diagram_timer_isr} detailliert dargestellt. Die ISR wird durch das Setzen des TBIFG-Flags im TB0CTL-Register des Timer B0 ausgel\"ost, nachdem dieser den in TB0CCR0 definierten Z\"ahlwert erreicht hat. Ausf\"uhrlicher in Kapitel \ref{CC_Register} und \ref{TimerControlRegister} besprochen. Die prim\"aren Aufgaben der Timer-ISR umfassen:
 
 \begin{itemize}
-	\item \textbf{Fehlerbehandlung und -signalisierung:} Bei Eintritt pr\"uft die ISR den globalen Ereignis-Parameter -- \Code{global\_events} -- auf eine registrierte UART- (\Code{UART\_ERR}) oder Befehls-Fehler-Flag (\Code{CMD\_ERR}). Wird ein Fehler detektiert, initiiert die Routine die Ausgabe der dazugeh\"origen Fehlermeldung \"uber die UART-Schnittstelle mittels der Funktion \Code{observer\_print()}. Anschlie{\ss}end wird die entsprechende Fehler-Flag zur\"uckgesetzt und der Zustands-Funktionszeiger \Code{state\_ptr} auf die Reset-Funktion \Code{state\_2} gesetzt, um das Modul in einen definierten Ausgangszustand zu \"uberf\"uhren.
+	\item \textbf{Fehlerbehandlung und -signalisierung:} Bei Eintritt pr\"uft die ISR den globalen Ereignis-Parameter -- \Code{global\_events} -- auf eine registrierte UART- (\Code{UART\_ERR}) oder Befehls-Fehler-Flag (\Code{CMD\_ERR}). Wird ein Fehler detektiert, initiiert die Routine die Ausgabe der dazugeh\"origen Fehlermeldung \"uber die UART-Schnittstelle mittels der Funktion \Code{observer\_print}, welche in \Abbildung{observer_print} aus Kapitel~\ref{label} dargestellt ist. Anschlie{\ss}end wird die entsprechende Fehler-Flag zur\"uckgesetzt und der Zustands-Funktionszeiger \Code{state\_ptr} auf die Reset-Funktion \Code{state\_2} gesetzt, um das Modul in einen definierten Ausgangszustand zu \"uberf\"uhren.
 
-	\item \textbf{Ausf\"uhrung der Zustandslogik:} Sofern keine Fehlerbehandlung und UART-Schreiboperation aktiv ist (das \Code{WRT\_UART}-Flag ist nicht gesetzt), wird die durch den Funktionszeiger \Code{state\_ptr} referenzierte Zustandsfunktion aufgerufen. Dies erm\"oglicht die schrittweise Abarbeitung implementierter Zust\"ande. Mehr dazu in Kapitel \ref{Interruptgesteuertes_Lesen&Schreiben}.
+	\item \textbf{Ausf\"uhrung der Zustandslogik:} Sofern keine Fehlerbehandlung aktiv ist, wird die durch den Funktionszeiger \Code{state\_ptr} referenzierte Zustandsfunktion aufgerufen. Dies erm\"oglicht die schrittweise Abarbeitung implementierter Zust\"ande. Mehr dazu in Kapitel \ref{Interruptgesteuertes_Lesen&Schreiben}.
 \end{itemize}
 
 Abschlie{\ss}end wird das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register gel\"oscht, um die ISR f\"ur den n\"achsten Zyklus vorzubereiten. Die periodische Natur dieser Routine ist essentiell f\"ur weitere Funktionen wie die Timeout-Erkennung bei der Befehlseingabe und die nicht-blockierende Ausf\"uhrung l\"angerer Operationen.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.75\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
+	\includegraphics[width=0.50\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_timer_isr}
 \end{figure}
+
+%----------------------------------------------------------------------------------------------------%
 
 \newpage
 \subsection{UART ISR}
 \label{UART_ISR}
 
-Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dh das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"allen, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe Kapitel \ref{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach dem Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in Kapitel \ref{datenintegritaet} und \ref{eUSCI_Zusammenfassung}.
+Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dahe das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"allen, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe Kapitel \ref{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach dem Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in Kapitel \ref{datenintegritaet} und \ref{eUSCI_Zusammenfassung}.
 
 Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRXIFG} -- der UART-ISR l\"asst sich anhand des Aktivit\"atsdiagramms in \Abbildung{activity_diagram_uart_isr_rec} pr\"azise nachvollziehen. Zu den Kernaufgaben des Empfangsteils z\"ahlen:
 
 \begin{itemize}
 	\item \textbf{Fehlerdetektion:} Pr\"ufung auf Kommunikationsfehler wie \Code{UCBRK} (Break-Signal) oder \Code{UCRXERR} (Framing-, Overrun- oder Parit\"atsfehler) und entsprechendes Setzen eines UART-Fehler-Wertes -- in der \Code{uart\_error}-Variable. 
 	
-	\item \textbf{Zeichenbehandlung:} Verarbeitung empfangener Bytes -- und zwischenspeichern in der \Code{rx\_byte}-Variable --, inklusive spezieller Steuerzeichen wie \grqq \texttt{\textbackslash r}\grqq (Carriage Return), das die Befehlseingabe abschließt und die Zustandsmaschine aktiviert, sowie \grqq \texttt{\textbackslash b}\grqq (Backspace) zur Korrektur von Eingaben im \Code{uart\_buffer}, und \grqq \texttt{\textbackslash n}\grqq (Newline), das ignoriert wird.
+	\item \textbf{Zeichenbehandlung:} Verarbeitung empfangener Bytes -- und zwischenspeichern in der \Code{rx\_byte}-Variable --, inklusive spezieller Steuerzeichen wie \grqq \texttt{\textbackslash r}\grqq (Carriage Return), das die Befehlseingabe abschlie{\ss}t und die Zustandsmaschine aktiviert, sowie \grqq \texttt{\textbackslash b}\grqq (Backspace) zur Korrektur von Eingaben im \Code{uart\_buffer}, und \grqq \texttt{\textbackslash n}\grqq (Newline), das ignoriert wird.
 
 	\item \textbf{Pufferverwaltung:} Validierung (Pr\"ufung auf Alphanumerik und Leerzeichen), Pufferung der g\"ultiger Zeichen im uart\_buffer inklusive \"uberlaufschutz und Echo-Ausgabe des Zeichens.
 
 	\item \textbf{Timeout-Initiierung:} Bei Empfang des ersten Zeichens nach einem Reset wird \Code{state\_ptr} auf \Code{state\_0} gesetzt, welches die Timeout-\"Uberwachung startet.
 \end{itemize}
 
+\newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
+	\includegraphics[angle=270, width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_uart_isr_rec}
 \end{figure}
 
-Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-ISR, dessen Ablauf in \Abbildung{activity_diagram_uart_isr_send} visualisiert ist, ist f\"ur die schrittweise Ausgabe von Zeichenketten zust\"andig. Solange \Code{print\_ptr} nicht auf ein Null-Terminierungszeichen (\grq \texttt{\textbackslash 0}\grq) zeigt, wird das aktuelle Zeichen in den Sendepuffer \Code{UCA0TXBUF} geladen. Nach erfolgreicher \"ubertragung aller Zeichen einer Nachricht wird das \Code{WRT\_UART}-Flag in \Code{global\_events} zur\"uckgesetzt und der Sendeinterrupt (\Code{UCTXIE}) deaktiviert, w\"ahrend der Empfangsinterrupt (\Code{UCRXIE}) reaktiviert wird. Diese ISR ist somit die direkte Schnittstelle f\"ur alle von \Code{observer\_print()} initiierten Schreibvorg\"ange.
-
 \newpage
+Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-ISR, dessen Ablauf in \Abbildung{activity_diagram_uart_isr_send} visualisiert ist, ist f\"ur die schrittweise Ausgabe von Zeichenketten zust\"andig. Solange \Code{print\_ptr} nicht auf ein Null-Terminierungszeichen (\grq \texttt{\textbackslash 0}\grq) zeigt, wird das aktuelle Zeichen in den Sendepuffer \Code{UCA0TXBUF} geladen. Nach erfolgreicher \"ubertragung aller Zeichen einer Nachricht wird das \Code{WRT\_UART}-Flag in \Code{global\_events} zur\"uckgesetzt und der Sendeinterrupt (\Code{UCTXIE}) deaktiviert, w\"ahrend der Empfangsinterrupt (\Code{UCRXIE}) reaktiviert wird. Diese ISR ist somit die direkte Schnittstelle f\"ur alle von \Code{observer\_print} initiierten Schreibvorg\"ange.
+
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.75\textwidth]{../Bilder/observer_activity_diagram_eusci_send.png}
+	\includegraphics[width=0.60\textwidth]{../Bilder/observer_activity_diagram_eusci_send.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_uart_isr_send}
 \end{figure}
 
+\newpage
+Die zuvor erw\"ahnte \Code{observer\_print}-Funktion dient der Initialisierung eines asynchronen Zeichenkettenausgabevorgangs \"uber eine UART-Schnittstelle. Zun\"achst \"uberpr\"uft sie, ob der \"ubergebene String-Zeiger \Code{str} \Code{null} ist, was auf einen ung\"ultigen Eingabewert hinweist; in diesem Fall wird ein Fehlerstatus gesetzt und der Vorgang abgebrochen. Andernfalls wird eine globale Ereignis-Flagge (\Code{WRT\_UART}) gesetzt, das die UART-\"Ubertragung signalisiert. Der Zeiger auf die zu \"ubertragende Zeichenkette wird in die globale Variable \Code{print\_ptr} geschrieben, woraufhin durch Setzen der Interrupt-Flags \Code{UCTXIFG} und \Code{UCTXIE} der UART-Sendeinterrupt aktiviert wird. Dadurch wird der eigentliche \"Ubertragungsvorgang vom Interrupt-Handler durchgef\"uhrt, was eine nicht-blockierende Daten\"ubertragung erm\"oglicht.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\textwidth]{../Bilder/ObserverModule/observer_print.png}
+	\caption{Daten\"ubertragungs-Initiierungs-Funktion -- observer\_print(const char * str)}
+	\label{fig:observer_print}
+\end{figure}
+
+%====================================================================================================%
 
 \newpage
 \section{Interruptgesteuertes Lesen und Schreiben}
@@ -163,12 +189,16 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 
 Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architektur lassen sich Funktionalit\"aten und weitere Features integrieren. Im Rahmen dieser Arbeit fiel die Wahl f\"ur eine Kernfunktion auf das interruptgesteuerte Lesen und Schreiben von FRAM-Speicherzellen. Die nachfolgenden Abschnitte erarbeiten die Konzeption und Implementierung dieser Speicheroperationen und analysieren potenzielle Limitationen. Ein fundamentales Merkmal hierbei ist, dass die interruptgesteuerten Speicherzugriffe nicht zwingend einen expliziten Haltezustand des Gesamtsystems erfordern –- wie im Kontext der m\"oglichen Debugging-Funktion in Kapitel \ref{Entwicklung} erl\"autert. Die angestrebte Funktionalit\"at kann auch ohne diese Art an erweiterte Systemkontrolle, eigenst\"andig agieren. Ein potenzieller Nachteil dessen ist jedoch in der Datenkonsistenz der Ausgabe: Durch die zustandsorientierte, inkrementelle Verarbeitung der Lese- und Schreibvorg\"ange k\"onnten konkurrierende Prozesse den adressierten Speicherbereich zwischen einzelnen Verarbeitungsschritten modifizieren. Daraus ergibt sich ein weiterer Grund f\"ur die Notwendigkeit, das Grundkonzept des statusorientierten, interruptgesteuerten Betriebs umzusetzen – wie im Folgenden beschrieben.
 
+%----------------------------------------------------------------------------------------------------%
+
 \subsection{Grundkonzept des statusorientierten, interruptgesteuerten Betriebs}
 \label{konzept_status_&_interrupt}
 
-Die zustandsorientierte Programmierung f\"ur das Observer-Modul setzt die Dekomposition komplexer, sequenzieller Abl\"aufe in kleinere, Verarbeitungseinheiten voraus. Wie bereits in den Kapiteln \ref{ZustaendeUndFunktionen} und \ref{Timer_ISR} dargelegt, repr\"asentieren die Lese- und Schreiboperationen dedizierte Zust\"ande innerhalb der \"ubergeordneten Zustandsmaschine. Diese Unterteilung ist essentiell, um die Reaktionsf\"ahigkeit des Systems auf externe Eingaben und die parallele Bearbeitung anderer systeminterner Aufgaben sicherzustellen. F\"ur die Realisierung der Speicherzugriffe sind neben generischen Zust\"anden -- zur Befehlsverarbeitung und Systeminitialisierung -- spezifische Zust\"ande f\"ur das Lesen und Schreiben erforderlich. Da diese Operationen, insbesondere bei gr\"oßeren Speicherzugriffen, potenziell zeitintensiv sind, ist die \"Uberf\"uhrung in eine zeichenorientierte Verarbeitung, welche periodisch durch die Timer-ISR ausgef\"uhrt wird, notwendig.
+Die zustandsorientierte Programmierung f\"ur das Observer-Modul setzt die Dekomposition komplexer, sequenzieller Abl\"aufe in kleinere, Verarbeitungseinheiten voraus. Wie bereits in den Kapiteln \ref{ZustaendeUndFunktionen} und \ref{Timer_ISR} dargelegt, repr\"asentieren die Lese- und Schreiboperationen dedizierte Zust\"ande innerhalb der \"ubergeordneten Zustandsmaschine. Diese Unterteilung ist essentiell, um die Reaktionsf\"ahigkeit des Systems auf externe Eingaben und die parallele Bearbeitung anderer systeminterner Aufgaben sicherzustellen. F\"ur die Realisierung der Speicherzugriffe sind neben generischen Zust\"anden -- zur Befehlsverarbeitung und Systeminitialisierung -- spezifische Zust\"ande f\"ur das Lesen und Schreiben erforderlich. Da diese Operationen, insbesondere bei gr\"o{\ss}eren Speicherzugriffen, potenziell zeitintensiv sind, ist die \"Uberf\"uhrung in eine zeichenorientierte Verarbeitung, welche periodisch durch die Timer-ISR ausgef\"uhrt wird, notwendig.
 
-Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. In Kapitel~\ref{laufzeit} wurden hierzu Laufzeitmessungen unter Realbedingungen genauer untersucht. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation ergeben, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
+Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. Im Fazit unter Kapitel~\ref{laufzeit} wurden hierzu Laufzeitmessungen unter Realbedingungen durchgef\"uhrt und genauer untersucht. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation ergeben, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
+
+%----------------------------------------------------------------------------------------------------%
 
 \subsection{Rolle der Interrupt Service Routinen}
 \label{LesenSchreiben_Rolle_ISR}
@@ -176,114 +206,117 @@ Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die j
 Die beiden prim\"aren Interrupt Service Routinen des Moduls, die UART-ISR und die Timer-ISR, erf\"ullen dabei kritische Funktionen im gesamten Prozesszyklus der Speicheroperationen –- von der initialen Befehlseingabe \"uber die schrittweise Datenverarbeitung bis hin zur finalen Ergebnisausgabe.
 
 \begin{itemize}
-	\item \textbf{Die UART-ISR:} Agiert als prim\"are Schnittstelle f\"ur die Benutzerinteraktion. Sie ist verantwortlich f\"ur den Empfang vollst\"andiger Befehlsstrings, wie beispielsweise \Code{rdm adresse bytes} zur Anforderung eines Speicherlesevorgangs oder \Code{wrm adresse string} zur Initiierung eines Schreibvorgangs. Dar\"uber hinaus \"ubernimmt die UART-ISR die Ausgabe der aus dem FRAM gelesenen Daten an den Benutzer und quittiert einen erfolgreich abgeschlossenen Schreibvorgang durch erneute Ausgabe des Befehls.
+	\item \textbf{Die UART-ISR:} Agiert als prim\"are Schnittstelle f\"ur die Benutzerinteraktion. Sie ist verantwortlich f\"ur den Empfang vollst\"andiger Befehlsstrings, wie beispielsweise \grqq\Code{rdm <adresse> <bytes>}\grqq, zur Anforderung eines Speicherlesevorgangs oder \grqq\Code{wrm <adresse> <string>}\grqq, zur Initiierung eines Schreibvorgangs. Dar\"uber hinaus \"ubernimmt die UART-ISR die Ausgabe der aus dem FRAM gelesenen Daten an den Benutzer und quittiert einen erfolgreich abgeschlossenen Schreibvorgang durch erneute Ausgabe des Befehls.
 	
-	\item \textbf{Die Timer-ISR:} Fungiert als periodischer Ausl\"oser und Taktgeber f\"ur die Ausf\"uhrung zustandsbasierter Funktionen. Sie ruft wiederholt die im Funktionszeiger \Code{state\_ptr} referenzierte, aktuell aktive Zustandsfunktion (\zB \Code{read\_mem()} oder \Code{write\_mem()}) auf. Diese Funktion bleibt so lange aktiv, bis ein definierter Endzustand der jeweiligen Operation erreicht ist. Eine weitere wesentliche Aufgabe der Timer-ISR ist die Synchronisation der Speicherzugriffe mit anderen Systemaktivit\"aten; sie stellt unter anderem sicher, dass Lese- und Schreiboperationen nur dann erfolgen, wenn keine konkurrierende UART-\"ubertragung aktiv ist (indiziert durch das Flag \Code{WRT\_UART}).
-	
+	\item \textbf{Die Timer-ISR:} Fungiert als periodischer Ausl\"oser und Taktgeber f\"ur die Ausf\"uhrung zustandsbasierter Funktionen. Sie ruft wiederholt die im Funktionszeiger \Code{state\_ptr} referenzierte, aktuell aktive Zustandsfunktion (\zB \Code{read\_mem} oder \Code{write\_mem}) auf. Diese Funktion bleibt so lange aktiv, bis ein definierter Endzustand der jeweiligen Operation erreicht ist.
 \end{itemize}
 
+%----------------------------------------------------------------------------------------------------%
+
+\newpage
 \subsection{Implementierung der Lese- und Schreibfunktion}
 \label{Implementierung_Lesen_Schreiben}
 
 Die softwaretechnische Realisierung der Lese- und Schreibfunktionen ist bewusst ressourcenschonend und auf Laufzeit optimiert. Diese Funktionen besitzen im Wesentlichen einen definierten Startzustand, einen Endzustand sowie die Logik f\"ur den eigentlichen, inkrementellen Speicherzugriff.
 
-Der Programmablauf der \Code{read\_mem()}-Funktion ist wie folgt strukturiert (siehe auch Quellcodeausschnitt in \Abbildung{read_mem_function}):
+Der Programmablauf der \Code{read\_mem}-Funktion ist wie folgt strukturiert (siehe auch Quellcodeausschnitt in \Abbildung{read_mem_function}):
 \begin{itemize}
-	\item \textbf{Initiierung:} Die Funktion wird aktiviert, sobald die Befehlsverarbeitungsroutine (\Code{state\_1}) einen \grqq rdm\grqq-Befehl identifiziert und den globalen Zustandszeiger \Code{state\_ptr} auf die Adresse der \Code{read\_mem()}-Funktion setzt. Gleichzeitig werden die f\"ur den Lesevorgang notwendigen Parameter –- die Startadresse (gespeichert in \Code{mem\_addr\_ptr}) und die Anzahl der zu lesenden Bytes (\Code{blocks}) –- aus dem \Code{uart\_buffer} extrahiert und in globalen Variablen zwischengespeichert.
+	\item \textbf{Initiierung:} Die Funktion wird aktiviert, sobald die Befehlsverarbeitungsroutine (\Code{state\_1}) einen \grqq rdm\grqq-Befehl identifiziert und den globalen Zustandszeiger \Code{state\_ptr} auf die Adresse der \Code{read\_mem}-Funktion setzt. Gleichzeitig werden die f\"ur den Lesevorgang notwendigen Parameter –- die Startadresse (gespeichert in \Code{mem\_addr\_ptr}) und die Anzahl der zu lesenden Bytes (\Code{blocks}) –- aus dem \Code{uart\_buffer} extrahiert und in globalen Variablen zwischengespeichert.
 	
 	\item \textbf{Inkrementelle Ausf\"uhrung:} Bei jedem Aufruf durch die Timer-ISR wird exakt ein Byte aus dem FRAM an der aktuellen Adresse (\Code{mem\_addr\_ptr + mem\_addr\_idx}) gelesen. Der Fortschritt innerhalb des adressierten Speicherbereichs wird mittels der Indexvariable \Code{mem\_addr\_idx} verfolgt, welche nach jedem gelesenen Byte inkrementiert wird.
 	
-	\item \textbf{Datenausgabe:} Das eingelesene Zeichen wird einer Validierung unterzogen (Filterung nicht-alphanumerischer Zeichen, die durch Leerzeichen ersetzt werden) und anschlie{\ss}end im Puffer \Code{rw\_buf} abgelegt. Mittels der Funktion \Code{observer\_print()} erfolgt die unmittelbare Ausgabe dieses Zeichens \"uber die UART-Schnittstelle an die Benutzerkonsole.
+	\item \textbf{Datenausgabe:} Das eingelesene Zeichen wird einer Validierung unterzogen (Filterung nicht-alphanumerischer Zeichen, die durch Leerzeichen ersetzt werden) und anschlie{\ss}end im Puffer \Code{rw\_buf} abgelegt. Mittels der Zuweisung \grq\Code{print\_ptr = rw\_buf\_ptr}\grq und setzen der Bits f\"ur das senden von Daten \"uber das UART-Protokoll erfolgt die unmittelbare Ausgabe des gelesenen Zeichens an die Benutzerkonsole.
 	
 	\item \textbf{Beendigung:} Die Leseoperation gilt als abgeschlossen, sobald der Z\"ahler \Code{mem\_addr\_idx} die vorgegebene Anzahl an zu lesenden Bytes erreicht oder \"uberschritten hat. In diesem Fall wird der \Code{state\_ptr} auf den Zeiger der \Code{state\_2}-Funktion (R\"ucksetz- und Leerlaufzustand) umgelenkt, um das System f\"ur neue Befehle vorzubereiten.
 \end{itemize}
 
+\newpage
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.75\textwidth]{../Bilder/ObserverModule/read_mem.png}
-	\caption{Implementierungsausschnitt der read\_mem()-Funktion im Observer-Modul}
+	\caption{Implementierungsausschnitt der read\_mem-Funktion im Observer-Modul}
 	\label{fig:read_mem_function}
 \end{figure}
 
-Analog dazu ist der Programmablauf der \Code{write\_mem()}-Funktion konzipiert (siehe Quellcodeausschnitt in \Abbildung{write_mem_function}):
+\newpage
+Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert (siehe Quellcodeausschnitt in \Abbildung{write_mem_function}):
 \begin{itemize}
-	\item \textbf{Initiierung:} Die Aktivierung erfolgt, wenn die Befehlsverarbeitung (\Code{state\_1}) einen \grqq wrm\grqq-Befehl erkennt und \Code{state\_ptr} auf die \Code{write\_mem()}-Funktion setzt. Die Zieladresse (\Code{mem\_addr\_ptr}) und der zu schreibende String (\Code{write\_str\_ptr}) werden aus dem \Code{uart\_buffer} extrahiert.
+	\item \textbf{Initiierung:} Die Aktivierung erfolgt, wenn die Befehlsverarbeitung (\Code{state\_1}) einen \grqq wrm\grqq-Befehl erkennt und \Code{state\_ptr} auf die \Code{write\_mem}-Funktion setzt. Die Zieladresse (\Code{mem\_addr\_ptr}) und der zu schreibende String (\Code{write\_str\_ptr}) werden aus dem \Code{uart\_buffer} extrahiert.
 	
 	\item \textbf{Adressvalidierung:} Vor dem eigentlichen Schreibzugriff wird \"uberpr\"uft, ob die angegebene Zieladresse in potenziell schreibgesch\"utzten oder f\"ur andere Zwecke reservierten Speicherbereichen liegt (\zB im Hexadezimalbereich von 0x000000 bis 0x0001FF oder 0x000C00 bis 0x000FFF, mehr Informationen dazu in \Abbildung{memory_map}). Bei Detektion einer ung\"ultigen Adresse wird ein entsprechender Fehlercode (\Code{INV\_ADDR}) gesetzt und die Operation terminiert.
 	
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.75\textwidth]{../Bilder/memory_map.png}
+		\caption{Memory map des FG4618 \Zitat[S. 603, Fig. 11.1]{davies:msp430}}
+		\label{fig:memory_map}
+	\end{figure}
+	
 	\item \textbf{Inkrementelle Ausf\"uhrung:} Bei jedem Aufruf durch die Timer-ISR wird ein einzelnes Zeichen aus dem \Code{write\_str\_ptr} (an der durch \Code{mem\_addr\_idx} indizierten Position) in die entsprechende FRAM-Speicherzelle (\Code{mem\_addr\_ptr + mem\_addr\_idx}) geschrieben. Der Fortschritt wird durch das hochz\"ahlen der \Code{mem\_addr\_idx}-Variable verfolgt.
 	
-	\item \textbf{Datenausgabe/Echo:} Das soeben geschriebene Zeichen wird zur Verifikation in den \Code{rw\_buf} kopiert und mittels \Code{observer\_print()} als Echo an den Benutzer zur\"uckgesendet.
+	\item \textbf{Datenausgabe/Echo:} Das soeben geschriebene Zeichen wird zur Verifikation in den \Code{rw\_buf} kopiert und mittels \Code{observer\_print} als Echo an den Benutzer zur\"uckgesendet.
 	
-	\item \textbf{Beendigung:} Die Schreiboperation ist abgeschlossen, sobald das Nullterminierungszeichen (\grq \texttt{\textbackslash 0}\grq) des \Code{write\_str\_ptr} erreicht wurde. Daraufhin wird abermals der \Code{state\_ptr} auf die \Code{state\_2}-Funktion gesetzt, um den Schreibzyklus ordnungsgem\"a{\ss} zu beenden und das Modul in seinen definierten Ausgangszustand zur\"uck zu setzen.
+	\item \textbf{Beendigung:} Die Schreiboperation ist abgeschlossen, sobald das Null-Terminierungszeichen (\grq \texttt{\textbackslash 0}\grq) des \Code{write\_str\_ptr} erreicht wurde. Daraufhin wird abermals der \Code{state\_ptr} auf die \Code{state\_2}-Funktion gesetzt, um den Schreibzyklus ordnungsgem\"a{\ss} zu beenden und das Modul in seinen definierten Ausgangszustand zur\"uck zu setzen.
 \end{itemize}
 
+\newpage
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.75\textwidth]{../Bilder/ObserverModule/write_mem.png}
-	\caption{Implementierungsausschnitt der write\_mem()-Funktion im Observer-Modul}
+	\caption{Implementierungsausschnitt der write\_mem-Funktion im Observer-Modul}
 	\label{fig:write_mem_function}
 \end{figure}
 
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.75\textwidth]{../Bilder/memory_map.png}
-	\caption{Memory map des FG4618 \Zitat[S. 603, Fig. 11.1]{davies:msp430}}
-	\label{fig:memory_map}
-\end{figure}
-
-\newpage
-Im Anschluss an die Implementierung der Speicherfunktionen ist die Analyse der Systemreaktivit\"at von zentraler Bedeutung. Zu diesem Zweck wurden Laufzeitmessungen durchgef\"uhrt. Dieses Kapitel detailliert den methodischen Ansatz zur Laufzeitmessung, die zugrundeliegende Systematik und pr\"asentiert die ermittelten Ergebnisse.
-
-\subsection{Untersuchung der Laufzeit unter Realbedingungen}
-\label{laufzeit}
-
-Zur Untermauerung der in Kapitel~\ref{konzept_status_&_interrupt} genannten Vorteile eines statusorientierten Zustandsautomaten hinsichtlich der Systemreaktivit\"at sind Laufzeituntersuchungen unerl\"asslich. Diese Messungen erm\"oglichen eine fundierte Bewertung der Ausf\"uhrungszeiten hinsichtlich genannter Vor- und Nachteile f\"ur andere Softwarekomponenten und Systemzust\"ande.
-
-Die Erfassung und Auswertung der Laufzeiten erfolgte mittels eines Digital-Oszilloskops (Modell: PicoScope 3406D MSO) in Verbindung mit der zugeh\"origen Messsoftware PicoScope 7 T\&M. F\"ur die Aufzeichnung der Signale wurde der digitale Eingang \Code{D1} des Oszilloskops genutzt. Eine einheitliche Abtastrate von 500 \Abkuerzung{Mega-Samples pro Sekunde}{MS/s} (Mega-Samples pro Sekunde) wurde f\"ur alle Messungen verwendet, um eine hohe zeitliche Aufl\"osung sicherzustellen.
-
-Zur Signalisierung der Messintervalle wurden GPIO-Pins von Port 3 des zugrundeliegenden Mikrocontrollers verwendet. Die exakte Zeitmessung einzelner Codeabschnitte erfolgte durch das Setzen eines spezifischen GPIO-Pins (konkret \Code{P3.4}, adressiert \"uber \Code{BIT4} des \Code{P3OUT}-Registers) zu Beginn des zu messenden Abschnitts (\Code{SETBIT(P3OUT, BIT4);}) und dessen unmittelbares Zur\"ucksetzen (\Code{CLRBIT(P3OUT, BIT4);}) an dessen Ende. Dieses Verfahren erm\"oglicht eine pr\"azise Erfassung der Ausf\"uhrungsdauer sowohl einzelner Verarbeitungszyklen als auch kompletter Lese- oder Schreiboperationen.
-
-Die nachfolgende \Tabelle{laufzeitmessungen} fasst die ermittelten Laufzeiten f\"ur repr\"asentative Ereignisse und Funktionen innerhalb des Observer-Moduls zusammen.
-
-\begin{table}[h!]
-	\small
-	\centering
-	\begin{tabular}{|l|l|l|}
-		\hline
-		\textbf{Ereignis} & \textbf{Funktion} & \textbf{Laufzeit} \\\hline
-		Leerlauf & TIMER0\_B0\_ISR & $\sim$3{,}9~\textmu s \\
-		Time-Out Timer & state\_0 & $\sim$3{,}4~\textmu s \\
-		Befehlsinterpretation & state\_1 & $\sim$70 - 140~ms \\
-		Resetzustand & state\_2 & $\sim$6{,}3~\textmu s \\
-		Leseoperation f\"ur 13 Byte & read\_mem & $\sim$130~ms \\
-		Leseoperation Parameterentnahme & read\_mem & $\sim$240~\textmu s \\
-		Leseoperation pro Byte & read\_mem & $\sim$10~\textmu s (+ $\sim$10~ms ISR Zyklus) \\
-		Schreiboperation f\"ur "test" & write\_mem & $\sim$40~ms \\
-		Schreiboperation Parameterentnahme & write\_mem & $\sim$220~\textmu s \\
-		Schreiboperation pro Byte & write\_mem & $\sim$10~\textmu s (+ $\sim$10~ms ISR Zyklus) \\\hline
-	\end{tabular}
-	\caption{Laufzeitmessungen -- Observer-Modul State-Machine}
-	\label{tab:laufzeitmessungen}
-\end{table}
-
-Ein wesentliches Ergebnis der statusorientierten, zeichenweisen Verarbeitung ist die Freigabe von Rechenzeit zwischen den einzelnen Verarbeitungszyklen f\"ur andere Systemaufgaben. \Abbildung{zeichenorientiertes_lesen} visualisiert diesen Sachverhalt exemplarisch anhand einer Leseoperation. Jeder in der Abbildung dargestellte Impuls repr\"asentiert die Verarbeitungszeit f\"ur ein einzelnes Zeichen. Die dargestellte Operation (\Code{rdm 0x1C00 13}) weist insgesamt 14 solcher Impulse auf. Der initiale Impuls zeigt die l\"angste Dauer, welche aus der einmaligen Initialisierungsphase pro Leseoperation resultiert: Hierbei werden die erforderlichen Parameter (Speicheradresse, Anzahl der Bytes) aus dem \Code{uart\_buffer} extrahiert. Dieser Vorgang involviert rechenzeitintensive String-Operationen wie \Code{strtok()}, \Code{strlen()}, \Code{strtol()} und \Code{atoi()}. Die nachfolgenden Zyklen, welche die eigentliche zeichenweise Leseoperation des Zeichens umfassen, weisen signifikant k\"urzere Ausf\"uhrungszeiten von etwa 10~\textmu s auf. In den Intervallen -- von ca. 10~ms -- zwischen diesen aktiven Verarbeitungsphasen (bedingt durch die Periode der Timer-ISR) steht der Prozessor f\"ur andere Aufgaben -- wie beispielsweise der Ausgabe des gelesenen Zeichens -- zur Verf\"ugung. Der letzte Verarbeitungszyklus (im Beispiel der 14.) dient der Finalisierung der Leseoperation. Er beinhaltet die erfolgreiche Pr\"ufung auf die angeforderte Anzahl an gelesenen Zeichen (Abgleich von \Code{mem\_addr\_idx} mit \Code{blocks} in der Funktion \Code{read\_mem}), und leitet bei Erfolg den \"Ubergang in den R\"ucksetzzustand (\Code{state\_2}) durch Aktualisierung des \Code{state\_ptr} ein.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=1.0\textwidth]{../Bilder/BA_MSP430_Observer_Zeitmessungen/ReadMem_Complete_zoomed_rdm_0x1C00_13.png}
-	\caption{Oszillogramm einer vollst\"andigen Speicherleseoperation (\Code{rdm 0x1C00 13})}
-	\label{fig:zeichenorientiertes_lesen}
-\end{figure}
-
 Die Identifikation, Verarbeitung und Signalisierung potenziell auftretender Fehlerzust\"ande ist ein weiterer unerl\"asslicher Entwicklungsschritt. Dieser Aspekt der Fehlerbehandlung wird im nachfolgenden Kapitel eingehend thematisiert.\AI
+
+%====================================================================================================%
 
 \newpage
 \section{Fehlerbehandlung}
 \label{Fehlerbehandlung}
 
+Die Identifizierung und Auswertung von Randbedingungen sowie die daran anschlie{\ss}ende Fehlerbehandlung sind grundlegende Bestandteile komplexer Softwareprojekte. F\"ur den Nutzer ist die Ausgabe potenziell auftretender Fehlerzust\"ande von hoher Bedeutung, um eine angemessene Fehlerbehebung einleiten zu k\"onnen. Um eine \"Uberlastung des Nutzers mit redundanten oder niederrangigen Fehlermeldungen -- oder Folgefehlern -- zu vermeiden, ist eine interne Speicherung und anschlie{\ss}ende Priorisierung detektierter Fehler notwendig. 
 
+Die prim\"aren Fehlerquellen innerhalb des Observer-Moduls ist die UART- Kommunikationsschnittstelle sowie die Prozesse der Befehlsinterpretation und -ausf\"uhrung.
+\begin{itemize}
+	\item \textbf{Die UART-Schnittstelle} besitzt diverse Fehlerindikatoren (Fehlervektoren beschrieben in Kapitel~\ref{eUSCI_Konfiguration}), welche direkt zu Beginn der UART-ISR -- sowohl im Sende- als auch im Empfangsteil -- gepr\"uft werden. Ein zus\"atzlicher Fehlerfall ist die \"uberschreitung eines definierten Zeitlimits (Time-Out) pro Zeichen f\"ur die Befehlseingabe. Bei Erreichen dieses Schwellenwerts wird die laufende Befehlseingabe terminiert, das System auf einen deffinierten Ausgangszustand zur\"uckgesetzt und eine entsprechende Fehlermeldung an die verbundene Benutzerkonsole \"ubermittelt.
+	
+	\item \textbf{Die Befehlsinterpretation sowie -verarbeitung} kann ebenfalls Fehler und definierte Randbedingungen aufweisen. Hierzu z\"ahlt die Detektion unbekannter Befehle, die Verwendung invalider Speicheradressen (\zB Zugriff auf gesch\"utzte Bereiche, \Vgl \Abbildung{memory_map}), fehlerhafte Zeichenketten oder unzul\"assige Blockgr\"o{\ss}en.
+\end{itemize}
 
+\newpage
+Die hierf\"ur implementierten Funktionen sind in \Abbildung{fehlerbehandlung_funktionen} dargestellt. Unterschiedliche Fehlerquellen erfordern dabei eine separate Behandlung und Klassifizierung. 
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{../Bilder/ObserverModule/Fehlerbehandlung_funktionen.png}
+	\caption{Funktion zur Fehlerpriorisierung und Speicherung sowie Setzen eines globalen \Code{Error}-Flags}
+	\label{fig:fehlerbehandlung_funktionen}
+\end{figure}
+
+Die Fehlerpriorisierung basiert auf in der Header-Datei (\Code{Observer.h}) definierten Makros, die entsprechend ihrer Eskalationsstufe numerisch kodiert sind (\Vgl \Abbildung{error_vectors}). Mittels eines Vergleichsoperators wird evaluiert, ob ein neu aufgetretener Fehler eine h\"ohere Priorit\"at besitzt als ein bereits intern vermerkter Fehler. Nur wenn dies der Fall ist oder noch kein spezifischer Fehler dieser Kategorie gespeichert wurde, wird der neue Fehler als der aktuell relevanteste behandelt und der bisherige gegebenenfalls \"uberschrieben.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\textwidth]{../Bilder/ObserverModule/error_vectors.png}
+	\caption{Definition der Fehler-Makros in der Header-Datei \Code{Observer.h} zur Festlegung der Fehlerpriorit\"aten.}
+	\label{fig:error_vectors}
+\end{figure}
+
+\newpage
+Die Konstruktion und Ausgabe der finalen Fehlermeldung obliegt der Timer-ISR. Diese Routine identifiziert den spezifischen Fehlerkontext anhand der zuvor gesetzten Fehlerereignis-Flag im globalen Ereignisregister \Code{global\_events}. Der zugeh\"orige Fehlercode im Fehlerregister \Code{uart\_error} oder \Code{cmd\_error}, zusammen mit einem Pr\"afix-Zeichen (\grq \# \grq) ergibt anschlie{\ss}end die Fehlermeldung. F\"ur die Formatierung der Meldung wird der Lese- und Schreib-Puffer \Code{rw\_buf} genutzt. Dessen Gr\"o{\ss}e ist auf drei Byte initialisiert, um das Pr\"afix-Zeichen, den alphanumerischen Fehlercode-Wert und das Null-Terminierungszeichen aufzunehmen. Die Startadresse dieses Puffers wird im Anschluss der Funktion \Code{observer\_print} \"ubergeben, welche die zeichenweise \"ubertragung der Fehlermeldung via UART initiiert. Es ist hierbei zu beachten, dass die Timer-ISR darauf ausgelegt ist, pro Durchlauf einen Fehler zu behandeln, da eine weitere Fehlerbehandlung die zuvor Formatierte Fehlermeldung \"uberschreiben w\"urde. Nach der Ausgabe eines Fehlers wird der Systemzustand abermals auf einen definierten Ausgangszustand zur\"uckgesetzt. Die hier beschriebene Routine zur Fehlerbehandlung in der Timer-ISR ist in \Abbildung{errorcode_isr} visualisiert.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{../Bilder/ObserverModule/Fehlerbehandlung_ISR.png}
+	\caption{Zusammensetzung und Initialisierung der Fehlernachrichtausgabe}
+	\label{fig:errorcode_isr}
+\end{figure}
+
+\newpage
+Nachdem Mechanismen zur Fehleridentifikation und -ausgabe etabliert wurden, richtet sich der Fokus nun auf die Realisierung eines erweiterten Funktionsmerkmals. Die folgenden Kapitel widmen sich daher der Analyse verschiedener Debugging-Methoden und untersuchen im Speziellen den Einsatz von Software-Breakpoints im Kontext eingebetteter Systeme. Dabei steht insbesondere die Evaluation einer Implementierungsm\"oglichkeit und den Mehrwert von Software-Breakpoints f\"ur das Observer-Moduls im Vordergrund, speziell im Hinblick auf die funktionale Erg\"anzung bereits bestehender Funktionen (Referenz \ref{Entwicklung}).\AI
+
+%====================================================================================================%
 
 \newpage
 \section{Debugging-Methoden: Hardware- vs. Software-Breakpoints}
@@ -304,6 +337,8 @@ Diese Gegen\"uberstellung offenbart einen klaren \Fachbegriff{Abw\"agung zwische
 Dar\"uber hinaus existiert auch noch eine spezielle Art von Breakpoints welcher von einem Speicherzugriff ausgl\"o{\ss}t wird. Watchpoints k\"onnen Grenzf\"alle identifizieren um dadurch invalide Speicheradressen und zugriffe sowie Puffer\"uberl\"aufe zu analysieren. \Zitat[Kap. 7.4.16.2]{ti:CCS}
 
 Die nachfolgende Analyse des MSP-FET Debuggers wird weitere Aspekte des Software und Hardware-Basierten Debuggings beleuchten und die Grundlage f\"ur die sp\"atere Implementierungsstrategie legen.\AI
+
+%----------------------------------------------------------------------------------------------------%
 
 \subsection{Der MSP-FET Download Adapter im Detail}
 \label{sec:MSP-FET_Debugger}
@@ -328,9 +363,12 @@ Dar\"uber hinaus spielt der MSP-FET eine ebenso gro{\ss}e Rolle f\"ur die Implem
 	\label{fig:CCS_SetBR}
 \end{figure}
 
+\newpage
 Es ist wichtig zu verstehen, dass der MSP-FET prim\"ar die Kommunikationsinfrastruktur und die Low-Level-Zugriffsmechanismen bereitstellt. W\"ahrend er das Setzen von Hardware-Breakpoints direkt \"uber das EEM steuert, stellt er f\"ur Software-Breakpoints die notwendigen Lese-, Schreib- und Kontrolloperationen zur Verf\"ugung. Die eigentliche Logik eines Software-Breakpoints – das hei{\ss}t, welche Instruktion als Breakpoint-Befehl dient, wie die urspr\"ungliche Instruktion gesichert und wiederhergestellt wird sowie der resultierende Trap behandelt wird – muss in der Debugger-Software auf dem Host und gegebenenfalls durch eine minimale Debug-Monitor-Routine auf dem Target implementiert werden, wobei der MSP-FET als Br\"ucke dient. \Zitat[S. 56, Kap. 10]{ti:slau157as, ti:slau654e}
 
 Die Kenntnis der Funktionalit\"aten und der Arbeitsweise des MSP-FET ist somit entscheidend f\"ur die Entwicklung einer robusten Software-Breakpoint-L\"osung. Er definiert die Grenzen und M\"oglichkeiten, wie mit dem Target-System interagiert werden kann, um Breakpoints zu setzen, Zustandsinformationen abzufragen und die Programmausf\"uhrung zu steuern. Die im Folgenden zu entwickelnde Strategie zur Implementierung von Software-Breakpoints muss sich daher eng an den durch den MSP-FET und die Debug-Schnittstelle des MSP430FR5729 gegebenen Rahmenbedingungen orientieren.
+
+%----------------------------------------------------------------------------------------------------%
 
 \newpage
 \subsection{Konzeptionierung von Software-Breakpoints}
@@ -340,10 +378,12 @@ Zur Realisierung von Breakpoints existieren mehrere Ans\"atze. Ein bew\"ahrter E
 
 Im Gegensatz dazu zielt die hier vorgestellte L\"osung auf eine Abwandlung der Software-Breakpoints ab, die direkt den Programmspeicher manipuliert. Dabei wird, in dieser Implementierung, an der gew\"unschten Halteadresse der originale Maschinenbefehl durch einen Sprungbefehl (Jump) ersetzt, der auf eine speziell implementierte \NeuerBegriff{Breakpoint-Handler}-Routine verweist. Beim Erreichen dieses Befehls wird zun\"achst ein kritischer Abschnitt eingeleitet: Es werden die f\"ur den Prozess relevanten Register (R1 bis R3) – namentlich \Fachbegriff{Ein Register, das die Speicheradresse des derzeitigen Befehls enth\"alt.}{Program Counter} (\Abkuerzung{Program Counter}{PC}), \Fachbegriff{Ein Register, das die Speicheradresse des letzten oder ersten Datenelements im Stack speichert.}{Stack Pointer} (\Abkuerzung{Stack Pointer}{SP}), \Fachbegriff{Register f\"ur eine Reihe von Flags, die von der arithmetisch-logischen Einheit in Abh\"angigkeit der zuletzt durchgef\"uhrten Rechenoperation gesetzt werden.}{Statusregister} (\Abkuerzung{Status Register}{SR}) und \ggf mehrere \NeuerBegriff{General-Purpose-Register (R4 bis R15)} – gesichert und Interrupts deaktiviert, um eine atomare Kontextsicherung zu gew\"ahrleisten \Zitat[S.91, Kap. 4.3]{ti:slau272d}. Anschlie{\ss}end erfolgt der \"ubergang in die Handler-Routine, die das gesamte System bis auf das Observer-Modul blockiert und so das Auslesen und Manipulieren von Speicherinhalten erm\"oglicht.
 
-Nach der Analyse kann der urspr\"ungliche Programmzustand durch das laden der Registers\"atze wiederhergestellt werden. Eine explizite reaktivierung der Interrupts ist daher nicht n\"otig. Der Compiler stellt hierf\"ur \Fachbegriff{Compiler-spezifische, vordefinierte Funktionen, die direkt in optimierten Assemblercode umgesetzt werden.}{Compiler-Intrinsics}[Compiler-Intrinsic] bereit wie \Code{\_\_get\_SR()}, \Code{\_\_get\_SP()} und \Code{\_\_set\_interrupt\_state()} \Zitat[S.137, Kap. 6.8.1]{ti:slau132r}. Auf diese Weise wird ein vollst\"andiger Zyklus von Unterbrechung, Inspektion und Fortsetzung des Programmflusses realisiert, ohne dass das Hauptprogramm von dem Observer-Modul tiefgreifender beeinflusst wird.
+Nach der Analyse kann der urspr\"ungliche Programmzustand durch das laden der Registers\"atze wiederhergestellt werden. Eine explizite reaktivierung der Interrupts ist daher nicht n\"otig. Der Compiler stellt hierf\"ur \Fachbegriff{Compiler-spezifische, vordefinierte Funktionen, die direkt in optimierten Assemblercode umgesetzt werden.}{Compiler-Intrinsics}[Compiler-Intrinsic] bereit wie \Code{\_\_get\_SR}, \Code{\_\_get\_SP} und \Code{\_\_set\_interrupt\_state} \Zitat[S.137, Kap. 6.8.1]{ti:slau132r}. Auf diese Weise wird ein vollst\"andiger Zyklus von Unterbrechung, Inspektion und Fortsetzung des Programmflusses realisiert, ohne dass das Hauptprogramm von dem Observer-Modul tiefgreifender beeinflusst wird.
 
 Vor diesem Hintergrund wird in den folgenden Abschnitten die Konzeptionierung erweiterter Software-Breakpoints im Detail erl\"autert und auf die daf\"ur notwendigen Voraussetzungen eingegangen.
 
+
+\newpage
 \subsubsection{Verwendung eines Sprungbefehls anstelle einer Trap}
 \label{sec:JumpVsTrap}
 
@@ -352,6 +392,8 @@ Wie in Abschnitt \ref{Hardware_VS_Software_Breakpoints} erl\"autert, basieren kl
 F\"ur diese Arbeit war es jedoch erforderlich, dass bei Ausl\"osen eines Breakpoints benutzerdefinierte Routinen aus dem Observer-Modul aktiv bleiben und verwendet werden k\"onnen (\Vgl Abschnitt \ref{Interruptgesteuertes_Lesen&Schreiben}). Diese Funktionalit\"aten sind mit dem Standardverhalten von GEL-Traps nicht kompatibel, da sie typischerweise nur auf Debugger-seitige Prozesse abzielen und keine Kontextintegration benutzerdefinierter Routinen auf dem Zielsystem erlauben.
 
 Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzichtet und stattdessen ein direkter Sprungbefehl (Jump) auf eine benutzerdefinierte Breakpoint-Handler-Routine implementiert. Dadurch wird sichergestellt, dass das Observer-Modul auch w\"ahrend einer Unterbrechung aktiv bleibt und die Kontrolle \"uber Register- und Speicherzugriffe erhalten bleibt.
+
+
 
 \subsubsection{Implementierung erweiterter Software Breakpoints}
 \label{sec:ImplementierungSoftwareBreakpoints}
@@ -375,6 +417,9 @@ Diese Vorgehensweise stellt die R\"uckkehr zum urspr\"unglichen Systemzustand �
 
 Um die im vorigen Abschnitt \ref{sec:KonzeptionierungSoftwareBreakpoints} skizzierten Konzepte robust umzusetzen, sind die im n\"achsten Abschnitt, technischen Details wie Instruktionsl\"angen und Speicher-Alignment, zu betrachten.\AI
 
+
+
+\newpage
 \subsubsection{Instruktionsl\"angen, Speicher-Alignment und Adress-Modi}
 \label{sec:TechnischeUmsetzunSoftwareBreakpoints}
 
@@ -385,38 +430,33 @@ Die Manipulation von Befehlen im Stack ist hoch kritisch, da das Hauptprogramm k
 	
 	\item \textbf{Opcode-L\"angen:} W\"ahrend einzelne Maschinenbefehle in der Regel zwei bis vier Bytes belegen, k\"onnen komplexe Instruktionen – etwa \Code{CMP.B} – bis zu sechs Bytes lang sein, wie in \Abbildung{DisassemblyOpcodeLaengen} zu sehen. \Zitat[S.165, Kap. 4.6.2.32]{ti:slau272d} Diese Variabilit\"at erschwert das gezielte \"Uberschreiben von genau vier Byte, die f\"ur die Jump-Instruktion einschlie{\ss}lich Zieladresse ben\"otigt werden. Unter diesen Randbedingungen besteht die Gefahr, dass entweder zu viele oder zu wenige Bytes \"uberschrieben werden, was zu ung\"ultigen oder unbeabsichtigten Instruktionen f\"uhren kann.
 	
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.7\textwidth]{../Bilder/OpcodeLaengen.png}
+		\caption{Code Composer Disassembly Modus - Opcode l\"angen}
+		\label{fig:DisassemblyOpcodeLaengen}
+	\end{figure}
+	
+	\newpage
 	\item \textbf{Adressierungs Modus:} Der Speicher, im Umfang von einem Megabyte, kann \"uber sieben unterschiedliche arten Adressiert werden. Wahlweise kommen 16 oder 20-Bit Adressen zum Einsatz. Diese Variabilit\"at der Adressierungsmodi und die damit einhergehenden unterschiedlichen Adressbreiten haben tiefgreifende Konsequenzen.\Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 \end{itemize}
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.75\textwidth]{../Bilder/OpcodeLaengen.png}
-	\caption{Code Composer Disassembly Modus - Opcode l\"angen}
-	\label{fig:DisassemblyOpcodeLaengen}
-\end{figure}
 
 Das Sichern und Wiederherstellen von Registern und des Originalen Opcodes reicht daher nicht aus, insbesondere angesichts den variablen Instruktionsl\"angen und komplexer Adressierungsmodi. 
 
 Die gr\"o{\ss}e der Opcodes h\"angt von folgenden Parametern ab. Die Grundlegende l\"ange einer Instruktion des MSP430 liegt bei zwei Byte. Darin ist die Operation, wie beispielsweise \Code{MOV.W}, sowie die Register- und Adressierungsart kodiert. Unterschiedliche Adressierungen von Operanden \"uber Adressierungsmodi wie \glqq \Fachbegriff{Operand ist direkt in der Instruktion enthalten – also ein fester Wert, nicht aus dem Speicher.}{Immediate}\grqq , \glqq \Fachbegriff{Operand befindet sich an einer feste Speicheradresse.}{Absolute} \grqq oder \glqq \Fachbegriff{Operand ist nicht direkt gegeben, sondern steht an der Adresse, die ein Register enth\"alt.}{Indirect}\grqq, haben zur Folge, dass die Adressen oder Konstanten zus\"atzlich als \Fachbegriff{Synonym f\"ur 2 Byte gro{\ss}e Datenbreite}{Word} (2 Byte) oder \Fachbegriff{Synonym f\"ur 4 Byte gro{\ss}e Datenbreite}{extended Word} (4 Byte) kodiert werden. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 
-Ein Beispiel hierzu, woraus sich der 6-Byte lange Opcode, zum Vergleichen des Speicherinhalts des Registers \glqq \&error\grqq  mit dem Hexadezimalen Wert \glqq 0x0003\grqq, aus \Abbildung{DisassemblyOpcodeLaengen} zusammensetzt:
-\\\textbf{\Code{CMP.B \#0x0003, \&error}}
+\newpage
+Ein Beispiel hierzu, woraus sich der 6-Byte lange Opcode, zum Vergleichen des Speicherinhalts des Registers \glqq \&error\grqq  mit dem Hexadezimalen Wert \glqq 0x0003\grqq, aus \Abbildung{DisassemblyOpcodeLaengen} zusammensetzt: \Zitat[S. 147, Kap. 4.6.2.14 \& S. 112, Kap. 4.4.7 \& S. 108, Kap. 4.4.4]{ti:slau272d}
+\\\textbf{\Code{CMP.B \#0x0003, \&error}} 
 \begin{itemize}
 	\item \textbf{1 Byte} Opcode f\"ur \Code{CMP.B}
 	\item \textbf{1 Byte} Modus f\"ur Quell-Operand und Ziel-Operand (Immediate -> Absolute)
 	\item \textbf{2 Byte} Immediate-Wert f\"ur Konstante \glqq 0x0003\grqq
 	\item \textbf{2 Byte} Absolute-Adresse f\"ur Label \glqq \&error\grqq
 \end{itemize}
-\Zitat[S. 147, Kap. 4.6.2.14 \& S. 112, Kap. 4.4.7 \& S. 108, Kap. 4.4.4]{ti:slau272d}
+
 
 Diese Analyse verdeutlicht die komplexit\"at der Manipulation und Wiederherstellung von Instruktionen im Stack. Eine Kopie des Stacks schafft dabei eine sichere Umgebung, in welcher der bestehende Opcode Manipuliert wird. Hierbei muss die Kopie die unterschiedlichen Adressformate und die potenziell im Stack gespeicherten, modusabh\"angigen Zeiger korrekt abbilden oder transformieren. Dies garantiert ein sicheres zur\"uckkehren in die Hauptroutinen, sowie eine Robuste Ausf\"uhrung der Funktion zum verarbeiten der \ggf mehreren Breakpoints.
 
 Dies erschwert die Umsetzung und erh\"oht die Komplexit\"at der Routine erheblich, wodurch Timing und Konsistenz gef\"ahrdet werden. Im anschlie{\ss}enden Fazit werden die gewonnenen Erkenntnisse bewertet, offene Fragestellungen skizziert und ein Ausblick auf weiterf\"uhrende Arbeiten gegeben.
-
-\subsection{Fazit zur Umsetzung von Software Breakpoints}
-\label{sec:FazitSoftwareBreakpoints}
-
-Die Realisierung von Software-Breakpoints auf dem Low‑Power‑Mikrocontroller MSP430FR5729 erfordert ein tiefgehendes Verst\"andnis der Prozessor‑Architektur, der Instruktionsformate, der vielf\"altigen Adressierungs-Modi und ihrer Auswirkungen auf die Speicherverwaltung und der nebenl\"aufigen Abl\"aufe im System. Die Analyse der Problemstellung hat ergeben, dass unter anderem kritische Bereiche atomar bearbeitet, Register und Stack-Zust\"ande zuverl\"assig gesichert und Intrinsics korrekt eingesetzt werden m\"ussen. Zudem sind umfangreiche Funktionen zur \"uberwachung und Protokollierung des Systemzustands zu implementieren.
-
-Die erwartete komplexit\"at inklusive der Anforderungen an Robustheit, Echtzeitf\"ahigkeit und m\"oglichst geringem Eingriff in den Betrieb \"uberschreitet den Rahmen einer \"ublichen Bachelorarbeit. Eine vollst\"andige, ausgereifte Implementierung w\"are mit dem Umfang einer Masterarbeit oder vergleichbarer Forschungsarbeiten m\"oglich. Dennoch bildet dieses Thema eine exzellente Grundlage f\"ur weiterf\"uhrende Arbeiten in den Bereichen eingebettete Echtzeitsysteme und Debugging‑Technologien, insbesondere in Bezug auf Architekturen mit flexiblen, aber komplexen Speicheradressierungsmechanismen.
 

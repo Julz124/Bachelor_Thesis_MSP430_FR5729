@@ -222,16 +222,16 @@ LOCAL Void set_cmd_error(Char err) {
 
 // Print chars to UART-connection
 #pragma FUNC_ALWAYS_INLINE(observer_print)
-LOCAL int observer_print(const char * str) {
+LOCAL Void observer_print(const char * str) {
     if (str EQ NULL) {
         set_uart_error(PRINT_ERROR);
-        return -1;
+        return;
     }
     SETBIT(global_events, WRT_UART);
     print_ptr = str;
     SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
     SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
-    return 0;
+    return;
 }
 
 /*
@@ -620,6 +620,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
         uart_error = NO_ERR;
         CLRBIT(global_events, UART_ERR);
         state_ptr = &state_2;
+        return;
     }
 
     if (TSTBIT(global_events & CMD_ERR, CMD_ERR)) {
@@ -629,6 +630,7 @@ __interrupt Void TIMER0_B0_ISR(Void) {
         cmd_error = NO_ERR;
         CLRBIT(global_events, CMD_ERR);
         state_ptr = &state_2;
+        return;
     }
 
     // execute main function routine

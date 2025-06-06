@@ -196,7 +196,7 @@ Die zuvor erw\"ahnte \Code{observer\_print}-Funktion dient der Initialisierung e
 \section{Interruptgesteuertes Lesen und Schreiben}
 \label{sec:Interruptgesteuertes_Lesen&Schreiben}
 
-Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architektur lassen sich Funktionalit\"aten und weitere Features integrieren. Im Rahmen dieser Arbeit fiel die Wahl f\"ur eine Kernfunktion auf das interruptgesteuerte Lesen und Schreiben von FRAM-Speicherzellen. Die nachfolgenden Abschnitte erarbeiten die Konzeption und Implementierung dieser Speicheroperationen und analysieren potenzielle Limitationen. Ein fundamentales Merkmal hierbei ist, dass die interruptgesteuerten Speicherzugriffe nicht zwingend einen expliziten Haltezustand des Gesamtsystems erfordern –- wie im Kontext der m\"oglichen Debugging-Funktion in \Kapitel{Entwicklung} erl\"autert. Die angestrebte Funktionalit\"at kann auch ohne diese Art an erweiterte Systemkontrolle, eigenst\"andig agieren. Ein potenzieller Nachteil dessen ist jedoch in der Datenkonsistenz der Ausgabe: Durch die zustandsorientierte, inkrementelle Verarbeitung der Lese- und Schreibvorg\"ange k\"onnten konkurrierende Prozesse den adressierten Speicherbereich zwischen einzelnen Verarbeitungsschritten modifizieren. Daraus ergibt sich ein weiterer Grund f\"ur die Notwendigkeit, das Grundkonzept des statusorientierten, interruptgesteuerten Betriebs umzusetzen – wie im Folgenden beschrieben.
+Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architektur lassen sich Funktionalit\"aten und weitere Features integrieren. Im Rahmen dieser Arbeit fiel die Wahl f\"ur eine Kernfunktion auf das interruptgesteuerte Lesen und Schreiben von FRAM-Speicherzellen. Die nachfolgenden Abschnitte erarbeiten die Konzeption und Implementierung dieser Speicheroperationen und analysieren potenzielle Limitationen. Ein fundamentales Merkmal hierbei ist, dass die interruptgesteuerten Speicherzugriffe nicht zwingend einen expliziten Haltezustand des Gesamtsystems erfordern –- wie im Kontext der m\"oglichen Debugging-Funktion in \Chapter{Entwicklung} erl\"autert. Die angestrebte Funktionalit\"at kann auch ohne diese Art an erweiterte Systemkontrolle, eigenst\"andig agieren. Ein potenzieller Nachteil dessen ist jedoch in der Datenkonsistenz der Ausgabe: Durch die zustandsorientierte, inkrementelle Verarbeitung der Lese- und Schreibvorg\"ange k\"onnten konkurrierende Prozesse den adressierten Speicherbereich zwischen einzelnen Verarbeitungsschritten modifizieren. Daraus ergibt sich ein weiterer Grund f\"ur die Notwendigkeit, das Grundkonzept des statusorientierten, interruptgesteuerten Betriebs umzusetzen – wie im Folgenden beschrieben.
 
 %----------------------------------------------------------------------------------------------------%
 
@@ -394,7 +394,7 @@ Die hierf\"ur implementierten Funktionen sind in \Listing{fehlerbehandlung_funkt
 Die Fehlerpriorisierung basiert auf in der Header-Datei (\Code{Observer.h}) definierten Makros, die entsprechend ihrer Eskalationsstufe numerisch kodiert sind (\Vgl \Listing{error_vectors}). Mittels eines Vergleichsoperators wird evaluiert, ob ein neu aufgetretener Fehler eine h\"ohere Priorit\"at besitzt als ein bereits intern vermerkter Fehler. Nur wenn dies der Fall ist oder noch kein spezifischer Fehler dieser Kategorie gespeichert wurde, wird der neue Fehler als der aktuell relevanteste behandelt und der bisherige gegebenenfalls \"uberschrieben.
 
 \newpage
-\begin{lstlisting} [style=modernC, caption={Definition der Fehler-Makros in der Header-Datei \Code{Observer.h} zur Festlegung der Fehlerpriorit\"aten.}, label={lst:fehlerbehandlung_funktionen}]
+\begin{lstlisting} [style=modernC, caption={Definition der Fehler-Makros in der Header-Datei \Code{Observer.h} zur Festlegung der Fehlerpriorit\"aten.}, label={lst:error_vectors}]
 	/*
 	* UART Error
 	*/
@@ -443,15 +443,8 @@ Die Konstruktion und Ausgabe der finalen Fehlermeldung obliegt der Timer-ISR. Di
 	}
 \end{lstlisting}
 
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.7\textwidth]{../Bilder/ObserverModule/Fehlerbehandlung_ISR.png}
-	\caption{}
-	\label{fig:}
-\end{figure}
-
 \newpage
-Nachdem Mechanismen zur Fehleridentifikation und -ausgabe etabliert wurden, richtet sich der Fokus nun auf die Realisierung eines erweiterten Funktionsmerkmals. Die folgenden Kapitel widmen sich daher der Analyse verschiedener Debugging-Methoden und untersuchen im Speziellen den Einsatz von Software-Breakpoints im Kontext eingebetteter Systeme. Dabei steht insbesondere die Evaluation einer Implementierungsm\"oglichkeit und den Mehrwert von Software-Breakpoints f\"ur das Observer-Moduls im Vordergrund, speziell im Hinblick auf die funktionale Erg\"anzung bereits bestehender Funktionen (Referenz \Kapitel{Entwicklung}).\AI
+Nachdem Mechanismen zur Fehleridentifikation und -ausgabe etabliert wurden, richtet sich der Fokus nun auf die Realisierung eines erweiterten Funktionsmerkmals. Die folgenden Kapitel widmen sich daher der Analyse verschiedener Debugging-Methoden und untersuchen im Speziellen den Einsatz von Software-Breakpoints im Kontext eingebetteter Systeme. Dabei steht insbesondere die Evaluation einer Implementierungsm\"oglichkeit und den Mehrwert von Software-Breakpoints f\"ur das Observer-Moduls im Vordergrund, speziell im Hinblick auf die funktionale Erg\"anzung bereits bestehender Funktionen (Referenz \Chapter{Entwicklung}).\AI
 
 %====================================================================================================%
 
@@ -552,7 +545,7 @@ Die Implementierung gliedert sich in folgende Schritte:
 
 Diese Vorgehensweise stellt die R\"uckkehr zum urspr\"unglichen Systemzustand – einschlie{\ss}lich des Originalen-Opcodes – sicher und garantiert die Konsistenz des Programms.
 
-Um die im vorigen \Kapitel{sec:KonzeptionierungSoftwareBreakpoints} skizzierten Konzepte robust umzusetzen, sind die im n\"achsten Abschnitt, technischen Details wie Instruktionsl\"angen und Speicher-Alignment, zu betrachten.\AI
+Um die im vorigen \Kapitel{KonzeptionierungSoftwareBreakpoints} skizzierten Konzepte robust umzusetzen, sind die im n\"achsten Abschnitt, technischen Details wie Instruktionsl\"angen und Speicher-Alignment, zu betrachten.\AI
 
 
 

@@ -48,7 +48,14 @@
 % verschiedene Befehle um Wörter semantisch auszuzeichnen -----------------------------------------------
 \newcommand{\NeuerBegriff}[1]{\textbf{#1}}
 
-\newcommand{\Abkuerzung}[2]{\textit{#2}\nomenclature{#2}{#1}}
+%\newcommand{\Abkuerzung}[2]{\textit{#2}\nomenclature{#2}{#1}}
+
+\NewDocumentCommand{\Abkuerzung}{m m o}{%
+	\textit{#2}\xspace%
+	\IfNoValueTF{#3}
+	{\nomenclature{#2}{#1}}%
+	{\nomenclature{#3}{#1}}%
+}
 
 %\newcommand{\Fachbegriff}[2][\empty]{%
 %	\ifthenelse{\equal{#1}{\empty}}%

@@ -57,6 +57,14 @@
 	{\nomenclature{#3}{#1}}%
 }
 
+\NewDocumentCommand{\AbkuerzungB}{m m o}{%
+	#1\xspace%
+	\textit{(#2)}\xspace%
+	\IfNoValueTF{#3}
+	{\nomenclature{#2}{#1}}%
+	{\nomenclature{#3}{#1}}%
+}
+
 %\newcommand{\Fachbegriff}[2][\empty]{%
 %	\ifthenelse{\equal{#1}{\empty}}%
 %	{\textit{#2}\xspace}%

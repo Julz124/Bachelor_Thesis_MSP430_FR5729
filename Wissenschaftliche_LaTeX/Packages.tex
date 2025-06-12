@@ -251,7 +251,6 @@
 % fortlaufendes Durchnummerieren der Fußnoten -------------------------------
 \usepackage{chngcntr}
 
-
 % schönere Tabellen --------------------------------------------------------------------
 \usepackage{tabularx}
 \usepackage{multirow}
@@ -265,10 +264,21 @@
 \usepackage{ragged2e}
 \usepackage{lscape}
 
+\renewcommand{\arraystretch}{1.3}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+% Define a ragged-right column with automatic width (for tabularx)
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+
+% For fixed width ragged right columns if needed
+\newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
 
 % Rotation von Elementen -------------------------------------------------------
 \usepackage{rotating}
 
+% Fußnoten in Tabellen -------------------------------
+\usepackage{tablefootnote}
 
 % Formatierung von Listen ändern --------------------------------------------------
 \usepackage{paralist}

@@ -51,7 +51,7 @@
 %\newcommand{\Abkuerzung}[2]{\textit{#2}\nomenclature{#2}{#1}}
 
 \NewDocumentCommand{\Abkuerzung}{m m o}{%
-	\textit{#2}\xspace%
+	\textit{#2}%
 	\IfNoValueTF{#3}
 	{\nomenclature{#2}{#1}}%
 	{\nomenclature{#3}{#1}}%
@@ -59,7 +59,7 @@
 
 \NewDocumentCommand{\AbkuerzungB}{m m o}{%
 	#1\xspace%
-	\textit{(#2)}\xspace%
+	\textit{(#2)}%
 	\IfNoValueTF{#3}
 	{\nomenclature{#2}{#1}}%
 	{\nomenclature{#3}{#1}}%
@@ -74,6 +74,14 @@
 \NewDocumentCommand{\Fachbegriff}{m m o}{%
 	\textit{#2}\xspace%
 	\footnote{#1}%
+	\IfNoValueTF{#3}
+	{\nomenclature{#2}{#1}}%
+	{\nomenclature{#3}{#1}}%
+}
+
+\NewDocumentCommand{\FachbegriffT}{m m o}{%
+	\textit{#2}\xspace%
+	\tablefootnote{#1}%
 	\IfNoValueTF{#3}
 	{\nomenclature{#2}{#1}}%
 	{\nomenclature{#3}{#1}}%

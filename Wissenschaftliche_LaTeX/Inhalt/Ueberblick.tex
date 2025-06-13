@@ -173,7 +173,7 @@ Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Opera
 		10-9 & CLLD & RW & 0h & Compare latch load. Ausw\"ahlen des \glqq compare latch load events\grqq{}. \\ \hline
 		8 & CAP & RW & 0h & Capture-/Compare mode \\ \hline
 		7-5 & OUTMOD & RW & 0h & Output mode \\ \hline
-		4 & CCIE & RW & 0h & Capture/compare interrupt enable. Aktivieren der Interrupt-Anforderung des entsprechenden \Code{CCIFG}-Flag. \\ \hline
+		4 & CCIE & RW & 0h & Capture/compare interrupt enable. Aktivieren der Interrupt-Anforderung des entsprechenden \Code{CCIFG}-\FachbegriffT{Ein Flag bezeichnet in der Informatik ein einzelnes Bit oder eine boolesche Variable, die einen bin\"aren Zustand (\zB \glqq{}wahr/falsch\grqq{} oder \glqq{}aktiv/inaktiv\grqq{}) repr\"asentiert und h\"aufig zur Steuerung von Programmabl\"aufen oder zur Statusanzeige verwendet wird.}{Flag}. \\ \hline
 		3 & CCI & R & Undef & Capture/compare input. Das ausgew\"ahlte Eingangssignal kann \"uber dieses Bit ausgelesen werden. \\ \hline
 		2 & OUT & RW & 0h & Output. F\"ur Output-Mode \grqq 0\grqq{} kontrolliert dieses Bit den Ausgangsstatus. \\ \hline
 		1 & COV & RW & 0h & Capture overflow. Dieses Bit zeigt ein \grqq capture overflow\grqq{} an. \Code{COV} muss Softwareseitig zur\"uckgesetzt werden.  \\ \hline
@@ -197,7 +197,7 @@ Die Auswahl einer geeigneten \glqq Clock-Source\grqq{} f\"ur den Timer erfolgt \
 
 Die Timer-Frequenz bestimmt wiederum die Zeitbasis des Timers. Eine h\"ohere Timer-Frequenz f\"uhrt zu einer feineren Zeitaufl\"osung, da der Z\"ahler schneller inkrementiert wird. Dies erm\"oglicht pr\"azise Zeitmessungen und die Erzeugung von Signalen hoher Frequenzen. Umgekehrt f\"uhrt eine niedrigere Frequenz zu einer gr\"oberen Zeitaufl\"osung, kann aber den Stromverbrauch reduzieren.
 
-Ein weiteres Steuerbit, das \glqq Mode Control\grqq{}-Bit (\Abkuerzung{Mode Control}{\Code{MC}}) steuert die -- bereits in \Kapitel{Timer_CountMode} erl\"auterten -- Z\"ahl-Modi und das \Code{TAIE}-/\Code{TBIE}-Bit steuert, ob Interrupts Ein- oder Ausgeschaltet sind.
+Ein weiteres Steuerbit, das \glqq{}Mode Control\grqq{}-Bit (\Abkuerzung{Mode Control}{MC}) steuert die -- bereits in \Kapitel{Timer_CountMode} erl\"auterten -- Z\"ahl-Modi und das \Code{TAIE}-/\Code{TBIE}-Bit steuert, ob Interrupts Ein- oder Ausgeschaltet sind.
 
 Die Auswahl der Clock-Source, des Prescalers und weiteren Steuerbits ist daher entscheidend, um die gew\"unschte Zeitbasis, Aufl\"osung und Verhalten f\"ur den zu konfigurierenden Timer zu erreichen um die Anforderungen der jeweiligen Anwendung optimal zu erf\"ullen.
 

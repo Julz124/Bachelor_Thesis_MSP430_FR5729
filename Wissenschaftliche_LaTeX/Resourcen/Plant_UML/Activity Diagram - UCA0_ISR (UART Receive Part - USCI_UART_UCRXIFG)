@@ -1,0 +1,56 @@
+@startuml
+title Activity Diagram: UCA0_ISR (UART Receive Part - USCI_UART_UCRXIFG)
+
+start
+if (UCA0STATW & UCBRK?) then (yes)
+  :set_uart_error(BREAK_ERROR);
+  :ch = UCA0RXBUF;
+  stop
+else (no)
+endif
+
+if (UCA0STATW & UCRXERR?) then (yes)
+  :set_uart_error(FROVPAR_ERROR);
+  :ch = UCA0RXBUF;
+  stop
+else (no)
+endif
+
+:rx_byte = UCA0RXBUF;
+:timeout_counter = 0;
+
+if (rx_byte == '\\n'?) then (yes)
+  stop
+else (no)
+  if (rx_byte == '\\r'?) then (yes)
+    :observer_print(new_line);
+    :state_ptr = &state_1;
+    :SETBIT(TB0CTL, TBIFG);
+    stop
+  else (no)
+    if (rx_byte == '\\b' AND buffer_index > 0?) then (yes)
+      :*(uart_buffer_ptr + --buffer_index) = '\\0';
+      :observer_print("\\b \\b");
+      stop
+    else (no)
+      if (!IS_ALNUM(rx_byte) AND rx_byte != ' '?) then (yes)
+        :observer_print("?");
+        stop
+      else (no)
+        if (buffer_index >= UART_BUFFER_SIZE?) then (yes)
+          :set_uart_error(BUFFER_ERROR);
+          :buffer_index = 0;
+          stop
+        else (no)
+          :*(uart_buffer_ptr + buffer_index++) = rx_byte;
+          :*(uart_buffer_ptr + buffer_index) = '\\0';
+          :observer_print(uart_buffer_ptr + (buffer_index - 1)); // Echo
+          if (!state_ptr?) then (yes)
+            :state_ptr = &state_0;
+          endif
+          stop
+        endif
+      endif
+    endif
+  endif
+@enduml

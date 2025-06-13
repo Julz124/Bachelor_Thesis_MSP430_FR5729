@@ -6,15 +6,15 @@
 \chapter{Entwicklung}
 \label{cha:Entwicklung}
 
-Aufbauend auf den in den vorangegangenen Kapiteln -- \Kapitel{TIMER&ISR} und \Kapitel{eUSCI} -- vermittelten theoretischen Grundlagen zu Timern, Interrupt Service Routinen (ISR) und dem Enhanced Universal Serial Communication Interface des Mikrocontrollers MSP430FR5729, widmet sich dieses Kapitel der Entwicklung und praktischen Umsetzung der interruptgesteuerten Benutzerschnittstelle.
+Aufbauend auf den in den vorangegangenen Kapiteln -- \Kapitel{TIMER&ISR} und \Kapitel{eUSCI} -- vermittelten theoretischen Grundlagen zu Timern, Interrupt Service Routinen und dem Enhanced Universal Serial Communication Interface des Mikrocontrollers MSP430FR5729, widmet sich dieses Kapitel der Entwicklung und praktischen Umsetzung der interruptgesteuerten Benutzerschnittstelle.
 
-Zun\"achst erfolgt die systematische Konzeptionierung des \glqq Observer-Moduls\grqq. Dieses dient als zentrale Instanz zur Erfassung und Bearbeitung von Befehlseingaben sowie zur Steuerung zugeh\"origer Systemausgaben. Dieses Modul stellt somit die Grundlage f\"ur die Interaktion zwischen Benutzer und Mikrocontroller dar.
+Zun\"achst erfolgt die systematische Konzeptionierung des \glqq{}Observer-Moduls\grqq{}. Dieses dient als zentrale Instanz zur Erfassung und Bearbeitung von Befehlseingaben sowie zur Steuerung zugeh\"origer Systemausgaben. Somit stellt es die Grundlage f\"ur die Interaktion zwischen Benutzer und Mikrocontroller dar.
 
 Im weiteren Verlauf wird die Konfiguration der interruptgesteuerten Kommunikation \"uber die UART-Schnittstelle erarbeitet. Hierbei liegt der Fokus auf zuverl\"assigkeit und robustheit sowie deren sicherer Ausgabe unter Echtzeitbedingungen.
 
 Abschlie{\ss}end werden zentrale Debugging-Mechanismen vorgestellt, evaluiert und exemplarisch in Form von softwarebasierten Breakpoints implementiert. Ziel ist es, die Robustheit, Echtzeitf\"ahigkeit sowie den funktionalen Umfang der zu entwickelnden Komponente zu validieren und zu evaluieren.
 
-Die Integration von Breakpoints erm\"oglicht es, gezielt in den Programmablauf eingreifen zu k\"onnen, ohne den Systemzustand zu beeintr\"achtigen. Insbesondere zu integrierende Funktionen f\"ur das lesen und beschreiben von Speicherzellen profitieren hiervon. Wird ein Breakpoint erreicht, k\"onnen diese Befehle kontrolliert und st\"orungsfrei ausgef\"uhrt werden, da das Hauptprogramm w\"ahrenddessen in einen definierten Haltemodus versetzt wird. Auf diese Weise l\"asst sich eine konsistente Speicherzugriffslogik realisieren, die auch w\"ahrend kritischer Zust\"ande wie Kontextwechsel zuverl\"assig funktioniert.\AI
+Die Integration von Breakpoints erm\"oglicht es, gezielt in den Programmablauf eingreifen zu k\"onnen, ohne den Systemzustand zu beeintr\"achtigen. Insbesondere zu integrierende Funktionen wie \zB f\"ur das auslesen und beschreiben von Speicherzellen w\"urden hiervon profitieren. Wird ein Breakpoint erreicht, k\"onnen diese Befehle kontrolliert und st\"orungsfrei ausgef\"uhrt werden, da das Hauptprogramm w\"ahrenddessen in einen definierten Haltemodus versetzt wird. Auf diese Weise l\"asst sich eine konsistente Speicherzugriffslogik realisieren, die auch w\"ahrend kritischer Zust\"ande wie Kontextwechsel zuverl\"assig funktioniert.\AI
 
 %====================================================================================================%
 
@@ -42,7 +42,7 @@ Ausgehend vom grundlegenden Architekturkonzept des Observer-Moduls erfolgt in ei
 \label{sec:ZustaendeUndFunktionen}
 
 Der Programmablauf, nach der Initialisierung des Moduls bis zur erfolgreichen Ausgabe einer Information, beschreibt sich wie folgt:
-Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff{Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)}{alphanumerischen}[alphanumerisch] Zeichen wird ein \glqq Time-Out\grqq-Timer aktiviert. Dieser Time-Out-Timer bildet den ersten von drei Zust\"anden (\Code{state\_0}). Erfolgt innerhalb eines definierten Zeitintervalls keine abschlie{\ss}ende Eingabe, wird der Vorgang \"uber den Zustand \Code{state\_2} zur\"uckgesetzt, und es wird ein \glqq Time-Out-Error\grqq generiert. bei erfolgreicher Best\"atigung hingegen wird der Timer deaktiviert und \"uber den Zustand \Code{state\_1} die Befehlsinterpretation eingeleitet. In \Code{state\_1} wird ein zum Befehl passender Funktionszeiger dem Statuszeiger zugewiesen. Das Ergebnis der Befehlsverarbeitung wird anschlie{\ss}end \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens. \Abbildung{StateMachine_ObserverModul} zeigt einen voll Umfassenden \Fachbegriff{Auch endlicher Automat, ist ein mathematisches Modell zur Beschreibung von Systemen mit endlich vielen Zust\"anden, das \"Uberg\"ange zwischen diesen in Abh\"angigkeit von Eingaben definiert.}{Zustandsautomaten}[Zustandsautomat].
+Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff{Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9)}{alphanumerischen}[alphanumerisch] Zeichen wird ein \glqq{}Time-Out-Timer\grqq{} aktiviert. Dieser Time-Out-Timer bildet den ersten von drei Zust\"anden (\Code{state\_0}). Erfolgt innerhalb eines definierten Zeitintervalls keine abschlie{\ss}ende Eingabe, wird der Vorgang \"uber den Zustand \Code{state\_2} zur\"uckgesetzt, und es wird ein \Code{\glqq{}Time-Out-Error\grqq{}} generiert. bei erfolgreicher Best\"atigung hingegen wird der Timer deaktiviert und \"uber den Zustand \Code{state\_1} die Befehlsinterpretation eingeleitet. In \Code{state\_1} wird ein zum Befehl passender Funktionszeiger dem Statuszeiger zugewiesen. Das Ergebnis der Befehlsverarbeitung wird anschlie{\ss}end \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens. \Abbildung{StateMachine_ObserverModul} zeigt einen voll Umfassenden \Fachbegriff{Auch endlicher Automat, ist ein mathematisches Modell zur Beschreibung von Systemen mit endlich vielen Zust\"anden, das \"Uberg\"ange zwischen diesen in Abh\"angigkeit von Eingaben definiert.}{Zustandsautomaten}[Zustandsautomat].
 Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich in \Kapitel{Timer_ISR}.
 
 \begin{figure}[h!]
@@ -58,37 +58,53 @@ Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich 
 \subsection{Initialisierung}
 \label{sec:Init}
 
-Ein funktionales Modul, welches die daf\"ur ben\"otigten Hardware-Komponenten – insbesondere Interrupt Service Routines (ISR) und das eUSCI-Modul – integriert, erfordert eine \"offentlich zug\"angliche Initialisierungsmethode, die von der Hauptroutine aufgerufen wird. Diese Methode \"ubernimmt die Konfiguration der Steuerregister sowie die Initialisierung ben\"otigter Variablen und Datenstrukturen.
+Ein funktionales Modul, welches die daf\"ur ben\"otigten Hardware-Komponenten -- insbesondere Interrupt Service Routinen und das eUSCI-Interface -- integriert, erfordert eine \"offentlich zug\"angliche Initialisierungsmethode, die von der Hauptroutine aufgerufen werden kann. Diese Methode \"ubernimmt die Konfiguration der Steuerregister sowie die Initialisierung ben\"otigter Variablen und Datenstrukturen.
 
 F\"ur die Ein- und Ausgabe \"uber UART kann die in \Kapitel{eUSCI_Konfiguration} beschriebene Konfiguration \"ubernommen werden. Folgende Einstellungen haben sich dabei als vorteilhaft erwiesen:
 
-\begin{itemize}
-	\item Gerade Parit\"at
-	\item LSB-first
-	\item Acht-Datenbits
-	\item Ein Stoppbit
-	\item UART-Modus
-	\item Asynchroner Modus
-	\item ACLK-Taktquelle
-	\item Aktiver Fehler-Interrupt
-	\item Aktiver Break-Interrupt
-	\item 9600 Baud
-	\item 16-faches Oversampling
-	\item Entprellzeit von rund 100ns
-\end{itemize}
+\begin{multicols}{2}
+	\begin{itemize}
+		\item Gerade Parit\"at
+		\item LSB-first
+		\item Acht-Datenbits
+		\item Ein Stoppbit
+		\item UART-Modus
+		\item Asynchroner Modus
+	\end{itemize}	
+\vfill\null
+\columnbreak
+	\begin{itemize}
+		\item ACLK-Taktquelle
+		\item Aktiver Fehler-Interrupt
+		\item Aktiver Break-Interrupt
+		\item 9600 Baud
+		\item 16-faches Oversampling
+	\end{itemize}
+\vfill\null
+\end{multicols}
 
-Die Verarbeitung von Ereignissen wie Befehlsinterpretation, Fehlerausgabe und Eingabe-Time-Out wird \"uber eine gemeinsame ISR realisiert. Eine daf\"ur passende Periodendauer betr\"agt 10\,ms. \Kapitel{TIMER&ISR} beschreibt die verf\"ugbaren Timer des MSP430FR5729. Aufgrund der in diesem Zusammenhang dargestellten Eigenschaften erweist sich ein Timer vom Typ B als besonders geeignet, da seine erweiterte Konfiguration -- gegen\"uber des Timers von Typ A -- eine skalierbare und anpassungsf\"ahige Implementierung des Moduls im Hinblick auf zuk\"unftige Systemanforderungen erlaubt. Neben den funktionalen Vorteilen ergibt sich die Wahl des Timers auch deshalb, weil im System bereits s\"amtliche Timer vom Typ A anderweitig genutzt werden.
+Die Verarbeitung von Ereignissen wie Befehlsinterpretation, Fehlerausgabe und Eingabe-Timeouts wird \"uber eine gemeinsame Interrupt Service Routine realisiert. Eine Periodendauer von 10\,ms erscheint als optimaler Kompromiss zwischen guter Reaktivit\"at und einem nicht-blockierenden Verhalten. Dieser Wert soll zudem sicherstellen, dass gen\"ugend Rechenzeit f\"ur andere Prozesse \"ubrig bleibt. Eine abschlie{\ss}ende Beurteilung der gew\"ahlten Zeitspanne findet in \Kapitel{laufzeit} statt. 
 
+\Kapitel{TIMER&ISR} beschreibt die verf\"ugbaren Timer des MSP430FR5729. Aufgrund der in diesem Zusammenhang dargestellten Eigenschaften erweist sich ein Timer vom Typ B als besonders geeignet, da seine erweiterte Konfiguration -- gegen\"uber des Timers von Typ A -- eine skalierbare und anpassungsf\"ahige Implementierung des Moduls im Hinblick auf zuk\"unftige Systemanforderungen erlaubt. Neben den funktionalen Vorteilen ergibt sich die Wahl des Timers auch deshalb, weil im System bereits s\"amtliche Timer vom Typ A anderweitig genutzt werden.
+
+\newpage
 Die relevante Konfiguration der Capture-/Compare-Register basiert auf folgenden Parametern:
 
-\begin{itemize}
-	\item Compare-Modus
-	\item UP-Modus
-	\item ACKL als Taktquelle
-	\item Input Teiler jeweils auf acht
-	\item Compare-Register auf 96 setzen
-	\item Aktivierter Timer-Interrupt
-\end{itemize}
+\begin{multicols}{2}
+	\begin{itemize}
+		\item Compare-Modus
+		\item UP-Modus
+		\item ACKL als Taktquelle
+	\end{itemize}	
+\vfill\null
+\columnbreak
+	\begin{itemize}	
+		\item Input Teiler jeweils auf acht
+		\item Compare-Register auf 96 setzen
+		\item Aktivierter Timer-Interrupt
+	\end{itemize}
+\vfill\null	
+\end{multicols}
 
 Der Wert f\"ur das Compare-Register ergibt sich aus folgender Formel:
 
@@ -104,7 +120,7 @@ Weitere Initialisierungen umfassen:
 	\item sowie Funktionszeiger f\"ur die Ereignisverarbeitung.
 \end{itemize}
 
-Ein besonderer Vorteil ergibt sich durch den Einsatz eines \Fachbegriff{Datenstruktur, die Schl\"ussel-Wert-Paare speichert und schnellen Zugriff auf Werte \"uber ihre eindeutigen Schl\"ussel erlaubt.}{Dictionarys}[Dictionary], das Befehlen eindeutig Funktionszeiger zuordnet.
+Anstatt Befehle umst\"andlich \"uber eine \Code{switch-case}-Struktur zu verarbeiten, kommt ein \Fachbegriff{Datenstruktur, die Schl\"ussel-Wert-Paare speichert und schnellen Zugriff auf Werte \"uber ihre eindeutigen Schl\"ussel erlaubt.}{Dictionary} zum Einsatz. Der Vorteil dabei ist, dass jedem Befehl (Schl\"ussel) direkt ein Funktionszeiger (Wert) zugeordnet wird. Die Befehlsinterpretation erfordert somit nur noch einen schnellen, iterativen Nachschlagevorgang, um den passenden Funktionszeiger zu ermitteln und im Statuszeiger (\Code{state\_ptr}) f\"ur die weitere Abarbeitung in der Timer-ISR zu hinterlegen.
 
 %----------------------------------------------------------------------------------------------------%
 
@@ -114,21 +130,24 @@ Ein besonderer Vorteil ergibt sich durch den Einsatz eines \Fachbegriff{Datenstr
 
 Dieses Unterkapitel thematisiert die Timer-ISR innerhalb des Observer-Moduls. Funktionen im Hinblick auf die Fehlerbehandlung und die Steuerung der Zustandslogik sind dar\"uber Implementiert.
 
-Die Timer-ISR wird periodisch ausgef\"uhrt und fungiert als fundamentaler Taktgeber f\"ur die operativen Sequenzen des Moduls. Die Frequenz dieses Taktes bestimmt die Reaktionsgeschwindigkeit des Systems auf sowohl externe Ereignisse als auch interne Prozesse. Darunter f\"allt der Abschluss einer Befehlseingabe oder die Evaluierung und Signalisierung von Fehlerzust\"anden. Um die Leistung und Reaktivit\"at nicht negativ zu beeintr\"achtigen, ist der Programmcode innerhalb dieser ISR bewusst minimal und ist auf Ausf\"uhrungszeit optimiert. Diese Ma{\ss}nahme ist kritisch, da Interrupts naturgem\"a{\ss} eine blockierende Wirkung auf den Prozessfluss haben.
+Die Timer-ISR wird periodisch ausgef\"uhrt und fungiert als fundamentaler Taktgeber f\"ur die operativen Sequenzen des Moduls. Die Frequenz dieses Taktes bestimmt die Reaktionsgeschwindigkeit des Systems auf sowohl externe Ereignisse als auch interne Prozesse. Darunter f\"allt der Abschluss einer Befehlseingabe oder die Evaluierung und Signalisierung von Fehlerzust\"anden. Um die Leistung und Reaktivit\"at nicht negativ zu beeintr\"achtigen, ist der Programmcode innerhalb dieser ISR bewusst minimal und auf Ausf\"uhrungszeit optimiert. Diese Ma{\ss}nahme ist kritisch, da Interrupts naturgem\"a{\ss} eine blockierende Wirkung auf den Prozessfluss haben.
 
-Der Ablauf der Timer-ISR ist im Aktivit\"atsdiagramm in \Abbildung{activity_diagram_timer_isr} detailliert dargestellt. Die ISR wird durch das Setzen des TBIFG-Flags im TB0CTL-Register des Timer B0 ausgel\"ost, nachdem dieser den in TB0CCR0 definierten Z\"ahlwert erreicht hat. Ausf\"uhrlicher in \Kapitel{CC_Register} und \Kapitel{TimerControlRegister} besprochen. Die prim\"aren Aufgaben der Timer-ISR umfassen:
+Der Ablauf der Timer-ISR ist im Aktivit\"atsdiagramm in \Abbildung{activity_diagram_timer_isr} detailliert dargestellt. 
+
+Die ISR wird durch das Setzen des TBIFG-Flags im TB0CTL-Register des Timer B0 ausgel\"ost, nachdem dieser den in TB0CCR0 definierten Z\"ahlwert erreicht hat. Ausf\"uhrlicher in \Kapitel{CC_Register} und \Kapitel{TimerControlRegister} besprochen. Die prim\"aren Aufgaben der Timer-ISR umfassen:
 
 \begin{itemize}
-	\item \textbf{Fehlerbehandlung und -signalisierung:} Bei Eintritt pr\"uft die ISR den globalen Ereignis-Parameter -- \Code{global\_events} -- auf eine registrierte UART- (\Code{UART\_ERR}) oder Befehls-Fehler-Flag (\Code{CMD\_ERR}). Wird ein Fehler detektiert, initiiert die Routine die Ausgabe der dazugeh\"origen Fehlermeldung \"uber die UART-Schnittstelle mittels der Funktion \Code{observer\_print}, welche in \Listing{observer_print} aus \Kapitel{label} dargestellt ist. Anschlie{\ss}end wird die entsprechende Fehler-Flag zur\"uckgesetzt und der Zustands-Funktionszeiger \Code{state\_ptr} auf die Reset-Funktion \Code{state\_2} gesetzt, um das Modul in einen definierten Ausgangszustand zu \"uberf\"uhren.
+	\item \textbf{Fehlerbehandlung und -signalisierung:} Bei Eintritt pr\"uft die ISR den globalen Ereignis-Parameter -- \Code{global\_events} -- auf eine registrierte UART- (\Code{UART\_ERR}) oder Befehls-Fehler-Flag (\Code{CMD\_ERR}). Wird ein Fehler detektiert, initiiert die Routine die Ausgabe der dazugeh\"origen Fehlermeldung \"uber die UART-Schnittstelle mittels der Funktion \Code{observer\_print}, welche in \Listing{observer_print} aus \Kapitel{UART_ISR} dargestellt ist. Anschlie{\ss}end wird die entsprechende Fehler-Flag zur\"uckgesetzt und der Zustands-Funktionszeiger \Code{state\_ptr} auf die Reset-Funktion \Code{state\_2} gesetzt, um das Modul in einen definierten Ausgangszustand zu \"uberf\"uhren.
 
 	\item \textbf{Ausf\"uhrung der Zustandslogik:} Sofern keine Fehlerbehandlung aktiv ist, wird die durch den Funktionszeiger \Code{state\_ptr} referenzierte Zustandsfunktion aufgerufen. Dies erm\"oglicht die schrittweise Abarbeitung implementierter Zust\"ande. Mehr dazu in \Kapitel{Interruptgesteuertes_Lesen&Schreiben}.
 \end{itemize}
 
-Abschlie{\ss}end wird das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register gel\"oscht, um die ISR f\"ur den n\"achsten Zyklus vorzubereiten. Die periodische Natur dieser Routine ist essentiell f\"ur weitere Funktionen wie die Timeout-Erkennung bei der Befehlseingabe und die nicht-blockierende Ausf\"uhrung l\"angerer Operationen.
+\newpage
+Zu beginn wird noch das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register gel\"oscht, um die ISR f\"ur den n\"achsten Zyklus vorzubereiten. Die periodische Natur dieser Routine ist essentiell f\"ur weitere Funktionen wie die Timeout-Erkennung bei der Befehlseingabe und die nicht-blockierende Ausf\"uhrung l\"angerer Operationen.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.50\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
+	\includegraphics[width=0.85\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_timer_isr}
 \end{figure}
@@ -139,16 +158,16 @@ Abschlie{\ss}end wird das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register 
 \subsection{UART ISR}
 \label{sec:UART_ISR}
 
-Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dahe das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"allen, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe \Kapitel{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach dem Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in \Kapitel{datenintegritaet} und \Kapitel{eUSCI_Zusammenfassung}.
+Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dahe das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"alle, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe \Kapitel{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in \Kapitel{datenintegritaet} und \Kapitel{eUSCI_Zusammenfassung}.
 
 Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRXIFG} -- der UART-ISR l\"asst sich anhand des Aktivit\"atsdiagramms in \Abbildung{activity_diagram_uart_isr_rec} pr\"azise nachvollziehen. Zu den Kernaufgaben des Empfangsteils z\"ahlen:
 
 \begin{itemize}
 	\item \textbf{Fehlerdetektion:} Pr\"ufung auf Kommunikationsfehler wie \Code{UCBRK} (Break-Signal) oder \Code{UCRXERR} (Framing-, Overrun- oder Parit\"atsfehler) und entsprechendes Setzen eines UART-Fehler-Wertes -- in der \Code{uart\_error}-Variable. 
 	
-	\item \textbf{Zeichenbehandlung:} Verarbeitung empfangener Bytes -- und zwischenspeichern in der \Code{rx\_byte}-Variable --, inklusive spezieller Steuerzeichen wie \grqq \texttt{\textbackslash r}\grqq (Carriage Return), das die Befehlseingabe abschlie{\ss}t und die Zustandsmaschine aktiviert, sowie \grqq \texttt{\textbackslash b}\grqq (Backspace) zur Korrektur von Eingaben im \Code{uart\_buffer}, und \grqq \texttt{\textbackslash n}\grqq (Newline), das ignoriert wird.
+	\item \textbf{Zeichenbehandlung:} Verarbeitung empfangener Bytes -- und zwischenspeichern in der \Code{rx\_byte}-Variable --, inklusive spezieller Steuerzeichen wie \glqq{}\texttt{\textbackslash r}\grqq{} (Carriage Return), welches die Befehlseingabe abschlie{\ss}t und die Zustandsmaschine aktiviert, sowie \glqq{}\texttt{\textbackslash b}\grqq{} (Backspace) zur Korrektur von bereits gespeicherten Eingaben im \Code{uart\_buffer}, und \glqq{}\texttt{\textbackslash n}\grqq{} (Newline), das ignoriert wird.
 
-	\item \textbf{Pufferverwaltung:} Validierung (Pr\"ufung auf Alphanumerik und Leerzeichen), Pufferung der g\"ultiger Zeichen im uart\_buffer inklusive \"uberlaufschutz und Echo-Ausgabe des Zeichens.
+	\item \textbf{Pufferverwaltung:} Validierung (Pr\"ufung auf Alphanumerik und Leerzeichen), Pufferung der g\"ultiger Zeichen im \Code{uart\_buffer} inklusive \"uberlaufschutz und Echo-Ausgabe des Zeichens.
 
 	\item \textbf{Timeout-Initiierung:} Bei Empfang des ersten Zeichens nach einem Reset wird \Code{state\_ptr} auf \Code{state\_0} gesetzt, welches die Timeout-\"Uberwachung startet.
 \end{itemize}
@@ -162,7 +181,7 @@ Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRX
 \end{figure}
 
 \newpage
-Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-ISR, dessen Ablauf in \Abbildung{activity_diagram_uart_isr_send} visualisiert ist, ist f\"ur die schrittweise Ausgabe von Zeichenketten zust\"andig. Solange \Code{print\_ptr} nicht auf ein Null-Terminierungszeichen (\grq \texttt{\textbackslash 0}\grq) zeigt, wird das aktuelle Zeichen in den Sendepuffer \Code{UCA0TXBUF} geladen. Nach erfolgreicher \"ubertragung aller Zeichen einer Nachricht wird das \Code{WRT\_UART}-Flag in \Code{global\_events} zur\"uckgesetzt und der Sendeinterrupt (\Code{UCTXIE}) deaktiviert, w\"ahrend der Empfangsinterrupt (\Code{UCRXIE}) reaktiviert wird. Diese ISR ist somit die direkte Schnittstelle f\"ur alle von \Code{observer\_print} initiierten Schreibvorg\"ange.
+Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-ISR, dessen Ablauf in \Abbildung{activity_diagram_uart_isr_send} visualisiert ist, ist f\"ur die schrittweise Ausgabe von Zeichenketten zust\"andig. Solange \Code{print\_ptr} nicht auf ein Null-Terminierungszeichen (\grq{}\texttt{\textbackslash 0}\grq{}) zeigt, wird das aktuelle Zeichen in den Sendepuffer \Code{UCA0TXBUF} geladen. Nach erfolgreicher \"ubertragung aller Zeichen einer Nachricht wird das \Code{WRT\_UART}-Flag in \Code{global\_events} zur\"uckgesetzt und der Sendeinterrupt (\Code{UCTXIE}) deaktiviert, w\"ahrend der Empfangsinterrupt (\Code{UCRXIE}) reaktiviert wird. Diese ISR ist somit die direkte Schnittstelle f\"ur alle von \Code{observer\_print} initiierten Schreibvorg\"ange.
 
 \begin{figure}[h!]
 	\centering
@@ -172,10 +191,10 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 \end{figure}
 
 \newpage
-Die zuvor erw\"ahnte \Code{observer\_print}-Funktion dient der Initialisierung eines asynchronen Zeichenkettenausgabevorgangs \"uber eine UART-Schnittstelle. Zun\"achst \"uberpr\"uft sie, ob der \"ubergebene String-Zeiger \Code{str} \Code{null} ist, was auf einen ung\"ultigen Eingabewert hinweist; in diesem Fall wird ein Fehlerstatus gesetzt und der Vorgang abgebrochen. Andernfalls wird eine globale Ereignis-Flagge (\Code{WRT\_UART}) gesetzt, das die UART-\"Ubertragung signalisiert. Der Zeiger auf die zu \"ubertragende Zeichenkette wird in die globale Variable \Code{print\_ptr} geschrieben, woraufhin durch Setzen der Interrupt-Flags \Code{UCTXIFG} und \Code{UCTXIE} der UART-Sendeinterrupt aktiviert wird. Dadurch wird der eigentliche \"Ubertragungsvorgang vom Interrupt-Handler durchgef\"uhrt, was eine nicht-blockierende Daten\"ubertragung erm\"oglicht.
+Die zuvor erw\"ahnte \Code{observer\_print}-Funktion dient der Initialisierung eines asynchronen Zeichenkettenausgabevorgangs \"uber eine UART-Schnittstelle. Zun\"achst \"uberpr\"uft sie, ob der \"ubergebene String-Zeiger \Code{str}, \Code{null} ist, was auf einen ung\"ultigen Eingabewert hinweist; in diesem Fall wird ein Fehlerstatus gesetzt und der Vorgang abgebrochen. Andernfalls wird eine globale Ereignis-Flagge (\Code{WRT\_UART}) gesetzt, das die UART-\"Ubertragung signalisiert. Der Zeiger auf die zu \"ubertragende Zeichenkette wird in die globale \Code{print\_ptr}-Variable geschrieben, woraufhin durch Setzen der Interrupt-Flags \Code{UCTXIFG} und \Code{UCTXIE} der UART-Sendeinterrupt aktiviert wird. Dadurch wird der eigentliche \"Ubertragungsvorgang vom Interrupt-\Fachbegriff{Ein Handler ist in der Informatik eine Routine oder Funktion, die auf ein bestimmtes Ereignis oder eine Bedingung reagiert, \zB ein Ereignis- oder Interrupt-Handler.}{Handler} durchgef\"uhrt, was eine nicht-blockierende Daten\"ubertragung erm\"oglicht.
 
 \vspace{0.5cm}
-\begin{lstlisting} [style=modernC, caption={Initiierungs-Funktion für UART Daten\"ubertragung}, label={lst:observer_print}]
+\begin{lstlisting} [style=modernC, caption={Initiierungs-Funktion f\"ur UART Daten\"ubertragung}, label={lst:observer_print}]
 	#pragma FUNC_ALWAYS_INLINE(observer_print)
 	LOCAL Void observer_print(const char * str) {
 		if (str EQ NULL) {
@@ -299,7 +318,7 @@ Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert (si
 	
 	\item \textbf{Datenausgabe/Echo:} Das soeben geschriebene Zeichen wird zur Verifikation in den \Code{rw\_buf} kopiert und mittels \Code{observer\_print} als Echo an den Benutzer zur\"uckgesendet.
 	
-	\item \textbf{Beendigung:} Die Schreiboperation ist abgeschlossen, sobald das Null-Terminierungszeichen (\grq \texttt{\textbackslash 0}\grq) des \Code{write\_str\_ptr} erreicht wurde. Daraufhin wird abermals der \Code{state\_ptr} auf die \Code{state\_2}-Funktion gesetzt, um den Schreibzyklus ordnungsgem\"a{\ss} zu beenden und das Modul in seinen definierten Ausgangszustand zur\"uck zu setzen.
+	\item \textbf{Beendigung:} Die Schreiboperation ist abgeschlossen, sobald das Null-Terminierungszeichen des \Code{write\_str\_ptr} erreicht wurde. Daraufhin wird abermals der \Code{state\_ptr} auf die \Code{state\_2}-Funktion gesetzt, um den Schreibzyklus ordnungsgem\"a{\ss} zu beenden und das Modul in seinen definierten Ausgangszustand zur\"uck zu setzen.
 \end{itemize}
 
 

@@ -1,0 +1,41 @@
+@startuml
+title Activity Diagram: UCA0_ISR (UART Send Part - USCI_UART_UCTXIFG)
+
+start
+
+if (UCA0STATW has BREAK flag) then (yes)
+  :set_uart_error(BREAK_ERROR);
+  :ch = UCA0RXBUF;
+  note right: Clear Inputbuffer;
+  stop
+else (no)
+endif
+
+if (UCA0STATW has RX Error) then (yes)
+  :set_uart_error(FROVPAR_ERROR);
+  :ch = UCA0RXBUF;
+  stop
+else (no)
+endif
+
+if (print_ptr not null) then (yes)
+  :UCA0TXBUF = *print_ptr;
+  :print_ptr++;
+  stop
+else (no)
+endif
+
+:CLRBIT(global_events, WRT_UART);
+note right: Clear Write to UART Flag
+
+:CLRBIT(UCA0IE, UCTXIE);
+note right: Enable UART Receive Interrupt
+
+:ch = UCA0RXBUF;
+
+:SETBIT(UCA0IE, UCRXIE);
+note right: Disable UART Transmit Interrupt
+
+
+stop
+@enduml

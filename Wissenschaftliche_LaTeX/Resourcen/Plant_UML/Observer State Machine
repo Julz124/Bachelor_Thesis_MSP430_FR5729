@@ -1,0 +1,56 @@
+@startuml
+title Observer State Machine
+
+' WICHTIG: Definieren Sie ein Startelement oder einen ersten Zustand,
+' BEVOR Sie Layout-Anweisungen wie 'top to bottom direction' verwenden.
+' Dies hilft PlantUML, den Diagrammtyp korrekt als Zustandsdiagramm zu erkennen.
+[*] --> Idle : Observer_init()
+
+' Layout-Anpassungen können jetzt folgen:
+top to bottom direction
+skinparam ranksep 100
+skinparam nodesep 10
+skinparam wrapWidth 200
+' skinparam linetype ortho ' Optional auskommentieren zum Testen
+
+' == Zustandsdefinitionen ==
+' Idle wurde bereits durch den Startübergang implizit erstellt,
+' hier können Sie die Beschreibung hinzufügen.
+state Idle: state_ptr == &state_dummy
+state TimeoutCheck: "state_0 (Timeout Monitoring)"
+state CommandParse: "state_1 (Command Parsing)"
+state ExecuteReadMem: "read_mem (Executing Read)"
+state ExecuteWriteMem: "write_mem (Executing Write)"
+state ResetAndClear: "state_2 (Resetting Variables)"
+
+' == Weitere Übergänge ==
+Idle --> TimeoutCheck : UART RX: First char received\n(in UCA0_ISR: state_ptr = &state_0)
+
+' TimeoutCheck Zustand
+TimeoutCheck --> CommandParse : UART RX: '\\r' received\n(in UCA0_ISR: state_ptr = &state_1)
+TimeoutCheck --> ResetAndClear : UART RX: Timeout occurred\n(in state_0: set_uart_error(TIME_OUT);\nTIMER0_B0_ISR detects error)
+TimeoutCheck -> TimeoutCheck : Timer Tick (in TIMER0_B0_ISR)\n(no timeout, no new command)
+
+' CommandParse Zustand
+CommandParse --> ExecuteReadMem : Command "rdm" found\n(in state_1: state_ptr = &read_mem)
+CommandParse --> ExecuteWriteMem : Command "wrm" found\n(in state_1: state_ptr = &write_mem)
+CommandParse --> ResetAndClear : Command unknown or empty buffer\n(in state_1: set_cmd_error();\nTIMER0_B0_ISR detects error or\nstate_1 sets state_ptr = &state_2)
+CommandParse -> CommandParse : Timer Tick (in TIMER0_B0_ISR)\n(iterating Observer_func_dict)
+
+' ExecuteReadMem Zustand
+ExecuteReadMem --> ResetAndClear : All blocks read or error\n(in read_mem: state_ptr = &state_2 or\nTIMER0_B0_ISR on error)
+ExecuteReadMem -> ExecuteReadMem : Timer Tick (in TIMER0_B0_ISR)\n(reading next block)
+
+' ExecuteWriteMem Zustand
+ExecuteWriteMem --> ResetAndClear : End of string or error\n(in write_mem: state_ptr = &state_2 or\nset_cmd_error();\nTIMER0_B0_ISR detects error)
+ExecuteWriteMem -> ExecuteWriteMem : Timer Tick (in TIMER0_B0_ISR)\n(writing next char)
+
+' ResetAndClear Zustand
+ResetAndClear --> Idle : Variables reset\n(in state_2: state_ptr = NULL)
+
+' == Globale Fehlernotiz und Übergang ==
+' Der explizite Übergang [*] --> ResetAndClear wurde bereits am Anfang als Teil des globalen Fehlers definiert.
+' Wenn Sie einen anderen Startpunkt für diesen Fehler hatten, passen Sie ihn entsprechend an.
+' Hier wird der bereits definierte Übergang [*] --> ResetAndClear genutzt.
+' Der zweite globale Fehler-Übergang aus Ihrem Original:
+@enduml

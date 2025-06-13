@@ -1,0 +1,45 @@
+@startuml
+skinparam componentStyle uml2
+
+package "MSP430 Hardware" {
+  interface UART_HW
+  interface Timer_HW
+}
+
+class Observer {
+  + Observer_init() : Void
+  --
+  - global_events : TEvt
+  - uart_error : Char
+  - cmd_error : Char
+  - state_ptr : Void (*)()
+  - Observer_func_dict : const ObserverFuncEntry[]
+  - uart_buffer : Char[]
+  - timeout_counter : Int
+  --
+  - state_0() : Void
+  - state_1() : Void
+  - state_2() : Void
+  - read_mem() : Void
+  - write_mem() : Void
+  - observer_print() : Int
+  - set_uart_error() : Void
+  - set_cmd_error() : Void
+  - UCA0_ISR() : __interrupt Void
+  - TIMER0_B1_ISR() : __interrupt Void
+}
+
+Observer ..> UART_HW : Uses
+Observer ..> Timer_HW : Uses
+
+note right of Observer
+  **Hauptfunktionen:**
+  * Initialisierung von UART und Timer.
+  * Empfangen von Befehlen über UART.
+  * Verarbeiten von Speicherlese- (`rdm`)
+    und Speicherschreibbefehlen (`wrm`).
+  * Zustandsbasierte Ausführung und Fehlerbehandlung.
+  * Interrupthandler für UART (`UCA0_ISR`)
+    und Timer (`TIMER0_B1_ISR`).
+end note
+@enduml

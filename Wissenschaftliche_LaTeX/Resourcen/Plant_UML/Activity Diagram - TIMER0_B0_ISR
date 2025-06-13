@@ -1,0 +1,32 @@
+@startuml
+
+title Activity Diagram: TIMER0_B0_ISR
+
+start
+
+:Clear TBIFG (TB0CTL);
+
+if (UART_ERR in global_events?) then (yes)
+    :Set rw_buf_ptr[0] = '#';
+    :Set rw_buf_ptr[1] = uart_error;
+    :observer_print(rw_buf_ptr);
+    :uart_error = NO_ERR;
+    :Clear UART_ERR in global_events;
+    :state_ptr = &state_2;
+    stop
+else (no)
+    if (CMD_ERR in global_events?) then (yes)
+        :Set rw_buf_ptr[0] = '#';
+        :Set rw_buf_ptr[1] = cmd_error;
+        :observer_print(rw_buf_ptr);
+        :cmd_error = NO_ERR;
+        :Clear CMD_ERR in global_events;
+        :state_ptr = &state_2;
+        stop
+    else (no)
+        :Call state_ptr();
+        stop
+    endif
+endif
+
+@enduml

@@ -538,14 +538,15 @@ Die Kenntnis der Funktionalit\"aten und der Arbeitsweise des MSP-FET ist somit e
 \subsection{Konzeptionierung von Software-Breakpoints}
 \label{sec:KonzeptionierungSoftwareBreakpoints}
 
-Zur Realisierung von Breakpoints existieren mehrere Ans\"atze. Ein bew\"ahrter Einstieg besteht darin, etablierte Debugger und ihre Architektur zu studieren. Im Embedded‑ und Low‑Power‑Bereich kommen beispielsweise Werkzeuge wie \NeuerBegriff{TRACE32}, \NeuerBegriff{M-Core} oder das \NeuerBegriff{MSP-FET} von Texas Instruments zum Einsatz. Diese Debugger setzen Hardware-Breakpoints \"uber spezielle Debug‑Interfaces um und bieten damit eine hohe Zuverl\"assigkeit bei minimaler Eingriffstiefe in das Laufzeitsystem.
+Zur Realisierung von Breakpoints existieren mehrere Ans\"atze. Ein bew\"ahrter Einstieg besteht darin, etablierte Debugger und ihre Architektur zu studieren. Im Embedded‑ und Low‑Power‑Bereich kommen beispielsweise Werkzeuge wie \NeuerBegriff{TRACE32}, \NeuerBegriff{M-Core} oder das zuvor besprochene MSP-FET von Texas Instruments zum Einsatz. Diese Debugger setzen Hardware-Breakpoints \"uber spezielle Debug‑Interfaces um und bieten damit eine hohe Zuverl\"assigkeit bei minimaler Eingriffstiefe in das Laufzeitsystem.
 
-Im Gegensatz dazu zielt die hier vorgestellte L\"osung auf eine Abwandlung der Software-Breakpoints ab, die direkt den Programmspeicher manipuliert. Dabei wird, in dieser Implementierung, an der gew\"unschten Halteadresse der originale Maschinenbefehl durch einen Sprungbefehl (Jump) ersetzt, der auf eine speziell implementierte \NeuerBegriff{Breakpoint-Handler}-Routine verweist. Beim Erreichen dieses Befehls wird zun\"achst ein kritischer Abschnitt eingeleitet: Es werden die f\"ur den Prozess relevanten Register (R1 bis R3) – namentlich \Fachbegriff{Ein Register, das die Speicheradresse des derzeitigen Befehls enth\"alt.}{Program Counter} (\Abkuerzung{Program Counter}{PC}), \Fachbegriff{Ein Register, das die Speicheradresse des letzten oder ersten Datenelements im Stack speichert.}{Stack Pointer} (\Abkuerzung{Stack Pointer}{SP}), \Fachbegriff{Register f\"ur eine Reihe von Flags, die von der arithmetisch-logischen Einheit in Abh\"angigkeit der zuletzt durchgef\"uhrten Rechenoperation gesetzt werden.}{Statusregister} (\Abkuerzung{Status Register}{SR}) und \ggf mehrere \NeuerBegriff{General-Purpose-Register (R4 bis R15)} – gesichert und Interrupts deaktiviert, um eine atomare Kontextsicherung zu gew\"ahrleisten \Zitat[S.91, Kap. 4.3]{ti:slau272d}. Anschlie{\ss}end erfolgt der \"ubergang in die Handler-Routine, die das gesamte System bis auf das Observer-Modul blockiert und so das Auslesen und Manipulieren von Speicherinhalten erm\"oglicht.
+Im Gegensatz dazu zielt die hier vorgestellte L\"osung auf eine Abwandlung der Software-Breakpoints ab, die direkt den Programmspeicher manipuliert. Dabei wird, in dieser Implementierung, an der gew\"unschten Halteadresse der originale Maschinenbefehl durch einen Sprungbefehl (Jump) ersetzt, der auf eine speziell implementierte \NeuerBegriff{Breakpoint-Handler}-Routine verweist. Beim Erreichen dieses Befehls wird zun\"achst ein kritischer Abschnitt eingeleitet: Es werden die f\"ur den Prozess relevanten Register (R1 bis R3) – namentlich \Fachbegriff{Ein Register, das die Speicheradresse des derzeitigen Befehls enth\"alt.}{Program Counter} (\Abkuerzung{Program Counter}{PC}), \Fachbegriff{Ein Register, das die Speicheradresse des letzten oder ersten Datenelements im Stack speichert.}{Stack Pointer} (\Abkuerzung{Stack Pointer}{SP}), \Fachbegriff{Register f\"ur eine Reihe von Flags, die von der arithmetisch-logischen Einheit in Abh\"angigkeit der zuletzt durchgef\"uhrten Rechenoperation gesetzt werden.}{Statusregister} (\Abkuerzung{Status Register}{SR}) und \ggf mehrere \Fachbegriff{Frei verwendbare Arbeitsregister für allgemeine Operationen.}{General-Purpose-Register} (R4 bis R15) – gesichert und Interrupts deaktiviert, um eine atomare Kontextsicherung zu gew\"ahrleisten \Zitat[S.91, Kap. 4.3]{ti:slau272d}. Anschlie{\ss}end wechselt das System in die Handler-Routine. Diese blockiert das gesamte System, mit Ausnahme des Observer-Moduls, um weiterhin das Auslesen und Manipulieren von Speicherinhalten zu erm\"oglichen.
 
-Nach der Analyse kann der urspr\"ungliche Programmzustand durch das laden der Registers\"atze wiederhergestellt werden. Eine explizite reaktivierung der Interrupts ist daher nicht n\"otig. Der Compiler stellt hierf\"ur \Fachbegriff{Compiler-spezifische, vordefinierte Funktionen, die direkt in optimierten Assemblercode umgesetzt werden.}{Compiler-Intrinsics}[Compiler-Intrinsic] bereit wie \Code{\_\_get\_SR}, \Code{\_\_get\_SP} und \Code{\_\_set\_interrupt\_state} \Zitat[S.137, Kap. 6.8.1]{ti:slau132r}. Auf diese Weise wird ein vollst\"andiger Zyklus von Unterbrechung, Inspektion und Fortsetzung des Programmflusses realisiert, ohne dass das Hauptprogramm von dem Observer-Modul tiefgreifender beeinflusst wird.
+Nach der Analyse kann der urspr\"ungliche Programmzustand durch das laden der Registers\"atze wiederhergestellt werden. Der Compiler stellt hierf\"ur \Fachbegriff{Compiler-spezifische, vordefinierte Funktionen als optimierter Assemblercode.}{Compiler-Intrinsics}[Compiler-Intrinsic] bereit wie \Code{\_\_get\_SR}, \Code{\_\_get\_SP} und \Code{\_\_set\_interrupt\_state} \Zitat[S.137, Kap. 6.8.1]{ti:slau132r}. Auf diese Weise wird ein vollst\"andiger Zyklus von Unterbrechung, Inspektion und Fortsetzung des Programmflusses realisiert, ohne dass das Hauptprogramm von dem Observer-Modul tiefgreifender beeinflusst wird.
 
 Vor diesem Hintergrund wird in den folgenden Abschnitten die Konzeptionierung erweiterter Software-Breakpoints im Detail erl\"autert und auf die daf\"ur notwendigen Voraussetzungen eingegangen.
 
+%----------------------------------------------------------------------------------------------------%
 
 \newpage
 \subsubsection{Verwendung eines Sprungbefehls anstelle einer Trap}
@@ -553,35 +554,36 @@ Vor diesem Hintergrund wird in den folgenden Abschnitten die Konzeptionierung er
 
 Wie in \Kapitel{Hardware_VS_Software_Breakpoints} erl\"autert, basieren klassische software-Breakpoints h\"aufig auf sogenannten Trap-Instruktionen. Das Debugging-Framework der Entwicklungsumgebung unterst\"utzt dies unter anderem \"uber die \NeuerBegriff{General Extension Language} (\Abkuerzung{General Extension Language}{GEL}) – ein Makro- und Skriptsystem, das die Initialisierung von Systemen sowie die Steuerung von Debug-Sitzungen erm\"oglicht. Dar\"uber hinaus erlaubt GEL auch das Setzen von Breakpoints, Speicherzugriffe und die Ablaufkontrolle des Programms \Zitat[Kap. 7.7, 7.7.8.6 \& 7.7.8.7]{ti:CCS}.
 
-F\"ur diese Arbeit war es jedoch erforderlich, dass bei Ausl\"osen eines Breakpoints benutzerdefinierte Routinen aus dem Observer-Modul aktiv bleiben und verwendet werden k\"onnen (\Vgl \Kapitel{Interruptgesteuertes_Lesen&Schreiben}). Diese Funktionalit\"aten sind mit dem Standardverhalten von GEL-Traps nicht kompatibel, da sie typischerweise nur auf Debugger-seitige Prozesse abzielen und keine Kontextintegration benutzerdefinierter Routinen auf dem Zielsystem erlauben.
+F\"ur diese Arbeit war es jedoch erforderlich, dass bei Ausl\"osen eines Breakpoints benutzerdefinierte Routinen aus dem Observer-Modul aktiv bleiben und verwendet werden k\"onnen. Dazu geh\"oren Funktionen, die in \Kapitel{Interruptgesteuertes_Lesen&Schreiben} besprochen wurden. Diese Funktionalit\"aten sind mit dem Standardverhalten von GEL-Traps nicht kompatibel, da sie typischerweise nur auf Debugger-seitige Prozesse abzielen und keine Kontextintegration benutzerdefinierter Routinen auf dem Zielsystem erlauben.
 
-Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzichtet und stattdessen ein direkter Sprungbefehl (Jump) auf eine benutzerdefinierte Breakpoint-Handler-Routine implementiert. Dadurch wird sichergestellt, dass das Observer-Modul auch w\"ahrend einer Unterbrechung aktiv bleibt und die Kontrolle \"uber Register- und Speicherzugriffe erhalten bleibt.
+Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzichtet und stattdessen ein direkter Sprungbefehl auf eine benutzerdefinierte Breakpoint-Handler-Routine implementiert. Dadurch wird sichergestellt, dass das Observer-Modul auch w\"ahrend einer Unterbrechung aktiv bleibt und die Kontrolle \"uber Register- und Speicherzugriffe erhalten bleibt.
 
-
+%----------------------------------------------------------------------------------------------------%
 
 \subsubsection{Implementierung erweiterter Software Breakpoints}
 \label{sec:ImplementierungSoftwareBreakpoints}
 
-Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf das Code-Segmenten zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven Adressierungsmodus ber\"ucksichtigen.
+Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf benachbarte Code-Segmente zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven \Fachbegriff{Der Adressierungsmodus bezeichnet die Art und Weise, wie Operanden innerhalb des Befehlswortes adressiert werden; unterst\"utzt werden \ua Register-, symbolische, absolute und indirekte Adressierung. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}}{Adressierungsmodus} ber\"ucksichtigen.
 
+\newpage
 Die Implementierung gliedert sich in folgende Schritte:
 \begin{enumerate}
 	\item \textbf{Adressvalidierung:} Pr\"ufen, ob die Zieladresse auf vier Byte ausgerichtet ist und im Stack liegt.
 	  
-	\item \textbf{Kontext-Sicherung:} In einem kritischen Abschnitt werden PC, SP, SR und alle modifizierten Register in einem Puffer abgelegt. Hierbei ist zu beachten, dass die Breite des PC vom Adressierungsmodus abh\"angt, worauf entsprechend r\"ucksicht genommen werden muss. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}
+	\item \textbf{Kontext-Sicherung:} In einem kritischen Abschnitt werden PC, SP, SR sowie alle modifizierten Register in einem Puffer abgelegt. Hierbei ist zu beachten, dass die Breite des PC vom Adressierungsmodus abh\"angt, worauf entsprechend r\"ucksicht genommen werden muss. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 	
-	\item \textbf{Ersetzen des Opcodes:} Der Original-Opcode (vier Byte) wird durch den vier-Byte-Sprungbefehl (zwei Byte f\"ur den Instruction-Code, zwei Byte f\"ur die Zieladresse der Handler-Routine) \"uberschrieben. \Zitat[S.161, Kap. 4.6.2.28]{ti:slau272d}
+	\item \textbf{Ersetzen des Opcodes:} Der Originale Opcode (vier Byte) wird mit dem vier-Byte-Sprungbefehl (zwei Byte f\"ur den Instruction-Code, zwei Byte f\"ur die Zieladresse der Handler-Routine) \"uberschrieben. \Zitat[S.161, Kap. 4.6.2.28]{ti:slau272d}
 	
-	\item \textbf{Ausf\"uhrung des Breakpoint-Handlers:} Beim Eintreten des Breakpoint-Opcodes springt der PC in die Handler-Routine, die das System an weiterer Ausf\"uhrung hindert und stattdessen das Observer-Modul f\"ur weitere Debug-Schritte aktiv h\"alt.
+	\item \textbf{Ausf\"uhrung des Breakpoint-Handlers:} Beim Eintreten des Breakpoint-Opcodes springt der PC in die Handler-Routine. Diese hindert das System an weiterer Ausf\"uhrung, deaktiviert Interrupts und h\"alt stattdessen das Observer-Modul f\"ur weitere Debug-Schritte aktiv.
 	
 	\item \textbf{Kontext-Wiederherstellung:} Nach Abschluss der Debug-Aktion werden alle Register und der urspr\"ungliche Opcode wiederhergestellt, bevor der normale Programmablauf fortgesetzt wird.
 \end{enumerate}
 
-Diese Vorgehensweise stellt die R\"uckkehr zum urspr\"unglichen Systemzustand – einschlie{\ss}lich des Originalen-Opcodes – sicher und garantiert die Konsistenz des Programms.
+Diese Vorgehensweise stellt die R\"uckkehr zum urspr\"unglichen Systemzustand – einschlie{\ss}lich des Originalen-Opcodes – sicher und m\"usste die Konsistenz des Programms garantieren.
 
 Um die im vorigen \Kapitel{KonzeptionierungSoftwareBreakpoints} skizzierten Konzepte robust umzusetzen, sind die im n\"achsten Abschnitt, technischen Details wie Instruktionsl\"angen und Speicher-Alignment, zu betrachten.\AI
 
-
+%----------------------------------------------------------------------------------------------------%
 
 \newpage
 \subsubsection{Instruktionsl\"angen, Speicher-Alignment und Adress-Modi}
@@ -590,36 +592,35 @@ Um die im vorigen \Kapitel{KonzeptionierungSoftwareBreakpoints} skizzierten Konz
 Die Manipulation von Befehlen im Stack ist hoch kritisch, da das Hauptprogramm keine Kenntnis vom Observer-Modul hat und eine falsche Adressierung, unterschiedlichen Adressierungs-Modi oder unvollst\"andige Opcode-substituierung zu undefiniertem Verhalten f\"uhren kann. Drei zentrale Aspekte sind dabei zu beachten:
 
 \begin{itemize}
-	\item \textbf{Speicher-Alignment:} MSP430-Instruktionen sind grunds\"atzlich an geraden Speicheradressen ausgerichtet. Vor jedem Schreib- oder Lesezugriff muss daher sichergestellt werden, dass die Zieladresse eine gerade Adresse ist. Zugriffe auf ungerade Adressen k\"onnen zu undefiniertem Verhalten f\"uhren, sofern keine Fehlerbehandlung erfolgt. Dar\"uber hinaus sind Adressen, die in der Mitte eines Opcodes liegen, ung\"ultig und d\"urfen nicht als Breakpoint oder adressiert werden.
+	\item \textbf{Speicher-Alignment:} MSP430-Instruktionen sind grunds\"atzlich an geraden Speicheradressen ausgerichtet. Vor jedem Schreib- oder Lesezugriff muss daher sichergestellt werden, dass die Zieladresse eine gerade Adresse ist. Zugriffe auf ungerade Adressen k\"onnen zu undefiniertem Verhalten f\"uhren, sofern keine Fehlerbehandlung erfolgt. Dar\"uber hinaus sind Adressen, die in der Mitte eines Opcodes liegen, ung\"ultig und d\"urfen nicht als Breakpoint adressiert werden.
 	
 	\item \textbf{Opcode-L\"angen:} W\"ahrend einzelne Maschinenbefehle in der Regel zwei bis vier Bytes belegen, k\"onnen komplexe Instruktionen – etwa \Code{CMP.B} – bis zu sechs Bytes lang sein, wie in \Abbildung{DisassemblyOpcodeLaengen} zu sehen. \Zitat[S.165, Kap. 4.6.2.32]{ti:slau272d} Diese Variabilit\"at erschwert das gezielte \"Uberschreiben von genau vier Byte, die f\"ur die Jump-Instruktion einschlie{\ss}lich Zieladresse ben\"otigt werden. Unter diesen Randbedingungen besteht die Gefahr, dass entweder zu viele oder zu wenige Bytes \"uberschrieben werden, was zu ung\"ultigen oder unbeabsichtigten Instruktionen f\"uhren kann.
 	
 	\begin{figure}[h!]
 		\centering
-		\includegraphics[width=0.7\textwidth]{../Bilder/OpcodeLaengen.png}
+		\includegraphics[width=0.75\textwidth]{../Bilder/OpcodeLaengen.png}
 		\caption{Code Composer Disassembly Modus - Opcode l\"angen}
 		\label{fig:DisassemblyOpcodeLaengen}
 	\end{figure}
 	
 	\newpage
-	\item \textbf{Adressierungs Modus:} Der Speicher, im Umfang von einem Megabyte, kann \"uber sieben unterschiedliche arten Adressiert werden. Wahlweise kommen 16 oder 20-Bit Adressen zum Einsatz. Diese Variabilit\"at der Adressierungsmodi und die damit einhergehenden unterschiedlichen Adressbreiten haben tiefgreifende Konsequenzen.\Zitat[S. 97, Kap. 4.4]{ti:slau272d}
+	\item \textbf{Adressierungs Modus:} Der Speicher -- im Umfang von einem Megabyte -- kann \"uber sieben unterschiedliche arten Adressiert werden. Wahlweise kommen 16 oder 20-Bit Adressen zum Einsatz. Diese Variabilit\"at der Adressierungsmodi und die damit einhergehenden unterschiedlichen Adressbreiten haben tiefgreifende Konsequenzen. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 \end{itemize}
 
-Das Sichern und Wiederherstellen von Registern und des Originalen Opcodes reicht daher nicht aus, insbesondere angesichts den variablen Instruktionsl\"angen und komplexer Adressierungsmodi. 
+Das Sichern und Wiederherstellen von Registern und des Originalen Opcodes reicht daher nicht aus, insbesondere angesichts variabler Instruktionsl\"angen und komplexer Adressierungsmodi. 
 
-Die gr\"o{\ss}e der Opcodes h\"angt von folgenden Parametern ab. Die Grundlegende l\"ange einer Instruktion des MSP430 liegt bei zwei Byte. Darin ist die Operation, wie beispielsweise \Code{MOV.W}, sowie die Register- und Adressierungsart kodiert. Unterschiedliche Adressierungen von Operanden \"uber Adressierungsmodi wie \glqq \Fachbegriff{Operand ist direkt in der Instruktion enthalten – also ein fester Wert, nicht aus dem Speicher.}{Immediate}\grqq , \glqq \Fachbegriff{Operand befindet sich an einer feste Speicheradresse.}{Absolute} \grqq oder \glqq \Fachbegriff{Operand ist nicht direkt gegeben, sondern steht an der Adresse, die ein Register enth\"alt.}{Indirect}\grqq, haben zur Folge, dass die Adressen oder Konstanten zus\"atzlich als \Fachbegriff{Synonym f\"ur 2 Byte gro{\ss}e Datenbreite}{Word} (2 Byte) oder \Fachbegriff{Synonym f\"ur 4 Byte gro{\ss}e Datenbreite}{extended Word} (4 Byte) kodiert werden. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}
+Die gr\"o{\ss}e der Opcodes h\"angt von folgenden Parametern ab. Die Grundlegende l\"ange einer Instruktion im MSP430 liegt bei zwei Byte. Darin ist die Operation, wie beispielsweise \Code{MOV.W}, sowie die Register- und Adressierungsart kodiert. Unterschiedliche Adressierungen von Operanden \"uber Adressierungsmodi wie \glqq{}\Fachbegriff{Operand ist direkt in der Instruktion enthalten – also ein fester Wert, nicht aus dem Speicher.}{Immediate}\grqq{}, \glqq{}\Fachbegriff{Operand befindet sich an einer feste Speicheradresse.}{Absolute}\grqq{} oder \glqq{}\Fachbegriff{Operand ist nicht direkt gegeben, sondern steht an der Adresse, die ein Register enth\"alt.}{Indirect}\grqq{}, haben zur Folge, dass die Adressen oder Konstanten zus\"atzlich als \Fachbegriff{Synonym f\"ur 2 Byte gro{\ss}e Datenbreite}{Word} (2 Byte) oder \Fachbegriff{Synonym f\"ur 4 Byte gro{\ss}e Datenbreite}{extended Word} (4 Byte) kodiert werden.\\\Zitat[S. 97, Kap. 4.4]{ti:slau272d}
 
-\newpage
-Ein Beispiel hierzu, woraus sich der 6-Byte lange Opcode, zum Vergleichen des Speicherinhalts des Registers \glqq \&error\grqq  mit dem Hexadezimalen Wert \glqq 0x0003\grqq, aus \Abbildung{DisassemblyOpcodeLaengen} zusammensetzt: \Zitat[S. 147, Kap. 4.6.2.14 \& S. 112, Kap. 4.4.7 \& S. 108, Kap. 4.4.4]{ti:slau272d}
+Ein Beispiel hierzu, woraus sich der 6-Byte lange Opcode, zum Vergleichen des Speicherinhalts des Registers \glqq{}\&error\grqq{} mit dem Hexadezimalen Wert \glqq{}0x0003\grqq{}, aus \Abbildung{DisassemblyOpcodeLaengen} zusammensetzt: \Zitat[S. 147, Kap. 4.6.2.14 \& S. 112, Kap. 4.4.7 \& S. 108, Kap. 4.4.4]{ti:slau272d}
 \\\textbf{\Code{CMP.B \#0x0003, \&error}} 
 \begin{itemize}
 	\item \textbf{1 Byte} Opcode f\"ur \Code{CMP.B}
 	\item \textbf{1 Byte} Modus f\"ur Quell-Operand und Ziel-Operand (Immediate -> Absolute)
-	\item \textbf{2 Byte} Immediate-Wert f\"ur Konstante \glqq 0x0003\grqq
-	\item \textbf{2 Byte} Absolute-Adresse f\"ur Label \glqq \&error\grqq
+	\item \textbf{2 Byte} Immediate-Wert f\"ur Konstante \glqq{}0x0003\grqq{}
+	\item \textbf{2 Byte} Absolute-Adresse f\"ur Label \glqq{}\&error\grqq{}
 \end{itemize}
 
-
+\newpage
 Diese Analyse verdeutlicht die komplexit\"at der Manipulation und Wiederherstellung von Instruktionen im Stack. Eine Kopie des Stacks schafft dabei eine sichere Umgebung, in welcher der bestehende Opcode Manipuliert wird. Hierbei muss die Kopie die unterschiedlichen Adressformate und die potenziell im Stack gespeicherten, modusabh\"angigen Zeiger korrekt abbilden oder transformieren. Dies garantiert ein sicheres zur\"uckkehren in die Hauptroutinen, sowie eine Robuste Ausf\"uhrung der Funktion zum verarbeiten der \ggf mehreren Breakpoints.
 
 Dies erschwert die Umsetzung und erh\"oht die Komplexit\"at der Routine erheblich, wodurch Timing und Konsistenz gef\"ahrdet werden. Im anschlie{\ss}enden Fazit werden die gewonnenen Erkenntnisse bewertet, offene Fragestellungen skizziert und ein Ausblick auf weiterf\"uhrende Arbeiten gegeben.

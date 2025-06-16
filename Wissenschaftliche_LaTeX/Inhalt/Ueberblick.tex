@@ -1,12 +1,12 @@
 % !TEX encoding = UTF-8 Unicode
 % !TEX root =  ../Bachelorarbeit.tex
 
-\chapter{\"Uberblick}
+\chapter{Technische Hintergr\"unde}
 \label{sec:UeberblickEntwicklungsplattform}
 
 Die gew\"ahlte Entwicklungsplattform ist entscheidend f\"ur die darauf folgende Implementierung eingebetteter Software. Im Rahmen dieser Arbeit dient der MSP430FR5729 von Texas Instruments als zentrale Hardwarekomponente. Dessen Technische Daten und Funktionalit\"aten werden in den folgenden Abschnitten n\"aher betrachtet.
 
-Der MSP430FR5729 ist ein Low-Power-Microcontroller  \Fachbegriff{Mikrocontroller mit 16-Bit-Registerbreite und reduzierter Befehlssatzarchitektur (Reduced Instruction Set Computer)}{16-Bit-RISC-Microcontroller} von Texas Instruments mit einer Maximalen Taktfrequenz von Acht \Fachbegriff{Ma{\ss}einheit f\"ur die Frequenz und entspricht einer Million Schwingungen pro Sekunde (1 MHz = 10$^{6}$ Rechenschritte).}{Megaherz}. Eingebaute Low-Power-Modi (\Abkuerzung{Low Power Mode}{LPMs}[LPM]) erm\"oglichen \ua niedrigere Taktfrequenzen und das deaktivieren von Oszillatoren, wodurch er sich besonders gut f\"ur energieeffiziente Anwendungen im Bereich eingebetteter Systeme eignet. Eine Auflistung aller Modi sind in \Abbildung{operation_modes} zu sehen. \Zitat[S. 43, Kap. 6.3, S. 35, Kap. 1.4 \& S. 37, Kp. 1.4.1]{ti:slase35c, ti:slau272d}
+Der MSP430FR5729 ist ein Low-Power-Microcontroller  \Fachbegriff{Mikrocontroller mit 16-Bit-Registerbreite und reduzierter Befehlssatzarchitektur (Reduced Instruction Set Computer)}{16-Bit-RISC-MCU} von Texas Instruments mit einer Maximalen Taktfrequenz von Acht \Fachbegriff{Ma{\ss}einheit f\"ur die Frequenz und entspricht einer Million Schwingungen pro Sekunde (1 MHz = 10$^{6}$ Rechenschritte).}{Megaherz}. Eingebaute Low-Power-Modi (\Abkuerzung{Low Power Mode}{LPMs}[LPM]) erm\"oglichen \ua niedrigere Taktfrequenzen und das deaktivieren von Oszillatoren, wodurch er sich besonders gut f\"ur energieeffiziente Anwendungen im Bereich eingebetteter Systeme eignet. Eine Auflistung aller Modi sind in \Abbildung{operation_modes} zu sehen. \Zitat[S. 43, Kap. 6.3, S. 35, Kap. 1.4 \& S. 37, Kp. 1.4.1]{ti:slase35c, ti:slau272d}
 
 \begin{figure}[h!]
 	\centering
@@ -15,13 +15,14 @@ Der MSP430FR5729 ist ein Low-Power-Microcontroller  \Fachbegriff{Mikrocontroller
 	\label{fig:operation_modes}
 \end{figure}
 
+\newpage
 Der Mikroprozessor besitzt 16 Kilobyte an nicht-fl\"uchtigen FRAM, sowie ein Kilobyte \Fachbegriff{Schnellster, fl\"uchtiger Speicher mit geringer Kapazit\"at, bestehend aus Flip-Flops welcher meist direkt in der \Abkuerzung{Central Processing Unit}{CPU} mit eingebaut ist.}{statischen Arbeitsspeicher}[statischer Arbeitsspeicher] (\Abkuerzung{Static Random Access Memory}{SRAM}). 
 
 Die Versorgungsspannung betr\"agt 2 bis 3,6 Volt wobei ebenfalls verschiedene Low-Power-Modi verwendet werden k\"onnen, um den Stromverbrauch zunehmend zu minimieren. Diese beeinflussen den sp\"ateren Umgang mit Timer-Interrupts, weil sie den Energieverbrauch im Wartezustand beeinflussen. \Zitat[S. 26, Kap. 5.20]{ti:slase35c}
 
 Des Weiteren besitzt der Chip F\"unf Interne 16-Bit Timer mit jeweils Sieben\\\NeuerBegriff{Capture and Compare} Registerbl\"ocken. Diese internen Timer stellen eine zentrale Komponente f\"ur die Realisierung pr\"aziser Zeitgesteuerter Funktionen und die Generierung von Interrupts dar, welche im nachfolgenden \Kapitel{TIMER&ISR} tiefgreifender erl\"autert werden.
 
-Zur externen Kommunikation sind Protokolle wie \Abkuerzung{Universal Asynchronous Receiver Transmitter}{UART}, \Abkuerzung{Inter-Integrated Circuit}{I$^{2}$C} und \Abkuerzung{Serial Peripheral Interface}{SPI} integriert, welche mit 32 Programmierbaren \Abkuerzung{General Purpose Input/Output}{GPIO}-Pins angeschlossen werden k\"onnen. Kommunikationsschnittstellen sind f\"ur die Interaktion mit der Au{\ss}enwelt und Peripherieger\"aten von hoher Bedeutung. Eine detailliertere Ausarbeitung des \Fachbegriff{Serielle Schnittstelle in Mikrocontrollern von Texas Instruments, die verschiedene Kommunikationsprotokolle (\zB UART, SPI, I$^{2}$C) unterst\"utzt.}{enhanced Universal Serial Communication Interface} (\Abkuerzung{enhanced Universal Serial Communication Interface}{eUSCI}) folgt in \Kapitel{eUSCI}. \Zitat[S. 1, Kap. 1.1]{ti:slase35c}
+Zur externen Kommunikation sind Protokolle wie \Abkuerzung{Universal Asynchronous Receiver Transmitter}{UART}, \Abkuerzung{Inter-Integrated Circuit}{I$^{2}$C} und \Abkuerzung{Serial Peripheral Interface}{SPI} integriert, welche mit 32 Programmierbaren \Abkuerzung{General Purpose Input/Output}{GPIO}-Pins angeschlossen werden k\"onnen. Kommunikationsschnittstellen sind f\"ur die Interaktion mit der Au{\ss}enwelt und Peripherieger\"aten von hoher Bedeutung. Eine detailliertere Ausarbeitung des \Fachbegriff{Serielle Schnittstelle in Mikrocontrollern von Texas Instruments, die verschiedene Kommunikationsprotokolle (\zB UART, SPI, I$^{2}$C) unterst\"utzt.}{enhanced Universal Serial Communication Interface} (\Abkuerzung{enhanced Universal Serial Communication Interface}{eUSCI}) folgt in \Kapitel{eUSCI}. \Zitat[S. 1, Kap. 1.1]{ti:slase35c}	
 
 \begin{figure}[h!]
 	\centering
@@ -31,7 +32,7 @@ Zur externen Kommunikation sind Protokolle wie \Abkuerzung{Universal Asynchronou
 \end{figure}
 
 \newpage
-\Abbildung{BlockDiagramm_msp430} zeigt ein vollst\"andiges Block-Diagramm des Mikroprozessors, welches noch einige weitere Eigenschaften, Funktionen und Subsysteme auflistet. \AI
+\Abbildung{BlockDiagramm_msp430} zeigt ein vollst\"andiges Block-Diagramm des Mikroprozessors, welches noch einige weitere Eigenschaften, Funktionen und Subsysteme auflistet.\AI
 
 
 \section{Timer und Interrupt Service Routinen (ISR)}
@@ -57,6 +58,7 @@ Der Z\"ahlmodus, bestimmt die interne Z\"ahlweise des Timers. Die Timer unterst\
 \begin{itemize}
 	\item \textbf{Up Mode:} Im Up Mode (Additive Z\"ahlweise, \Vgl \Abbildung{up_mode}) beginnt der Z\"ahler bei Null und inkrementiert seinen Wert mit jedem Taktimpuls der gew\"ahlten \Fachbegriff{Eine Referenz auf ein periodisches Zeitsignal um zeitliche Abl\"aufe zu synchronisieren; typischerweise in Form von Quarzoszillatoren oder externen Taktsignalen.}{Clock-Source}. Er erreicht einen vordefinierten Maximalwert, der im Compare-Register gespeichert ist, und beginnt dann wieder von Null an zu z\"ahlen. Ein \"uberlauf-Interrupt wird generiert, sobald der Z\"ahler den Wert von \Code{CCR0} erreicht. Dieser Modus eignet sich ideal f\"ur die Erzeugung periodischer Ereignisse oder die Messung von Zeitintervallen bis zu einem bestimmten Grenzwert. Beispielsweise kann durch die Wahl einer geeigneten Clock-Source und eines passenden Wertes im Compare-Register eine pr\"azise Zeitbasis f\"ur periodische Aufgaben geschaffen werden. \Zitat[S. 337, Kap. 11.2.3.1 \& S. 359, Kap. 12.2.3.1, S. 330, Kap. 8.6]{ti:slau272d, davies:msp430}
 	
+	\vspace{1cm}
 	\begin{figure}[h!]
 		\centering
 		\includegraphics[width=0.75\textwidth]{../Bilder/up_mode.png}
@@ -64,6 +66,7 @@ Der Z\"ahlmodus, bestimmt die interne Z\"ahlweise des Timers. Die Timer unterst\
 		\label{fig:up_mode}
 	\end{figure}
 	
+	\newpage
 	\item \textbf{Continuous Mode:} Der Continuous Mode (\Vgl \Abbildung{continuous_mode}) l\"asst den Z\"ahler von Null bis zum maximal m\"oglichen Wert (FFFFh f\"ur 16-Bit-Timer) z\"ahlen und anschlie{\ss}end wieder bei Null beginnen. Ein \"uberlauf-Interrupt wird generiert, wenn der Z\"ahler vom Wert von FFFFh auf 0 \"uberl\"auft. \Zitat[S. 338, Kap. 11.2.3.2 \& S. 360, Kap. 12.2.3.2]{ti:slau272d} Dieser Modus ist besonders n\"utzlich, wenn l\"angere, voneinander unabh\"angige Zeitintervalle zu messen sind oder eine freilaufende Zeitbasis ben\"otigt wird, um Ereignisse in Bezug auf den Z\"ahlerstand, ohne einen periodischen Neustart durch das Compare-Register, zu erfassen. \Zitat[S. 338, Kap. 11.2.3.3 \& S. 360, Kap. 12.2.3.3, S. 318, Kap. 8.5]{ti:slau272d, davies:msp430}
 	
 	\begin{figure}[h!]
@@ -87,7 +90,6 @@ Die Wahl eines geeigneten Modus h\"angt stark von der spezifischen Anwendung ab.
 
 Zur Erg\"anzug der drei Z\"ahlweisen des Timers, wird in den folgenden Kapiteln die genaue Rolle der bereits erw\"ahnten Capture-/Compare-Modi erläutert.
 
-\newpage
 \subsection{Capture-Mode}
 \label{sec:Timer_CaptureMode}
 
@@ -100,6 +102,7 @@ Der Capture Mode erm\"oglicht es, den aktuellen Wert des Z\"ahlers pr\"azise zu 
 	\label{fig:CaptureModeBeispiele}
 \end{figure}
 
+\newpage
 Die Timer des MSP430FR5729 unterst\"utzen verschiedene Capture-Modi. Diese legen fest, bei welcher Art von Signal\"anderung die Erfassung des Z\"ahlerwertes erfolgt:
 
 \begin{itemize}
@@ -114,11 +117,13 @@ Sofern ein Interrupt im entsprechenden Capture-Register aktiviert ist, kann dies
 
 Die Konfiguration des Capture Mode umfasst die Auswahl des ausl\"osenden Ereignisses (Flanke) sowie \ggf die Aktivierung des Capture-Interrupts. Die erfassten Zeitstempel im Capture-Register erlauben pr\"azise Messungen und die Analyse externer Signale in eingebetteten Systemen. \Zitat[S. 340, Kap. 11.2.4.1 \& S. 362, Kap. 12.2.4.1, S. 300, Kap. 8.4]{ti:slau272d, davies:msp430}
 
+\vspace{0.5cm}
 \subsection{Compare-Mode}
 \label{sec:Timer_CompareMode}
 
 Der Compare Mode erm\"oglicht es, den aktuellen Wert des Z\"ahlers kontinuierlich mit den in den Compare-Registern \Code{CCR0} bis \Code{CCR7} hinterlegten Werten zu vergleichen. Wenn der Z\"ahlerstand mit dem Vergleichswert \"ubereinstimmt, kann \zB ein Interrupt ausgel\"ost oder ein Ausgangspin beeinflusst werden.
 
+\newpage
 Die Compare-Modi bieten verschiedene M\"oglichkeiten, wie der Ausgangspin bei einer \"ubereinstimmung beeinflusst werden soll:
 
 \begin{itemize}
@@ -139,16 +144,16 @@ Die Compare-Modi bieten verschiedene M\"oglichkeiten, wie der Ausgangspin bei ei
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=1.0\textwidth]{../Bilder/UpDown_ModeBsp.png}
+	\includegraphics[width=0.95\textwidth]{../Bilder/UpDown_ModeBsp.png}
 	\caption{Ausgabeeinheit im Up/Down-Modus\\\Zitat[S. 340, Abb. 11-9]{ti:slau272d}}
 	\label{fig:OutputUnit_UpDown_Mode}
 \end{figure}
 
+\newpage
 \"Ahnlich wie beim Capture Mode erm\"oglicht ein Interrupt der CPU, auf pr\"azise Zeitpunkte zu reagieren und entsprechende Aktionen auszuf\"uhren. Der Compare Mode ist somit ein vielseitiges Werkzeug zur Erzeugung von Steuersignalen, zur Implementierung von Zeitverz\"ogerungen oder zur Synchronisation interner Operationen mit einer pr\"azisen Zeitbasis. \Zitat[S. 342, Kap. 11.2.4.2 \& S. 364, Kap. 12.2.4.2, S. 352, Kap. 8.8]{ti:slau272d, davies:msp430}
 
 Nachdem die verschiedenen Betriebsarten des Timers betrachtet wurden, ist es wichtig zu verstehen, wie die zugeh\"origen Register konfiguriert werden, um die gew\"unschte Funktionalit\"at zu erzielen.
 
-\newpage
 \subsection{Einstellungen der Capture and Compare Register}
 \label{sec:CC_Register}
 
@@ -158,9 +163,12 @@ F\"ur jedes Capture/Compare-Register kann individuell festgelegt werden, ob ein 
 
 Wie bereits in \Kapitel{Timer_CompareMode} zum Compare-Modus beschrieben, legen die Output-Mode-Bits (\Code{OUTMOD}) fest, wie der zugeh\"orige Ausgangspin bei einer \"ubereinstimmung des Z\"ahlerstandes mit dem Compare-Registerwert beeinflusst wird. Die Auswahl des passenden Output-Modus ist entscheidend f\"ur die Erzeugung der gew\"unschten Ausgangssignale, wie beispielsweise bei der Pulsweitenmodulation.
 
-Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Operation wird ebenfalls \"uber Bits im \Code{TAxCCTLn}- oder \Code{TBxCCTLn}-Register gesteuert. F\"ur den Capture-Modus wird hier beispielsweise mit dem \Code{CM}-Bit festgelegt, ob die Erfassung bei einer steigenden, fallenden oder bei beiden Flanken des Eingangssignals erfolgen soll. Im Compare-Modus definiert diese Einstellung, unter welchen Bedingungen die Vergleichsoperation als erfolgreich betrachtet wird und die entsprechende Aktion (Interrupt, Ausgangssignal\"anderung) ausgel\"ost wird. Dies kann beispielsweise ein reiner Vergleich oder auch ein Vergleich in Kombination mit dem \"uberlauf des Z\"ahlers im Up-Modus sein. \Zitat[S. 351, Kap. 11.3.3 \& S. 375, Kap. 12.3.3, S. 292, Kap. 8.3.2]{ti:slau272d, davies:msp430}
+Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Operation wird ebenfalls \"uber Bits im \Code{TAxCCTLn}- oder \Code{TBxCCTLn}-Register gesteuert. F\"ur den Capture-Modus wird hier beispielsweise mit dem \Code{CM}-Bit festgelegt, ob die Erfassung bei einer steigenden, fallenden oder bei beiden Flanken des Eingangssignals erfolgen soll. 
 
 \newpage
+Im Compare-Modus definiert diese Einstellung, unter welchen Bedingungen die Vergleichsoperation als erfolgreich betrachtet wird und die entsprechende Aktion (Interrupt, Ausgangssignal\"anderung) ausgel\"ost wird. Dies kann beispielsweise ein reiner Vergleich oder auch ein Vergleich in Kombination mit dem \"uberlauf des Z\"ahlers im Up-Modus sein. \Zitat[S. 351, Kap. 11.3.3 \& S. 375, Kap. 12.3.3, S. 292, Kap. 8.3.2]{ti:slau272d, davies:msp430}
+
+\vspace{1cm}
 \begin{table}[h!]
 	\small
 	\centering
@@ -183,11 +191,11 @@ Die Auswahl des ausl\"osenden Ereignisses f\"ur eine Capture- oder Compare-Opera
 	\label{tab:tb_ccc_register}
 \end{table}
 
+\newpage
 Die sorgf\"altige Konfiguration dieser Einstellungen in den Capture/Compare-Registern ist unerl\"asslich, um den Timer an die Anforderungen der jeweiligen Applikation anzupassen.
 
 Ein weiterer fundamentaler Aspekt der Timer-Konfiguration ist \ua die Wahl der Taktquelle, welche die Zeitbasis f\"ur den Z\"ahler und somit f\"ur alle zeitgesteuerten Operationen des Timers bestimmt.\AI
 
-\newpage
 \subsection{Timer Control-Register}
 \label{sec:TimerControlRegister}
 
@@ -195,13 +203,13 @@ Die Timer des MSP430FR5729 k\"onnen von verschiedenen internen Taktquellen getak
 
 Die Auswahl einer geeigneten \glqq Clock-Source\grqq{} f\"ur den Timer erfolgt \"uber spezifische Bits im \Code{TAxCTL} oder \Code{TBxCTL} Timer-Control-Register. Das \Code{TASSEL}-/\Code{TBSSEL}-Bit legt fest, ob der Timer von \Code{TAxCLK}/\Code{TBxCLK}, \Code{ACLK}, \Code{SMCLK} oder \Code{INCLK} getaktet wird. Diese Wahl hat einen direkten Einfluss auf die Timer-Frequenz, wobei sie nicht gleich der Frequenz der gew\"ahlten Clock-Source entsprechen muss. Durch optionale \Fachbegriff{Vorschaltglied in elektronischen Z\"ahlschaltungen oder Timern, welches die Frequenz eines Eingangssignals durch einen festen Faktor reduziert, um eine nachfolgende Verarbeitung mit geringerer Taktrate zu erm\"oglichen.}{Prescaler-Werte}[Prescaler] wie dem \Code{ID}-Bit und dem \Code{TAIDEX}-/\Code{TBIDEX}-Bit kann die Frequenz weiter individualisiert werden. \Zitat[S. 349, Kap. 11.3.1 \& S. 372, Kap. 12.3.1, S. 289, Kap. 8.3.1]{ti:slau272d, davies:msp430}
 
+\newpage
 Die Timer-Frequenz bestimmt wiederum die Zeitbasis des Timers. Eine h\"ohere Timer-Frequenz f\"uhrt zu einer feineren Zeitaufl\"osung, da der Z\"ahler schneller inkrementiert wird. Dies erm\"oglicht pr\"azise Zeitmessungen und die Erzeugung von Signalen hoher Frequenzen. Umgekehrt f\"uhrt eine niedrigere Frequenz zu einer gr\"oberen Zeitaufl\"osung, kann aber den Stromverbrauch reduzieren.
 
 Ein weiteres Steuerbit, das \glqq{}Mode Control\grqq{}-Bit (\Abkuerzung{Mode Control}{MC}) steuert die -- bereits in \Kapitel{Timer_CountMode} erl\"auterten -- Z\"ahl-Modi und das \Code{TAIE}-/\Code{TBIE}-Bit steuert, ob Interrupts Ein- oder Ausgeschaltet sind.
 
 Die Auswahl der Clock-Source, des Prescalers und weiteren Steuerbits ist daher entscheidend, um die gew\"unschte Zeitbasis, Aufl\"osung und Verhalten f\"ur den zu konfigurierenden Timer zu erreichen um die Anforderungen der jeweiligen Anwendung optimal zu erf\"ullen.
 
-\newpage
 \Tabelle{tb_c_register} fasst alle weiteren Register des Timers B mit ihren Beschreibungen zusammen.\AI
 
 \begin{table}[h!]
@@ -226,6 +234,7 @@ Die Auswahl der Clock-Source, des Prescalers und weiteren Steuerbits ist daher e
 	\label{tab:tb_c_register}
 \end{table}
 
+\newpage
 \subsection{Zusammenfassung und Einsatzm\"oglichkeiten}
 \label{sec:TimerEinsatzmoeglichkeiten}
 
@@ -233,7 +242,6 @@ Die detaillierte Auseinandersetzung mit der Timer-Architektur des MSP430FR5729 h
 
 Analog zur \"Ubersicht \glqq What Timer Where?\grqq{} von John H. Davies lassen sich die prim\"aren Einsatzgebiete der Timer des MSP430FR5729 wie folgt zusammenfassen: \Zitat[S. 356, Kap. 8.10]{davies:msp430}
 
-\newpage
 \begin{itemize}
 	\item \textbf{Zeitmessung und Zeitbasis:} Unabh\"angig vom Timer-Typ k\"onnen alle als eine pr\"azise Zeitbasis dienen. Durch die Wahl einer geeigneten Clock-Source und passender Prescaler-Werte lassen sich genaue Zeitintervalle festlegen. Dies ist fundamental f\"ur das Zeitmanagement innerhalb des Mikrocontrollers und die Synchronisation mit externen als auch Internen Ereignissen. Timer A eignet sich hierbei oft f\"ur grundlegende Zeitsteuerungsaufgaben, w\"ahrend die flexiblere Konfigurierbarkeit des Timers vom Typ B wie \zB verschiedene Bit-L\"angen (\Kapitel{TIMER&ISR}) eine feinere Anpassung an spezifische Zeitmessanforderungen erlaubt.
 
@@ -244,7 +252,6 @@ Analog zur \"Ubersicht \glqq What Timer Where?\grqq{} von John H. Davies lassen 
 	\item \textbf{Interrupt-Steuerung und Task-Rotation:} Sowohl Capture- als auch Compare-Ereignisse k\"onnen Interrupts ausl\"osen. Dies erm\"oglicht eine effiziente Reaktion des Mikrocontrollers auf zeitgesteuerte Ereignisse oder Signale, ohne die kontinuierliche abfrage des Timer-Status. Die pr\"azise Interrupt-Generierung tr\"agt ma{\ss}geblich zur Realisierung reaktiver und effizienter eingebetteter (Echtzeit-) Systeme bei.
 \end{itemize}
 
-\newpage
 Zusammenfassend l\"asst sich der grundlegende Aufbau eines Timers, vereinfacht nach dem Vorbild aus Abbildung 8.5 und Abbildung 8.16 aus Davies' Buch, wie folgt darstellen:
 
 Ein Timer besteht im Kern aus einem Z\"ahler (\Kapitel{Timer_CountMode}), der durch eine ausgew\"ahlte Clock-Source (\Kapitel{TimerControlRegister}) in definierten Schritten inkrementiert oder dekrementiert wird. Dieser Z\"ahler l\"auft gem\"a{\ss} der gew\"ahlten Betriebsart.
@@ -257,9 +264,10 @@ Im Compare Mode (\Kapitel{Timer_CompareMode}) wird der aktuelle Wert des Z\"ahle
 
 Die Steuereinheit erm\"oglicht die Konfiguration des jeweiligen Kanals, einschlie{\ss}lich der Auswahl des Capture/Compare-Modus, des ausl\"osenden Ereignisses, des Ausgangsmodus und der Aktivierung/Deaktivierung des Interrupts.
 
-\newpage
 Das Blockdiagramm in \Abbildung{BlockDiagramm_Timer} zeigt Timer B mit seinen grundlegenden Komponenten und deren Zusammenspiel. Die flexiblen Konfigurationsm\"oglichkeiten dieser Bl\"ocke erm\"oglicht die Realisierung einer Vielzahl von Zeitsteuerungs- und Signalverarbeitungsaufgaben.
 
+\newpage
+\vspace{1cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/BlockDiagram_TimerB.png}
@@ -267,7 +275,6 @@ Das Blockdiagramm in \Abbildung{BlockDiagramm_Timer} zeigt Timer B mit seinen gr
 	\label{fig:BlockDiagramm_Timer}
 \end{figure}
 
-\newpage
 \section{Enhanced Universal Serial Communication Interface (eUSCI)}
 \label{sec:eUSCI}
 
@@ -275,6 +282,7 @@ Das eUSCI ist eine vielseitige und flexible serielle Peripheriekomponente des MS
 
 Der MSP430FR5729 verf\"ugt \"uber zwei Kommunikationskan\"ale, die in den folgenden Kapiteln n\"aher betrachtet werden. 
 
+\newpage
 \subsection{Die eUSCI-Architektur}
 \label{sec:eUSCI_Architektur}
 
@@ -284,9 +292,9 @@ Beim MSP430FR5729 ist der Kommunikationskanal vom Typ-B f\"ur Synchrone Daten\"u
 
 Der wesentliche Unterschied zwischen diesen beiden \"Ubertragungsarten besteht darin, ob das Taktsignal ebenfalls mit \"ubertragen wird. Bei der synchronen Kommunikation, wie sie etwa mit den Protokollen SPI oder I$^{2}$C erfolgt, wird dieses Taktsignal explizit mitgef\"uhrt. Im Gegensatz dazu kommt das UART-Protokoll ohne ein separates Taktsignal aus, da Sender und Empf\"anger \"uber eine gemeinsame \Fachbegriff{Bezeichnet die Anzahl der Signal\"anderungen (Symbole) pro Sekunde in einem \"Ubertragungskanal. Sie bestimmt somit die \"Ubertragungsgeschwindigkeit, ist aber nicht zwingend identisch mit der Bitrate, da pro Symbol mehrere Bits codiert sein k\"onnen.}{Baudrate} synchronisiert sind. \Zitat[S. 494, Kap. 10]{davies:msp430}
 
-\newpage
 Entsprechend ist der universelle Kommunikationskanal vom Typ B (\Abkuerzung{enhanced Universal Serial Communication Interface Type B}{eUSCI\_B}{}) speziell auf die Anforderungen synchroner Protokolle wie SPI und I$^{2}$C ausgelegt. Das \Abkuerzung{enhanced Universal Serial Communication Interface Type A}{eUSCI\_A}{}-Modul hingegen unterst\"utzt prim\"ar die UART-Kommunikation, kann jedoch dar\"uber hinaus auch eine asynchrone Variante des SPI-Protokolls abbilden. \Zitat[S. 496, Kap. 10.1.2]{davies:msp430}
 
+\newpage
 \begin{table}[h!]
 	\small
 	\centering
@@ -308,15 +316,14 @@ Entsprechend ist der universelle Kommunikationskanal vom Typ B (\Abkuerzung{enha
 
 \Tabelle{eusci-vergleich} fasst nochmals alle Eigenschaften beider Kan\"ale zusammen und stellt sie gegen\"uber. Wobei tiefgreifendere protokollspezifische Funktionen in den entsprechenden Unterkapiteln n\"aher betrachtet werden.
 
-\vspace{0.5cm}
 \subsection{Einordnung vorhandener Kommunikationsschnittstellen}
 \label{sec:Einordnung_Schnittstellen}
 
 Die vorliegende Arbeit befasst sich mit der Entwicklung einer interruptgesteuerten Benutzerschnittstelle. Die Evaluation eines daf\"ur geeigneten Protokolls zur Interaktion mit externen \Abkuerzung{Personal Computer}{PC} Systemen bestimmt ma{\ss}geblich den weiteren Verlauf der Evaluation und des Projekts. Daher ist eine einf\"uhrende Einordnung der zur Verf\"ugung stehenden seriellen Protokolle erforderlich, um im weiteren Verlauf gezielt auf jene Technologie eingehen zu k\"onnen, welche im Kontext der Arbeit von praktischer Relevanz ist.
 
-\newpage
 Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich besonders gut f\"ur den Datenaustausch zwischen einem Microcontroller und seinen Peripherieger\"aten oder weiteren Mikrocontrollern im Master-Slave-Verh\"altnis. Welche der beiden Technologien im jeweiligen Anwendungsfall zum Einsatz kommt, h\"angt unter anderem von der Anzahl der beteiligten Ger\"ate sowie der Distanz zu den Kommunikationspartnern ab. Weitere technische Unterschiede dieser Protokolle sind in \Tabelle{synchrone_protokolle} aufgelistet.
 
+\newpage
 \begin{table}[h!]
 	\small
 	\centering
@@ -337,18 +344,17 @@ Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich b
 	\label{tab:synchrone_protokolle}
 \end{table}
 
-\newpage
 Zusammenfassend l\"asst sich feststellen, dass sich die synchrone Daten\"ubertragung nur bedingt f\"ur die Kommunikation mit einem auf Windows oder Linux basierenden System eignet. Im Gegensatz dazu sind asynchrone Protokolle wie UART f\"ur diese Art der Anwendung deutlich besser geeignet, wie im folgenden erl\"autert. 
 
 Das UART-Protokoll zeichnet sich nicht nur durch eine einfache Implementierung aus, sondern ist auch \"au{\ss}erst robust und ressourcenschonend -- Eigenschaften, die insbesondere bei modularen, \Fachbegriff{Automatische Erkennung und Integration von Komponenten in ein System ohne manuelle Konfiguration}{Plug-and-Play-f\"ahigen}[Plug-and-Play] Systemkomponenten entscheidend sind. Der Verzicht auf eine gemeinsame Taktleitung erlaubt eine Punkt-zu-Punkt-Verbindung mit vergleichsweise geringen Hardwareanforderungen. 
 
+\newpage
 Diese Vorteile gelten gleicherma{\ss}en f\"ur die gegen\"uberliegende Seite der Schnittstelle: Alle g\"angigen Betriebssysteme wie Windows, Linux oder macOS stellen standardm\"a{\ss}ig Treiber f\"ur die asynchrone serielle Daten\"ubertragung bereit. Unter Windows erfolgt dies beispielsweise \"uber sogenannte \NeuerBegriff{COM-Ports}, w\"ahrend unter Linux Schnittstellen wie \NeuerBegriff{/dev/ttySx} oder \NeuerBegriff{/dev/ttyUSBx} verwendet werden. \Zitat{microsoft_serial, linux_kernel_docs}
 
 Im Falle des MSP430FR5729 erfolgt die UART-Kommunikation zus\"atzlich interruptgesteuert. Dies erlaubt es, eingehende Daten \"uber eine eigens definierte ISR zu verarbeiten, was eine latenzarme, gleichzeitig jedoch energieeffiziente Verarbeitung erm\"oglicht.\Zitat[S. 574, Kap. 10.12]{davies:msp430}
 
 Aus diesen Gr\"unden stellt UART die technisch sinnvollste Wahl f\"ur die Kommunikation zwischen dem MSP430FR5729 und einem PC mit Windows, Linux oder macOS dar. Das Protokoll erlaubt eine minimalinvasive, betriebssystemkompatible und energieeffiziente Verbindung. Im weiteren Verlauf wird die asynchrone universelle serielle Schnittstelle mit dem UART Protokoll detaillierter betrachtet.\AI
 
-\newpage
 \subsection{eUSCI\_A Modul: UART-Modus (Asynchrone Kommunikation)}
 \label{sec:eUSCI_UART}
 
@@ -357,7 +363,10 @@ F\"ur ein tiefgreifendes Verst\"andnis des Zusammenspiels zwischen dem Interface
 \subsubsection{Informations\"ubertragung}
 \label{sec:UART_uebertragung}
 
-Die Baudrate, wie in \Kapitel{eUSCI_Architektur} bereits er\"ortert, fungiert als entscheidender Synchronisationsmechanismus f\"ur asynchrone Daten\"ubertragungen. Dies impliziert, dass Sender und Empf\"anger sich zwar nicht an ein pr\"azises Timing f\"ur die \"Ubertragung einzelner Bits halten m\"ussen, jedoch eine \"Ubereinstimmung hinsichtlich der Frequenz zur \"Ubertragung ganzer Bl\"ocke -- typischerweise Bytes oder Zeichen -- erforderlich ist. \Abbildung{uart_send} visualisiert beispielhaft die \"Ubertragung zweier Bl\"ocke, die jeweils durch ein Start-Bit (\Abkuerzung{Start-Bit}{ST}) eingeleitet und durch ein Stop-Bit (\Abkuerzung{Stop-Bit}{SP}) abgeschlossen werden. Durch die Verwendung dieser Rahmenbits ergibt sich bei einer Konfiguration von acht Datenbits eine Netto-Datenrate von 8/10 der Brutto-\"Ubertragungsrate. Das bedeutet, dass von zehn \"ubertragenen Bits acht Bits die eigentliche Nutzinformation darstellt. Es gibt auch die M\"oglichkeit, flexibel auf unterschiedliche Baudraten zu reagieren. Vorausschauend sei erw\"ahnt, dass die in \Kapitel{auto_baud} erl\"auterte automatische Baudraten-Erkennung die Kommunikation mit mehreren Partnern bei unterschiedlichen Baudraten erlaubt. \Zitat[S. 576, Kap. 10.12.1]{davies:msp430, riverdi_baudrate}
+Die Baudrate, wie in \Kapitel{eUSCI_Architektur} bereits er\"ortert, fungiert als entscheidender Synchronisationsmechanismus f\"ur asynchrone Daten\"ubertragungen. Dies impliziert, dass Sender und Empf\"anger sich zwar nicht an ein pr\"azises Timing f\"ur die \"Ubertragung einzelner Bits halten m\"ussen, jedoch eine \"Ubereinstimmung hinsichtlich der Frequenz zur \"Ubertragung ganzer Bl\"ocke -- typischerweise Bytes oder Zeichen -- erforderlich ist. 
+
+\newpage
+\Abbildung{uart_send} visualisiert beispielhaft die \"Ubertragung zweier Bl\"ocke, die jeweils durch ein Start-Bit (\Abkuerzung{Start-Bit}{ST}) eingeleitet und durch ein Stop-Bit (\Abkuerzung{Stop-Bit}{SP}) abgeschlossen werden. Durch die Verwendung dieser Rahmenbits ergibt sich bei einer Konfiguration von acht Datenbits eine Netto-Datenrate von 8/10 der Brutto-\"Ubertragungsrate. Das bedeutet, dass von zehn \"ubertragenen Bits acht Bits die eigentliche Nutzinformation darstellt. Es gibt auch die M\"oglichkeit, flexibel auf unterschiedliche Baudraten zu reagieren. Vorausschauend sei erw\"ahnt, dass die in \Kapitel{auto_baud} erl\"auterte automatische Baudraten-Erkennung die Kommunikation mit mehreren Partnern bei unterschiedlichen Baudraten erlaubt. \Zitat[S. 576, Kap. 10.12.1]{davies:msp430, riverdi_baudrate}
 
 \begin{figure}[h!]
 	\centering
@@ -366,11 +375,11 @@ Die Baudrate, wie in \Kapitel{eUSCI_Architektur} bereits er\"ortert, fungiert al
 	\label{fig:uart_send}
 \end{figure}
 
-\newpage
 Die einzelnen Bits innerhalb eines Datenblocks werden mittels des \Fachbegriff{Bin\"ares Leitungscodierungsverfahren, bei dem der Signalpegel w\"ahrend eines Bitintervalls konstant bleibt und nicht zwischen den Bits auf einen Nullpegel zur\"uckkehrt}{Non-Return-to-Zero-Verfahrens}[Non-Return-to-Zero] (\Abkuerzung{non-return to zero}{NRZ}) kodiert und \"ubertragen. Eine typische Baudrate f\"ur eingebettete Systeme betr\"agt 9600 Baud, obgleich auch h\"ohere Frequenzen zur beschleunigten Daten\"ubertragung Anwendung finden k\"onnen. \Zitat{riverdi_baudrate}
 
 Die physikalische Verbindung zweier Parteien wird \"ublicherweise \"uber drei Leitungen realisiert. Eine Leitung f\"ur jede Kommunikationsrichtung (\Abkuerzung{Transmit Data}{TxD} zu \Abkuerzung{Receive Data}{RxD}) und eine f\"ur die gemeinsame Masse. Dies erm\"oglicht eine \NeuerBegriff{Vollduplex-Kommunikation}, bei der beide Seiten gleichzeitig und unabh\"angig voneinander Daten senden und empfangen k\"onnen. Voraussetzungen hierf\"ur sind separate Sende-/Empfangsschieberegister sowie dedizierte Puffer -- \Code{UCAxRXBUF} als Empfangs- und \Code{UCAxTXBUF} als Sendepuffer -- f\"ur beide Kommunikationsrichtungen in der Hardware des Interfaces. \\\Zitat[S. 499, Kap. 18.4.6 \& 18.4.7]{ti:slau272d}
 
+\newpage
 Der typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie folgt:
 
 \begin{enumerate}
@@ -381,9 +390,9 @@ Der typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie fol
 	\item Abschlie{\ss}ende Abtastung nach einer weiteren Bitperiode zur \"Uberpr\"ufung des Stopbits (\Fachbegriff{Bezeichnet in der Digitaltechnik einen Spannungszustand, der \"uber einer definierten Schaltschwelle liegt.}{High-Pegel} erwartet). Liegt stattdessen ein \Fachbegriff{Bezeichnet in der Digitaltechnik einen Spannungszustand, der unter einer definierten Schaltschwelle liegt.}{Low-Pegel} vor, wird ein Framing-Fehler erkannt.
 \end{enumerate}
 
-\newpage
 \Abbildung{uart_uebertragung} visualisiert diesen Empfangsprozess unter Verwendung einer sogenannten \Fachbegriff{Bestimmt den Zeitpunkt der Abtastung eingehender Bits; sie wird \"ublicherweise aus einer \"ubergeordneten Taktquelle (\zB SMCLK) abgeleitet und beeinflusst ma{\ss}geblich die Genauigkeit der Daten\"ubertragung.}{\glqq sampling clock\grqq{}}[sampling clock]. Diese Abtastfrequenz ist \"ublicherweise um den Faktor 16 h\"oher als die konfigurierte Baudrate. Das \Fachbegriff{Oversampling bezeichnet das Verfahren, bei dem ein Signal mit einer h\"oheren Abtastrate als der Abtastgrenze (Nyquist-Rate) digitalisiert wird, um Rauscheinfl\"usse zu reduzieren und die Signalqualit\"at zu verbessern.}{Oversampling} ist notwendig um das eintreffende Start-Bit zuverl\"assig und zeitnah auch zwischen den regul\"aren Bit-Takten detektieren zu k\"onnen.
 
+\newpage
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/uart_protocoll.png}
@@ -391,14 +400,14 @@ Der typische Ablauf beim Empfang eines Blocks \"uber UART gestaltet sich wie fol
 	\label{fig:uart_uebertragung}
 \end{figure}
 
-Die interne \NeuerBegriff{Bit-Clock} (\Abkuerzung{Bit-Clock}{BITCLK}) des Empf\"angers wird mit der fallenden Flanke des eingegangenen Start-Bits synchronisiert und operiert mit der Frequenz der eingestellten Baudrate. Da die fallende Flanke des Start-Bits zu einem beliebigen Zeitpunkt relativ zur Sampling Clock auftreten kann, entsteht ein initialer Synchronisationsfehler von bis zu einer halben Periode der Sampling Clock. Die in \Abbildung{uart_uebertragung} dargestellten Szenarien, bezeichnet als \glqq Input 1\grqq{} und \glqq Input 2\grqq{}, illustrieren die hieraus resultierende minimale und maximale zeitliche Verschiebung bei der Detektion der Startbit-Flanke, abh\"angig vom Phasenverh\"altnis zwischen dem Datensignal und der Sampling Clock.\Zitat[S. 476, kap. 18.2, S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{ti:slau272d, davies:msp430}
+Die interne Bit-Clock (\Abkuerzung{Bit-Clock}{BITCLK}) des Empf\"angers wird mit der fallenden Flanke des eingegangenen Start-Bits synchronisiert und operiert mit der Frequenz der eingestellten Baudrate. Da die fallende Flanke des Start-Bits zu einem beliebigen Zeitpunkt relativ zur Sampling Clock auftreten kann, entsteht ein initialer Synchronisationsfehler von bis zu einer halben Periode der Sampling Clock. Die in \Abbildung{uart_uebertragung} dargestellten Szenarien, bezeichnet als \glqq Input 1\grqq{} und \glqq Input 2\grqq{}, illustrieren die hieraus resultierende minimale und maximale zeitliche Verschiebung bei der Detektion der Startbit-Flanke, abh\"angig vom Phasenverh\"altnis zwischen dem Datensignal und der Sampling Clock. \Zitat[S. 476, kap. 18.2, S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{ti:slau272d, davies:msp430}
 
-\newpage
 \subsubsection{Datenintegrit\"at, Fehlererkennung und weitere technischen Details}
 \label{sec:datenintegritaet}
 
 Zur Sicherstellung der Datenintegrit\"at kann eine Fehlererkennung, beispielsweise \"uber ein Parit\"atsbit, eingesetzt werden. Ein UART-Datenpaket, auch Frame genannt, besteht typischerweise aus einem Start-Bit, sieben oder acht Datenbits, einem optionalen Parit\"atsbit (f\"ur gerade oder ungerade Parit\"at) und mindestens einem Stop-Bit.
 
+\newpage
 Die Implementierung komplexerer Fehlererkennung oder gar Fehlerkorrekturmechanismen, wie \zB Pr\"ufsummen (Checksum), obliegt \"ublicherweise der \"ubergeordneten Protokollebene, die auf der UART-Kommunikation aufsetzt. Dar\"uber hinaus ist f\"ur eine erfolgreiche Kommunikation die eindeutige Festlegung der Bitreihenfolge essentiell. Die LSB-first-Konvention ist De-facto-Standard.\Zitat[S. 574, Kap. 10.12 \& S. 575, Kap. 10.12.1]{davies:msp430}
 
 Die Automatische Fehlererkennung des Interfaces erlaubt es dem Benutzer, schnell und ohne gro{\ss}en Implementierungsaufwand auf Grenzf\"alle und \"Ubertragungsfehler zu reagieren. \Tabelle{uart_error_flags} schl\"usselt alle wichtigen Fehler-Flags mit ihren zugeh\"origen Beschreibungen auf.
@@ -419,9 +428,9 @@ Die Automatische Fehlererkennung des Interfaces erlaubt es dem Benutzer, schnell
 	\label{tab:uart_error_flags}
 \end{table}
 
-\newpage
 Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefasst. Eine minimale Konfiguration der Schnittstelle auf den UART-Betrieb wird in \Kapitel{eUSCI_Konfiguration} detailliert beschrieben.
 
+\newpage
 \begin{table}[h!]
 	\small
 	\centering
@@ -461,6 +470,7 @@ Der Synchronisations-Prozess beginnt mit der \"Ubertragung des hexadezimalen Wer
 
 Nach jedem empfangenen Zeichen ist zu beachten, das \Code{UCDORM}-Bit zur\"uckzusetzen, da bei gesetztem Bit zwar alle Zeichen empfangen, aber nicht in das Puffer-Register der Schnittstelle geschrieben werden. \Zitat[S. 481, Kap. 18.3.4]{ti:slau272d}
 
+\vspace{1cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.95\textwidth]{../Bilder/sync_field.png}
@@ -487,17 +497,20 @@ Nachdem das Modul sicher in den Reset-Zustand \"uberf\"uhrt wurde, k\"onnen weit
 	\item \textbf{UCSSELx:} Taktquelle f\"ur Baudratengenerator.
 \end{itemize}
 
-\newpage
-\"Uber die genannten grundlegenden Einstellungen hinaus existieren weitere spezifischere Kontrollbits. Beispielsweise ist das \Code{UCRXEIE}-Bit zur freigabe des Fehler-Interrupts und das \Code{UCBRKIE} zum aktivieren der Break-Interrupts zust\"andig. Spezialfunktionen wie der Multiprozessor-Modus, welcher \"uber das \Code{UCTXADDR}-Bit gesteuert wird, oder das Senden eines Break-Zeichens mittels \Code{UCTXBRK} sind f\"ur eine Standard-UART-Konfiguration oft zu vernachl\"assigen, sofern diese Funktionalit\"aten nicht explizit gefordert sind.\Zitat[S. 495, Kap. 18.4.1 \& S. 496, Kap. 18.4.2]{ti:slau272d}
+\"Uber die genannten grundlegenden Einstellungen hinaus existieren weitere spezifischere Kontrollbits. Beispielsweise ist das \Code{UCRXEIE}-Bit zur freigabe des Fehler-Interrupts und das \Code{UCBRKIE} zum aktivieren der Break-Interrupts zust\"andig. 
 
-Eine weitere essenzielle Konfiguration f\"ur den UART-Betrieb ist die der Baudrate. Diese erfolgt \"uber das \Code{UCAxBRW}-Register und das \Code{UCAxMCTLW}-Register. Die korrekte Wertermittlung f\"ur diese Register ist direkt von der Frequenz der zuvor mittels \Code{UCSSELx} gew\"ahlten Taktquelle sowie der angestrebten Baudrate abh\"angig. Der \glqq Family User's Guide\grqq{} des MSP430FR5729 von Texas Intruments liefert f\"ur die Berechnung dieser Werte detaillierte Formeln und Beispieltabellen. Das \Code{UCAxBRW}-Register nimmt den ganzzahligen Anteil des Baudratenteilers (Prescaler) auf. Das \Code{UCAxMCTLW}-Register beinhaltet die Konfiguration f\"ur die Modulation der Frequenz, sowie das Bit zur Aktivierung des Oversampling-Modus. Durch das \Code{UCBRFx}-Bit wird, in der ersten Modulationsstufe, die Feineinstellung des Prescalers vorgenommen. In der zweiten Modulationsstufe wird durch \Code{UCBRSx} ein Modulationsmuster f\"ur die BITCLK festgelegt. Im letzten Bitfeld kann nun der Oversampling-Modus aktiviert oder deaktiviert werden.\Zitat[S. 487, Kap. 18.3.10 \& S. 497, Kap. 18.4.3, 18.4.4]{ti:slau272d}
+\newpage
+Spezialfunktionen wie der Multiprozessor-Modus, welcher \"uber das \Code{UCTXADDR}-Bit gesteuert wird, oder das Senden eines Break-Zeichens mittels \Code{UCTXBRK} sind f\"ur eine Standard-UART-Konfiguration oft zu vernachl\"assigen, sofern diese Funktionalit\"aten nicht explizit gefordert sind.\Zitat[S. 495, Kap. 18.4.1 \& S. 496, Kap. 18.4.2]{ti:slau272d}
+
+Eine weitere essenzielle Konfiguration f\"ur den UART-Betrieb ist die der Baudrate. Diese erfolgt \"uber das \Code{UCAxBRW}-Register und das \Code{UCAxMCTLW}-Register. Die korrekte Wertermittlung f\"ur diese Register ist direkt von der Frequenz der zuvor mittels \Code{UCSSELx} gew\"ahlten Taktquelle sowie der angestrebten Baudrate abh\"angig. Der \glqq Family User's Guide\grqq{} des MSP430FR5729 von Texas Intruments liefert f\"ur die Berechnung dieser Werte detaillierte Formeln und Beispieltabellen. Das \Code{UCAxBRW}-Register nimmt den ganzzahligen Anteil des Baudratenteilers (Prescaler) auf. Das \Code{UCAxMCTLW}-Register beinhaltet die Konfiguration f\"ur die Modulation der Frequenz, sowie das Bit zur Aktivierung des Oversampling-Modus. Durch das \Code{UCBRFx}-Bit wird, in der ersten Modulationsstufe, die Feineinstellung des Prescalers vorgenommen. In der zweiten Modulationsstufe wird durch \Code{UCBRSx} ein Modulationsmuster f\"ur die BITCLK festgelegt. Im letzten Bitfeld kann nun der Oversampling-Modus aktiviert oder deaktiviert werden. \Zitat[S. 487, Kap. 18.3.10 \& S. 497, Kap. 18.4.3, 18.4.4]{ti:slau272d}
 
 Obwohl weitere spezifische Einstellungen m\"oglich sind, w\"urde deren detaillierte Er\"orterung den Rahmen dieser \"Ubersicht \"uberschreiten. Eine unerl\"assliche, abschlie{\ss}ende Konfigurationsma{\ss}nahme vor der Inbetriebnahme betrifft jedoch die Port-Pins: Die f\"ur den UART Betrieb verwendeten Pins m\"ussen, \"uber die Function-Select-Register (\Code{PxSEL}), auf die asynchrone UART-Kommunikation konfiguriert werden. \Zitat[S. 294, Kap. 8.2.5]{ti:slau272d}
 
 Nach Abschluss aller Konfigurationseinstellungen wird das \Code{UCSWRST}-Bit im \Code{UCAxCTLW0}-Register gel\"oscht (auf \grq{}0\grq{} zur\"uckgesetzt). Dieser Schritt hebt den Reset-Zustand auf und aktiviert das eUSCI-Modul mit der zuvor definierten Konfiguration. Optional k\"onnen nun die gew\"unschten Interrupts, wie \zB der Sende- (\Code{UCTXIE}), Empfangs- (\Code{UCRXIE}), Transmit-Complete- (\Code{UCTXCPTIE}) oder Start-Bit-Interrupt (\Code{UCSTTIE}), im \Code{UCAxIE}-Register aktiviert werden, um eine ereignisgesteuerte Datenverarbeitung zu erm\"oglichen. \Zitat[S. 502, Kap. 18.4.10]{ti:slau272d}
-	
+
 Diese sorgf\"altige Konfigurationssequenz ist entscheidend f\"ur die zuverl\"assige Funktion der UART-Schnittstelle des MSP430-Mikrocontrollers.
 
+\newpage
 \subsection{Zusammenfassung}
 \label{sec:eUSCI_Zusammenfassung}
 
@@ -514,6 +527,7 @@ Die zentralen Schritte zur Konfiguration des eUSCI-Moduls für den UART-Betrieb 
 \Abbildung{BlockDiagramm_eUSCI_A_UART} zeigt ein detailliertes Blockdiagramm des eUSCI\_A-Moduls in der konfigurierten UART-Betriebsart.
 
 \newpage
+\vspace{2cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/eUSCI_UART.png}

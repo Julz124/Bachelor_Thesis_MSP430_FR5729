@@ -3,7 +3,7 @@
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++%
 
-\chapter{Entwicklung}
+\chapter{Planung und praktische Umsetzung}
 \label{cha:Entwicklung}
 
 Aufbauend auf den in den vorangegangenen Kapiteln -- \Kapitel{TIMER&ISR} und \Kapitel{eUSCI} -- vermittelten theoretischen Grundlagen zu Timern, Interrupt Service Routinen und dem Enhanced Universal Serial Communication Interface des Mikrocontrollers MSP430FR5729, widmet sich dieses Kapitel der Entwicklung und praktischen Umsetzung der interruptgesteuerten Benutzerschnittstelle.
@@ -145,6 +145,7 @@ Die ISR wird durch das Setzen des TBIFG-Flags im TB0CTL-Register des Timer B0 au
 \newpage
 Zu beginn wird noch das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register gel\"oscht, um die ISR f\"ur den n\"achsten Zyklus vorzubereiten. Die periodische Natur dieser Routine ist essentiell f\"ur weitere Funktionen wie die Timeout-Erkennung bei der Befehlseingabe und die nicht-blockierende Ausf\"uhrung l\"angerer Operationen.
 
+\vspace{1cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.85\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
@@ -193,7 +194,7 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 \newpage
 Die zuvor erw\"ahnte \Code{observer\_print}-Funktion dient der Initialisierung eines asynchronen Zeichenkettenausgabevorgangs \"uber eine UART-Schnittstelle. Zun\"achst \"uberpr\"uft sie, ob der \"ubergebene String-Zeiger \Code{null} ist, was auf einen ung\"ultigen Eingabewert hinweist; in diesem Fall wird ein Fehlerstatus gesetzt und der Vorgang abgebrochen. Andernfalls wird eine globale Ereignis-Flagge (\Code{WRT\_UART}) gesetzt, das die UART-\"Ubertragung signalisiert. Der Zeiger auf die zu \"ubertragende Zeichenkette wird in die globale \Code{print\_ptr}-Variable geschrieben, woraufhin durch Setzen der Interrupt-Flags \Code{UCTXIFG} und \Code{UCTXIE} der UART-Sendeinterrupt aktiviert wird. Dadurch wird der eigentliche \"Ubertragungsvorgang vom Interrupt-\Fachbegriff{Ein Handler ist in der Informatik eine Routine oder Funktion, die auf ein bestimmtes Ereignis oder eine Bedingung reagiert, \zB ein Ereignis- oder Interrupt-Handler.}{Handler} durchgef\"uhrt, was eine nicht-blockierende Daten\"ubertragung erm\"oglicht.
 
-\vspace{0.5cm}
+\vspace{1cm}
 \begin{lstlisting} [style=modernC, caption={Initiierungs-Funktion f\"ur UART Daten\"ubertragung}, label={lst:observer_print}]
 	#pragma FUNC_ALWAYS_INLINE(observer_print)
 	LOCAL Void observer_print(const char * str) {
@@ -224,6 +225,7 @@ Aufbauend auf dem Grundkonzept des Observer-Moduls und der etablierten Architekt
 
 Die zustandsorientierte Programmierung f\"ur das Observer-Modul setzt die Dekomposition komplexer, sequenzieller Abl\"aufe in kleinere, Verarbeitungseinheiten voraus. Wie bereits im \Kapitel{ZustaendeUndFunktionen} und \Kapitel{Timer_ISR} dargelegt, repr\"asentieren die Lese- und Schreiboperationen dedizierte Zust\"ande innerhalb der \"ubergeordneten Zustandsmaschine. Diese Unterteilung ist essentiell, um die Reaktionsf\"ahigkeit des Systems auf externe Eingaben und die \glqq{}parallele\grqq{} Bearbeitung anderer systeminterner Aufgaben sicherzustellen. F\"ur die Realisierung der Speicherzugriffe sind neben generischen Zust\"anden -- zur Befehlsverarbeitung und Systeminitialisierung -- spezifische Zust\"ande f\"ur das Lesen und Schreiben erforderlich. Da diese Operationen, insbesondere bei gr\"o{\ss}eren Speicherzugriffen, potenziell zeitintensiv sind, ist die \"Uberf\"uhrung in eine zeichenorientierte Verarbeitung, welche periodisch durch die Timer-ISR ausgef\"uhrt wird, notwendig.
 
+\newpage
 Konkret bedeutet dies, dass nach der Verarbeitung eines einzelnen Zeichens die jeweilige Speicherroutine tempor\"ar terminiert und die Kontrolle an das System zur\"uckgibt. Die Fortsetzung der Operation erfolgt erst bei der n\"achsten Periode der Timer-ISR. Dieser inkrementelle Ansatz steigert die Reaktivit\"at des Gesamtsystems erheblich. Im Fazit unter \Kapitel{laufzeit} wurden hierzu Laufzeitmessungen unter Realbedingungen durchgef\"uhrt und genauer untersucht. Dem gegen\"uber steht der Nachteil, dass eine zus\"atzliche Laufvariable zum verfolgen des aktuellen Fortschritts, innerhalb der Lese- oder Schreiboperation, ben\"otigt wird. Dadurch entsteht eine potentiell l\"angere Gesamtdauer f\"ur die vollst\"andige Operation, da pro Timer-Zyklus lediglich ein einzelnes Zeichen verarbeitet wird.\AI
 
 %----------------------------------------------------------------------------------------------------%

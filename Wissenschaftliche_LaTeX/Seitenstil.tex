@@ -21,26 +21,32 @@
 
 
 % Kopfzeile für einseitiges Dokument:
-\ihead{%\small{\textsc{\titel}	\\
+%\ihead{%\small{\textsc{\titel}	\\
 	%\untertitel
 	%\\[2ex]
-	\textit{\headmark}%}
-}
-\chead{}
-\rohead{\includegraphics[scale=0.3]{\logo}}
-\setlength{\headheight}{21mm} % Höhe der Kopfzeile
+%	\textit{\headmark}%}
+%}
+%\chead{}
+%\rohead{\includegraphics[scale=0.5]{\logosolo}}
+%\setlength{\headheight}{21mm} % Höhe der Kopfzeile
 % Kopfzeile über den Text hinaus verbreitern
-\setheadwidth[0pt]{textwithmarginpar} 
-\setheadsepline[text]{0.4pt} % Trennlinie unter Kopfzeile
+%\setheadwidth[0pt]{textwithmarginpar} 
+%\setheadsepline[text]{0.4pt} % Trennlinie unter Kopfzeile
 
 
 %% Kopfzeile für Zweiseitiges Dokument:
-%\ihead{\textit{\leftmark}}
-%\chead{}
-%\ohead{}
-%\lehead{\includegraphics[scale=0.25]{\logo}}
-%\rohead{\includegraphics[scale=0.25]{\logo}}
-%\setheadsepline[text]{0.4pt} % Trennlinie unter Kopfzeile
+\ihead{\textit{\leftmark}}
+\chead{}
+\ohead{}
+\setlength{\headheight}{21mm}  % oder: passe die Höhe an, je nach Logogröße
+\lehead{\includegraphics[scale=0.35]{\logosolo}}
+\rohead{\includegraphics[scale=0.35]{\logosolo}}
+\setheadsepline[text]{0.4pt} % Trennlinie unter Kopfzeile
+
+\RedeclareSectionCommand[
+beforeskip=20pt, % Abstand vor Kapitel (Standard: ca. 1cm = 25pt)
+afterskip=10pt    % Abstand nach Kapitelüberschrift
+]{chapter}
 
 
 % Fußzeile
@@ -53,7 +59,6 @@
 % erzeugt ein wenig mehr Platz hinter einem Punkt
 \frenchspacing{}
 
-% Schusterjungen und Hurenkinder vermeiden
 \clubpenalty = 10000
 \widowpenalty = 10000 
 \displaywidowpenalty = 10000

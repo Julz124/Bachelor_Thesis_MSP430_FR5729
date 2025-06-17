@@ -87,7 +87,7 @@ Die erwartete komplexit\"at inklusive der Anforderungen an Robustheit, Echtzeitf
 \label{sec:Bewertung}
 Die zeitkritische Synchronisation zwischen Hauptprogramm und Observer-Modul stellte eine zentrale Herausforderung dar -- insbesondere im Hinblick auf den gew\"ahlten, nicht-blockierenden Ansatz der statusorientierten Verarbeitung. Die sequentielle, zeichenweise Abarbeitung von Lese- und Schreiboperationen \"uber mehrere Verarbeitungsschritte hinweg erh\"ohte zwar die Komplexit\"at der Implementierung, f\"uhrte jedoch zu einer \"au{\ss}erst performanten L\"osung hinsichtlich der Systemreaktivit\"at. Dies ist insbesondere f\"ur ein als \glqq{}unsichtbares\grqq{} Plug-in-Modul konzipiertes System essenziell.
 
-Die vollst\"andige Implementierung softwaregesteuerter Breakpoints erwies sich hingegen als \"au{\ss}erst anspruchsvoll. Zwar konnte ein vielversprechender Ansatz, gem\"a{\ss} dem in \Kapitel{ImplementierungSoftwareBreakpoints} skizzierten Konzept, entwickelt werden, (\Abbildung{software_breakpoint}) jedoch gelang keine vollst\"andig funktionale, robuste und konsistente Einbindung zur Laufzeit. Der entsprechende Quellcode befindet sich weiterhin, wenn auch auskommentiert, im Observer-Modul.
+Die vollst\"andige Implementierung softwaregesteuerter Breakpoints erweist sich hingegen als \"au{\ss}erst anspruchsvoll. Ein vielversprechender Ansatz wird, gem\"a{\ss} dem in \Kapitel{ImplementierungSoftwareBreakpoints} skizzierten Konzept, entwickelt, (\Abbildung{software_breakpoint}) jedoch gelang keine vollst\"andig funktionale, robuste und konsistente Einbindung zur Laufzeit. Der entsprechende Quellcode befindet sich, wenn auch auskommentiert, im Observer-Modul.
 
 \begin{figure}[h!]
 	\centering

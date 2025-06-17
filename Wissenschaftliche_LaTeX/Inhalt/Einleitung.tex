@@ -9,14 +9,14 @@
 
 Diese Bachelor-Thesis befasst sich mit der Entwicklung einer \Fachbegriff{Ein Mechanismus zur ereignisorientierten Unterbrechung des normalen Programmablaufs}{interruptgesteuerten}[interruptgesteuert] Benutzerschnittstelle auf einem \Fachbegriff{Ein Mikrocontroller, der f\"ur energieeffiziente Anwendungen optimiert ist. Typischerweise eingesetzt in batteriebetriebenen Embedded-Systemen}{Low-Power-Mikrocontroller}, zur \"Uberwachung und Manipulation von \Fachbegriff{Speicherzellen, die fl\"uchtig sind und ihre Inhalte beim Ausschalten verlieren}{Registern}[Register] und Speicherzellen in \Abkuerzung{Random Access Memory}{RAM} und \Abkuerzung{Ferroelectric Random Access Memory}{FRAM}.
 
-Im Zuge des Arbeitsauftrags wird ein unabh\"angiges \Fachbegriff{Eine funktionale Einheit innerhalb eines gr\"o{\ss}eren Systems, die separat entwickelt und gewartet werden kann}{Modul} entwickelt, welches nach Wunsch aktiviert oder deaktiviert wird.
+Im Zuge des Arbeitsauftrags entwickelt diese Arbeit ein unabh\"angiges \Fachbegriff{Eine funktionale Einheit innerhalb eines gr\"o{\ss}eren Systems, die separat entwickelt und gewartet werden kann}{Modul}, das sich bei Bedarf aktivieren oder deaktivieren l\"asst.
 
 \section{Die Umgebung, in der die Arbeit entstand}
 \label{sec:EntstehungsUmgebungArbeit}
 
-Die Entwicklung der Software geschah in Absprache mit Herr Prof. Dr. Iren\"aus Schoppa, welcher ein zus\"atzliches \Fachbegriff{Ein Softwarewerkzeug, das spezifische Aufgaben oder Funktionen innerhalb eines gr\"o{\ss}eren Systems oder Workflows erf\"ullt.}{Tool} zur tiefgreifenden Analyse unter Realbedingungen von Register- und Speicherinhalten f\"ur Studenten im Praktikum von Microprozessorsysteme ben\"otigt.
+Die Entwicklung der Software geschieht in Absprache mit Herrn Prof. Dr. Iren\"aus Schoppa, der ein zus\"atzliches \Fachbegriff{Ein Softwarewerkzeug, das spezifische Aufgaben oder Funktionen innerhalb eines gr\"o{\ss}eren Systems oder Workflows erf\"ullt.}{Tool} zur tiefgreifenden Analyse unter Realbedingungen von Register- und Speicherinhalten f\"ur Studenten im Praktikum von Mikroprozessorsysteme ben\"otigt.
 
-Als Entwicklungsbasis kam der in \Abkuerzung{Microprozessorsysteme}{MIPS} herangezogene MSP430FR5729 von Texas Instruments zum Einsatz, welcher bereits ein ausgereifter und etablierter \Abkuerzung{Low-Power-Mikrocontroller}{LP-MCU} ist. Der Fokus dieser Arbeit liegt auf den f\"ur die Implementierung wesentlichen Aspekten. Zahlreiche dem Prozessor zugrundeliegende Technologien werden aus diesem Grund bewusst ausgeklammert. \Zitat{davies:msp430}
+Als Entwicklungsbasis kommt der in \Abkuerzung{Mikroprozessorsysteme}{MIPS} herangezogene MSP430FR5729 von Texas Instruments zum Einsatz, welcher bereits ein ausgereifter und etablierter \Abkuerzung{Low-Power-Mikrocontroller}{LP-MCU} ist. Der Fokus dieser Arbeit liegt auf den f\"ur die Implementierung wesentlichen Aspekten. Zahlreiche dem Prozessor zugrundeliegende Technologien werden aus diesem Grund bewusst ausgeklammert. \Zitat{davies:msp430}
 
 \newpage
 \section{Der Inhalt dieser Arbeit}
@@ -24,17 +24,17 @@ Als Entwicklungsbasis kam der in \Abkuerzung{Microprozessorsysteme}{MIPS} herang
 
 \begin{description}
 
-	\item[Grundlagen, Technologien und Evaluation:] Im \Kapitel{UeberblickEntwicklungsplattform} werden die zur Planung und Umsetzung verwendeten Grundlagen und Technologien erarbeitet. Die grundlegenden Eigenschaften und der Aufbau des Softwareentwicklungsprozesses auf einem LP-MCU werden erkl\"art und die ben\"otigten Dokumentationen referenziert.
+	\item[Grundlagen, Technologien und Evaluation:] \Kapitel{UeberblickEntwicklungsplattform} erarbeitet die f\"ur die Planung und Umsetzung verwendeten Grundlagen und Technologien. Das Kapitel erkl\"art die grundlegenden Eigenschaften und den Aufbau des Softwareentwicklungsprozesses auf einem LP-MCU und referenziert die ben\"otigten Dokumentationen.
 	
-	\item[Konzeptionierung der Benutzerschnittstelle:] Dieses Kapitel umfasst die Dokumentation der gesamten Planungsphase des Observer-Moduls. Hier wird eine \"Ubersicht \"uber die L\"osungsfindung geschaffen und anschlie{\ss}end die zur Planung erforderlichen Dokumente und Diagramme angefertigt.
+	\item[Konzeptionierung der Benutzerschnittstelle:] Dieses Kapitel umfasst die Dokumentation der gesamten Planungsphase des Observer-Moduls. Hier entsteht eine \"Ubersicht \"uber die L\"osungsfindung, und die zur Planung erforderlichen Dokumente und Diagramme.
 	
-	\item[Die Entwicklung des Observers:] Im folgenden steht die Dokumentation der tats\"achlichen Programmierung des Software-Moduls im Vordergrund. Hier wird die Implementation gekl\"art und der Verlauf der Entwicklung anhand von Beispielen schrittweise abgearbeitet.
+	\item[Die Entwicklung des Observers:] Im folgenden steht die Dokumentation der tats\"achlichen Programmierung des Software-Moduls im Vordergrund. Dieser Teil kl\"art die Implementierung und arbeitet den Entwicklungsverlauf anhand von Beispielen schrittweise ab.
 	
-	\item[Fazit und kritische Bewertung:] Im Fazit werden die gemachten Erfahrungen und die Ergebnisse der Planung und Entwicklung abschlie{\ss}end zusammengefasst und kritisch bewertet. Zus\"atzlich wird ein kleiner Ausblick auf Erweiterungsm\"oglichkeiten und m\"ogliche Optimierungsschritte unternommen.
+	\item[Fazit und kritische Bewertung:] Das Fazit fasst die gemachten Erfahrungen sowie die Ergebnisse der Planung und Entwicklung abschlie{\ss}end zusammen und bewertet sie kritisch. Zus\"atzlich bietet das Kapitel einen kurzen Ausblick auf Erweiterungsm\"oglichkeiten und potenzielle Optimierungsschritte.
 
 \end{description}
 
 \section{Viele Informationen, wenige Quellen \dots}
 \label{sec:Quellenlage}
 
-Grunds\"atzlich ist es einfach geeignete Quellen zu den Themen rund um den MSP430 und dessen integrierten Technologien zu finden, da -- wie bereits erw\"ahnt -- der MSP430 weitesgehend etabliert ist. Der Hersteller -- Texas Instruments -- stellt dazu alle wesentlichen Informationen zur Softwareentwicklung bereit, was die Notwendigkeit vieler weiterer Quellen hinf\"allig macht.
+Grunds\"atzlich ist es einfach geeignete Quellen zu den Themen rund um den MSP430 und dessen integrierten Technologien zu finden, da -- wie bereits erw\"ahnt -- der MSP430 weitestgehend etabliert ist. Der Hersteller -- Texas Instruments -- stellt dazu alle wesentlichen Informationen zur Softwareentwicklung bereit, was die Notwendigkeit vieler weiterer Quellen hinf\"allig macht.

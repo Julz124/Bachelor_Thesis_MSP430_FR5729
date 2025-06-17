@@ -7,6 +7,10 @@
 \thispagestyle{empty}
 
 
-Die vorliegende wissenschaftliche Arbeit behandelt die Planung und Entwicklung einer interruptgesteuerten Benutzerschnittstelle zur Überwachung und Manipulation von Registern und Speicherzellen. Die Entwicklung soll auf Basis eines Low-Power-Microcontrollers der MSP430 Familie von Texas Instruments erfolgen.
-\\
-Es erfolgt eine umfangreiche Planungs-/ und Entwicklungsphase, die in Anlehnung an den Rational Unified Process dokumentiert wird. Auf Basis dieser Planung wird die Software dann als austauschbares Modul implementiert. Der Vorgang der praktischen Umsetzung wird schriftlich dokumentiert. Zum Abschluss der Arbeit wird die Erweiterung im Live-Betrieb des Praktikums von Microprozessorsysteme zum Einsatz kommen.
+Die vorliegende wissenschaftliche Arbeit behandelt die Konzeption und Umsetzung einer interruptgesteuerten Benutzerschnittstelle zur \"Uberwachung und Manipulation von Registern und Speicherzellen auf einem Low-Power-Mikrocontroller der MSP430-Familie von Texas Instruments. Im Zentrum der Entwicklung steht das sogenannte Observer-Modul, das eine statusorientierte, nicht-blockierende Abarbeitung eingehender Steuerbefehle erlaubt und damit die Grundlage f\"ur eine interaktive Systemanalyse und gezieltes Debugging im Echtzeitbetrieb schafft.
+
+Im Rahmen der Entwicklung wurde unter anderem ein zustandsbasierter Automat, eine UART-Kommunikationsschnittstelle sowie ein konfigurierbaren Timer-Interrupt realisiert, um eine zeichenweise Verarbeitung von Befehlen bei gleichzeitiger Entkopplung vom Hauptprogramm zu erm\"oglichen. Die Implementierung wurde durch eine detaillierte Analyse der Systemreaktivit\"at mittels GPIO-Signalisierung und Oszilloskop gest\"utzt, wodurch Aussagen \"uber die Echtzeiteigenschaften einzelner Funktionen getroffen werden konnten.
+
+Ein besonderes Augenmerk lag auf der prototypischen Integration softwarebasierter Breakpoints, welche tiefergehende Eingriffe in den Programmablauf erm\"oglichen sollen. Trotz des hohen Komplexit\"atsgrades konnte durch die Konzeptionierung eine solide Basis geschaffen werden, die weiterf\"uhrende Forschung und Entwicklung im Bereich eingebetteter Debugging-Technologien unterst\"utzt.
+
+Die fertige Erweiterung wurde im Rahmen des Praktikums Mikroprozessorsysteme erfolgreich unter Live-Bedingungen getestet und demonstriert die praktische Relevanz und Flexibilit\"at der entwickelten L\"osung.

@@ -421,10 +421,10 @@ Die automatische Fehlererkennung des Interfaces erm\"oglicht dem Benutzer eine s
 		\hline
 		\textbf{Fehlerbedingung} & \textbf{Fehler-Flag} & \textbf{Beschreibung} \\
 		\hline
-		Framing-Fehler & UCFE & Tritt auf, wenn das Stoppbit nicht den erwarteten High-Pegel hat. Bei zwei Stoppbits werden beide gepr\"uft. Bei Fehler wird das \Code{UCFE}-Bit gesetzt. \\\hline
-		Parit\"atsfehler & UCPE & Entsteht durch eine Abweichung zwischen berechneter und tats\"achlicher Parit\"at. Adressbits werden in die Berechnung einbezogen. Bei Fehler wird \Code{UCPE} gesetzt. \\\hline
-		Empfangs\"uberlauf & UCOE & Wenn ein neues Zeichen empfangen wird, bevor das vorherige gelesen wurde, wird ein \"Uberlauf erkannt und das \Code{UCOE}-Bit gesetzt. \\\hline
-		Break-Bedingung & UCBRK & Wird erkannt, wenn alle Bits (Daten-, Parit\"ats- und Stoppbits) auf Low liegen (bei deaktivierter Baudratenerkennung). \Code{UCBRK} wird gesetzt und \ggf auch \Code{UCRXIFG}, wenn \Code{UCBRKIE} aktiv ist. \\\hline
+		Framing-Fehler & UCFE & Tritt auf, wenn das Stoppbit nicht den erwarteten High-Pegel hat. Bei zwei Stoppbits werden beide gepr\"uft.\\\hline
+		Parit\"atsfehler & UCPE & Entsteht durch eine Abweichung zwischen berechneter und tats\"achlicher Parit\"at. Adressbits werden in die Berechnung einbezogen.\\\hline
+		Empfangs\"uberlauf & UCOE & Wenn ein neues Zeichen empfangen wird, bevor das vorherige gelesen wurde, wird ein \"Uberlauf erkannt.\\\hline
+		Break-Bedingung & UCBRK & Wird erkannt, wenn alle Bits auf Low liegen (bei deaktivierter Baudratenerkennung). \Code{UCBRK} wird gesetzt und \ggf auch \Code{UCRXIFG}, wenn \Code{UCBRKIE} aktiv ist. \\\hline
 	\end{tabular}
 	\caption{UART-Fehlerbedingungen und zugeh\"orige Status-Flags des MSP430FR5729\\\Zitat[S. 483, Tab. 18-1]{ti:slau272d}}
 	\label{tab:uart_error_flags}
@@ -460,6 +460,7 @@ Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefas
 
 Neben der festen Einstellung ermittelt die automatische Baudraten-Erkennung selbstst\"andig, \"uber eine \NeuerBegriff{Break/Sync Sequenz}, die vom Sender verwendete Baudrate. Diese Synchronisations-Sequenz besteht aus einem \NeuerBegriff{Break} und einem \NeuerBegriff{Sync} Feld. Der Bereich der erkennbaren Baudraten liegt im Oversampling-Modus zwischen 244 Baud (im niedrigfrequenz-Modus beginnend ab 15 Baud) und einem Megabaud. Ein Break umfasst 11 bis 21 \"ubertragen Nullen, w\"ahrend weitere Nullen einen \NeuerBegriff{Break Timeout}-Fehler ausl\"osen. Aus Konformit\"atsgr\"unden sollte das UART Protokoll auf acht Datenbits, mit LSB-first, keiner Parit\"at und einem Stop-Bit konfiguriert werden. In \Abbildung{auto_baud} ist die beschriebene Break/Sync-Sequenz dargestellt.
 
+\newpage
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/auto_baud.png}
@@ -509,6 +510,7 @@ Nach Abschluss aller Konfigurationseinstellungen wird das \Code{UCSWRST}-Bit im 
 
 Diese sorgf\"altige Konfigurationssequenz ist entscheidend f\"ur die zuverl\"assige Funktion der UART-Schnittstelle des MSP430-Mikrocontrollers.
 
+\newpage
 \subsection{Zusammenfassung}
 \label{sec:eUSCI_Zusammenfassung}
 
@@ -525,7 +527,6 @@ Die zentralen Schritte zur Konfiguration des eUSCI-Moduls f\"ur den UART-Betrieb
 \Abbildung{BlockDiagramm_eUSCI_A_UART} zeigt ein detailliertes Blockdiagramm des eUSCI\_A-Moduls in der konfigurierten UART-Betriebsart.
 
 \newpage
-\vspace{4cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/eUSCI_UART.png}

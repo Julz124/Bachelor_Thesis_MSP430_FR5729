@@ -564,11 +564,9 @@ Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzich
 \subsubsection{Implementierung erweiterter Software Breakpoints}
 \label{sec:ImplementierungSoftwareBreakpoints}
 
-Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. 
+Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf benachbarte Code-Segmente zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven \Fachbegriff{Der Adressierungsmodus bezeichnet die Art und Weise, wie Operanden innerhalb des Befehlswortes adressiert werden; unterst\"utzt werden \ua Register-, symbolische, absolute und indirekte Adressierung. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}}{Adressierungsmodus} ber\"ucksichtigen.
 
 \newpage
-Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf benachbarte Code-Segmente zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven \Fachbegriff{Der Adressierungsmodus bezeichnet die Art und Weise, wie Operanden innerhalb des Befehlswortes adressiert werden; unterst\"utzt werden \ua Register-, symbolische, absolute und indirekte Adressierung. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}}{Adressierungsmodus} ber\"ucksichtigen.
-
 Die Implementierung gliedert sich in folgende Schritte:
 \begin{enumerate}
 	\item \textbf{Adressvalidierung:} Pr\"ufen, ob die Zieladresse auf vier Byte ausgerichtet ist und im Stack liegt.
@@ -582,13 +580,13 @@ Die Implementierung gliedert sich in folgende Schritte:
 	\item \textbf{Kontext-Wiederherstellung:} Nach Abschluss der Debug-Aktion werden alle Register und der urspr\"ungliche Opcode wiederhergestellt, bevor der normale Programmablauf fortgesetzt wird.
 \end{enumerate}
 
-\newpage
 Diese Vorgehensweise stellt die R\"uckkehr zum urspr\"unglichen Systemzustand – einschlie{\ss}lich des Originalen-Opcodes – sicher und m\"usste die Konsistenz des Programms garantieren.
 
 Um die im vorigen \Kapitel{KonzeptionierungSoftwareBreakpoints} skizzierten Konzepte robust umzusetzen, sind die im n\"achsten Abschnitt, technischen Details wie Instruktionsl\"angen und Speicher-Alignment, zu betrachten.\AI
 
 %----------------------------------------------------------------------------------------------------%
 
+\newpage
 \subsubsection{Instruktionsl\"angen, Speicher-Alignment und Adress-Modi}
 \label{sec:TechnischeUmsetzunSoftwareBreakpoints}
 
@@ -597,7 +595,6 @@ Die Manipulation von Befehlen im Stack ist hoch kritisch, da das Hauptprogramm k
 \begin{itemize}
 	\item \textbf{Speicher-Alignment:} MSP430-Instruktionen sind grunds\"atzlich an geraden Speicheradressen ausgerichtet. Vor jedem Schreib- oder Lesezugriff muss daher sichergestellt werden, dass die Zieladresse eine gerade Adresse ist. Zugriffe auf ungerade Adressen k\"onnen zu undefiniertem Verhalten f\"uhren, sofern keine Fehlerbehandlung erfolgt. Dar\"uber hinaus sind Adressen, die in der Mitte eines Opcodes liegen, ung\"ultig und d\"urfen nicht als Breakpoint adressiert werden.
 	
-	\newpage
 	\item \textbf{Opcode-L\"angen:} W\"ahrend einzelne Maschinenbefehle in der Regel zwei bis vier Bytes belegen, k\"onnen komplexe Instruktionen – etwa \Code{CMP.B} – bis zu sechs Bytes lang sein, wie in \Abbildung{DisassemblyOpcodeLaengen} zu sehen. \Zitat[S.165, Kap. 4.6.2.32]{ti:slau272d} Diese Variabilit\"at erschwert das gezielte \"Uberschreiben von genau vier Byte, die f\"ur die Jump-Instruktion einschlie{\ss}lich Zieladresse ben\"otigt werden. Unter diesen Randbedingungen besteht die Gefahr, dass entweder zu viele oder zu wenige Bytes \"uberschrieben werden, was zu ung\"ultigen oder unbeabsichtigten Instruktionen f\"uhren kann.
 	
 	\begin{figure}[h!]

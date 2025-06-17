@@ -3,7 +3,7 @@
 
 % Zeilenabstand 1,5 Zeilen ---------------------------------------------------------------------
 \onehalfspacing{}
-
+\setlength{\parskip}{0.3\baselineskip}
 
 % Seitenränder ------------------------------------------------------------------------------------
 \setlength{\topskip}{\ht\strutbox} % behebt Warnung von geometry
@@ -38,10 +38,10 @@
 \ihead{\textit{\leftmark}}
 \chead{}
 \ohead{}
-\setlength{\headheight}{21mm}  % oder: passe die Höhe an, je nach Logogröße
+\setlength{\headheight}{14pt}  % oder: passe die Höhe an, je nach Logogröße
 \lehead{\includegraphics[scale=0.35]{\logosolo}}
 \rohead{\includegraphics[scale=0.35]{\logosolo}}
-\setheadsepline[text]{0.4pt} % Trennlinie unter Kopfzeile
+\setheadsepline{0.4pt} % Trennlinie unter Kopfzeile
 
 \RedeclareSectionCommand[
 beforeskip=20pt, % Abstand vor Kapitel (Standard: ca. 1cm = 25pt)

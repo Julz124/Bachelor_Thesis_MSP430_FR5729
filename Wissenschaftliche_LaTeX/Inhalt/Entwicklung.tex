@@ -306,6 +306,11 @@ Das in \Kapitel{Init} vorgestellte Dictionary, in dem Befehle ihren zugehörigen
 
 	\vspace{0.5cm}
 \begin{lstlisting} [style=modernC, caption={Dictionary f\"ur Befehls-Funktionszeiger verkn\"upfung}, label={lst:Observer_func_dict}]
+	typedef struct {
+		const Char key[CMD_LENGTH];     // String key for the function
+		Void (*func)(Void);             // Pointer to the function
+	} ObserverFuncEntry;
+	
 	LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
 		{"rdm", read_mem},              // read_mem function
 		{"wrm", write_mem},             // write_mem function

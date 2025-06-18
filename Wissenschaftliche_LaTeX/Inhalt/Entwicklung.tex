@@ -208,7 +208,7 @@ Dieser Abschnitt beschreibt das \glqq{}Rückgrat\grqq{} des Observer-Moduls. Daz
 Das in \Kapitel{ZustaendeUndFunktionen} erläuterte Konzept der zustandsbasierten Verarbeitung eingehender Befehle basiert auf den in \Listing{datenstruktur_zustaende} dargestellten \Fachbegriff{Ein Funktionsprototyp legt Signatur und Rückgabetyp einer Funktion fest, ohne deren Implementierung bereitzustellen.}{Funktionsprototypen}[Funktionsprototyp].
 
 \vspace{0.5cm}
-\begin{lstlisting} [style=modernC, caption={Datenstruktur der Funktionszeiger f\"ur die Zustandsmaschine}, label={lst:datenstruktur_zustaende}]
+\begin{lstlisting} [style=modernC, caption={Funktionszeiger f\"ur die Zustandsmaschine}, label={lst:datenstruktur_zustaende}]
 	/*
 	* State Machine
 	*/
@@ -305,7 +305,7 @@ Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in
 Das in \Kapitel{Init} vorgestellte Dictionary, in dem Befehle ihren zugehörigen Funktionszeigern zugewiesen werden, implementiert \Listing{Observer_func_dict}.
 
 	\vspace{0.5cm}
-\begin{lstlisting} [style=modernC, caption={Implementierung -- state\_2}, label={lst:state_2}]
+\begin{lstlisting} [style=modernC, caption={Dictionary f\"ur Befehls-Funktionszeiger verkn\"upfung}, label={lst:Observer_func_dict}]
 	LOCAL const ObserverFuncEntry Observer_func_dict[OBS_FUNCT_CMDS] = {
 		{"rdm", read_mem},              // read_mem function
 		{"wrm", write_mem},             // write_mem function

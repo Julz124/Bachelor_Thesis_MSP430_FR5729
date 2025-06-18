@@ -563,7 +563,7 @@ LOCAL Void state_1(Void) {
 
     if (*uart_buffer_ptr EQ '\0') {
         state_ptr = &state_2;
-        CLRBIT(P3OUT, BIT4);
+        //CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -571,7 +571,7 @@ LOCAL Void state_1(Void) {
     if (Observer_func_dict[dict_idx].func EQ NULL) {
         dict_idx = 0;
         set_cmd_error(UNKNOWN_CMD);
-        CLRBIT(P3OUT, BIT4);
+        //CLRBIT(P3OUT, BIT4);
         return;
     }
 
@@ -589,7 +589,7 @@ LOCAL Void state_1(Void) {
 // Reset buffer and pointer
 LOCAL Void state_2(Void) {
 
-    SETBIT(P3OUT, BIT4);
+    //SETBIT(P3OUT, BIT4);
     if (!TSTBIT(global_events & WRT_UART, WRT_UART)) {
         mem_addr_ptr = 0;
 
@@ -604,7 +604,7 @@ LOCAL Void state_2(Void) {
 
         state_ptr = &state_dummy;
     }
-    CLRBIT(P3OUT, BIT4);
+    //CLRBIT(P3OUT, BIT4);
 }
 
 #pragma vector = TIMER0_B1_VECTOR

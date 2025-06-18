@@ -15,14 +15,14 @@ Im Rahmen dieser Arbeit wurde eine interruptgesteuerte Benutzerschnittstelle f\"
 
 Die Entwicklung wesentlicher Bausteine, insbesondere die der Timer-Interrupt-Service-Routine, UART-Kommunikationsschnittstelle sowie der statusorientierten Abarbeitung eingehender Befehle, legt eine flexible und erweiterbare Basis f\"ur zuk\"unftige Funktionsimplementierungen. Die exemplarisch realisierten Lese- und Schreibfunktionen demonstrieren die praktische Anwendbarkeit dieser Architektur.
 
-Ein bedeutendes Ergebnis stellt die Realisierung des Observer-Moduls f\"ur Debugging-Zwecke dar, welches unabh\"angig von der \"ublichen Entwicklungsumgebung (Code Composer Studio und MSP-FET) agiert. Dies erlaubt es dem Benutzer, unter Realbetriebsbedingungen, tiefgreifende Analysen durch das auslesen und beschreiben von Speicherzellen w\"ahrend der aktiven Laufzeit. Gerade bei der Entwicklung auf Mikroprozessoren -- wie dem MSP430 -- sind Stichproben unter Echtzeitbedingungen von hohem Wert, da kontrolliert und nicht blockierend auf Speicherzellen zugegriffen werden kann.
+Ein bedeutendes Ergebnis stellt die Realisierung des Observer-Moduls f\"ur Debugging-Zwecke dar, welches unabh\"angig von der \"ublichen Entwicklungsumgebung (Code Composer Studio und MSP-FET) agiert. Dies erlaubt es dem Benutzer, unter Realbetriebsbedingungen, tiefgreifende Analysen durch das auslesen und beschreiben von Speicherzellen w\"ahrend der aktiven Laufzeit. Gerade bei der Entwicklung auf Mikrocontrollern -- wie dem MSP430 -- sind Stichproben unter Echtzeitbedingungen von hohem Wert, da kontrolliert und nicht blockierend auf Speicherzellen zugegriffen werden kann.
 
-\newpage
 Im Anschluss an die Implementierung wurde ein besonderes Augenmerk auf die Analyse der Systemreaktivit\"at gelegt. Zu diesem Zweck wurden Laufzeitmessungen durchgef\"uhrt, welche aufzeigen, inwieweit die entwickelten Komponenten den Anforderungen an Echtzeitf\"ahigkeit gen\"ugen. Das folgende Kapitel beschreibt detailliert die zugrunde liegende Methodik und pr\"asentiert die ermittelten Messergebnisse.\AI
 
 
 %----------------------------------------------------------------------------------------------------%
 
+\newpage
 \subsection{Untersuchung der Laufzeit unter Realbedingungen}
 \label{sec:laufzeit}
 
@@ -30,11 +30,12 @@ Zur Untermauerung der in \Kapitel{konzept_status_&_interrupt} genannten Vorteile
 
 Die Erfassung und Auswertung der Laufzeiten erfolgte mittels eines Digitalen Oszilloskops (Modell: PicoScope 3406D MSO) in Verbindung mit der zugeh\"origen Messsoftware PicoScope 7 T\&M. F\"ur die Aufzeichnung der Signale wurde der digitale Eingang \Code{D1} des Oszilloskops genutzt. Eine einheitliche Abtastrate von 500 \Abkuerzung{Mega-Samples pro Sekunde}{MS/s} (Mega-Samples pro Sekunde) wurde f\"ur alle Messungen verwendet, um eine hohe zeitliche Aufl\"osung sicherzustellen.
 
-Zur Signalisierung der Messintervalle wurden GPIO-Pins von Port 3 des zugrundeliegenden Mikrocontrollers verwendet. Die exakte Zeitmessung einzelner Codeabschnitte erfolgte durch das Setzen eines spezifischen GPIO-Pins (konkret \Code{P3.4}, adressiert \"uber \Code{BIT4} des \Code{P3OUT}-Registers) zu Beginn des zu messenden Abschnitts (\Code{SETBIT(P3OUT, BIT4);}) und dessen unmittelbares Zur\"ucksetzen (\Code{CLRBIT(P3OUT, BIT4);}) an dessen Ende. Diese Implementierung ist in den auskommentierten Zeilen von \Listing{read_mem_function} und \Listing{write_mem_function} ersichtlich. Dieses Verfahren erm\"oglicht eine pr\"azise Erfassung der Ausf\"uhrungsdauer sowohl einzelner Verarbeitungszyklen als auch kompletter Lese- oder Schreiboperationen.
+Zur Signalisierung der Messintervalle wurden GPIO-Pins von Port 3 des zugrundeliegenden Mikrocontrollers verwendet. Die exakte Zeitmessung einzelner Codeabschnitte erfolgte durch das Setzen eines spezifischen GPIO-Pins (konkret \Code{P3.4}, adressiert \"uber \Code{BIT4} des \Code{P3OUT}-Registers) zu Beginn des zu messenden Abschnitts (\Code{SETBIT(P3OUT, BIT4);}) und dessen unmittelbares Zur\"ucksetzen (\Code{CLRBIT(P3OUT, BIT4);}) an dessen Ende. Diese Implementierung ist in den auskommentierten Zeilen von \Listing{read_mem_function} und \Listing{write_mem_function} sowie in den Codeausschnitten der Zust\"ande aus \Kapitel{Zustandsmaschine_Hilfsstrukturen} ersichtlich. Dieses Verfahren erm\"oglicht eine pr\"azise Erfassung der Ausf\"uhrungsdauer sowohl einzelner Verarbeitungszyklen als auch kompletter Lese- oder Schreiboperationen.
 
 \newpage
 Die nachfolgende \Tabelle{laufzeitmessungen} fasst die ermittelten Laufzeiten f\"ur repr\"asentative Ereignisse und Funktionen innerhalb des Observer-Moduls zusammen.
 
+\vspace{0.5cm}
 \begin{table}[h!]
 	\small
 	\centering
@@ -58,6 +59,7 @@ Die nachfolgende \Tabelle{laufzeitmessungen} fasst die ermittelten Laufzeiten f\
 
 Ein wesentliches Ergebnis der statusorientierten, zeichenweisen Verarbeitung ist die Freigabe von Rechenzeit zwischen den einzelnen Verarbeitungszyklen f\"ur andere Systemaufgaben. \Abbildung{zeichenorientiertes_lesen} visualisiert diesen Sachverhalt exemplarisch anhand einer Leseoperation. 
 
+\vspace{0.5cm}
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1.0\textwidth]{../Bilder/BA_MSP430_Observer_Zeitmessungen/ReadMem_Complete_zoomed_rdm_0x1C00_13.png}
@@ -66,7 +68,7 @@ Ein wesentliches Ergebnis der statusorientierten, zeichenweisen Verarbeitung ist
 \end{figure}
 
 \newpage
-Jeder in der Abbildung dargestellte Impuls repr\"asentiert die Verarbeitungszeit f\"ur ein einzelnes Zeichen. Die dargestellte Operation (\Code{rdm 0x1C00 13}) weist insgesamt 14 solcher Impulse auf. Der initiale Impuls zeigt die l\"angste Dauer, welche aus der einmaligen Initialisierungsphase pro Leseoperation resultiert: Hierbei werden die erforderlichen Parameter (Speicheradresse, Anzahl der Bytes) aus dem \Code{uart\_buffer} extrahiert. Dieser Vorgang involviert rechenzeitintensive String-Operationen wie \Code{strtok}, \Code{strlen}, \Code{strtol} und \Code{atoi}. Die nachfolgenden Zyklen, welche die eigentliche zeichenweise Leseoperation des Zeichens umfassen, weisen signifikant k\"urzere Ausf\"uhrungszeiten von etwa 10~\textmu s auf. In den Intervallen -- von ca. 10~ms -- zwischen diesen aktiven Verarbeitungsphasen (bedingt durch die Periode der Timer-ISR) steht der Prozessor f\"ur andere Aufgaben -- wie beispielsweise der Ausgabe des gelesenen Zeichens -- zur Verf\"ugung. Der letzte Verarbeitungszyklus (in \Abbildung{zeichenorientiertes_lesen} der 14.) dient der Finalisierung der Leseoperation. Er beinhaltet die erfolgreiche Pr\"ufung auf die angeforderte Anzahl an gelesenen Zeichen (Abgleich von \Code{mem\_addr\_idx} mit \Code{blocks} in der \Code{read\_mem}-Funktion aus \Listing{read_mem_function}), und leitet bei Erfolg den \"Ubergang in den R\"ucksetzzustand (\Code{state\_2}) durch Aktualisierung des \Code{state\_ptr} ein.
+Jeder in der Abbildung dargestellte Impuls repr\"asentiert die Verarbeitungszeit f\"ur ein einzelnes Zeichen. Die dargestellte Operation (\Code{rdm 0x1C00 13}) weist insgesamt 14 solcher Impulse auf. Der initiale Impuls zeigt die l\"angste Dauer, welche aus der einmaligen Initialisierungsphase pro Leseoperation resultiert: Hierbei werden die erforderlichen Parameter (Speicheradresse, Anzahl der Bytes) aus dem \Code{uart\_buffer} extrahiert. Dieser Vorgang involviert rechenzeitintensive String-Operationen wie \\\Code{strtok}, \Code{strlen}, \Code{strtol} und \Code{atoi}. Die nachfolgenden Zyklen, welche die eigentliche zeichenweise Leseoperation des Zeichens umfassen, weisen signifikant k\"urzere Ausf\"uhrungszeiten von etwa 10~\textmu s auf. In den Intervallen -- von ca. 10~ms -- zwischen diesen aktiven Verarbeitungsphasen (bedingt durch die Periode der Timer-ISR) steht der Prozessor f\"ur andere Aufgaben -- wie beispielsweise der Ausgabe des gelesenen Zeichens -- zur Verf\"ugung. Der letzte Verarbeitungszyklus (in \Abbildung{zeichenorientiertes_lesen} der 14.) dient der Finalisierung der Leseoperation. Er beinhaltet die erfolgreiche Pr\"ufung auf die angeforderte Anzahl an gelesenen Zeichen (Abgleich von \Code{mem\_addr\_idx} mit \Code{blocks} in der \Code{read\_mem}-Funktion aus \Listing{read_mem_function}), und leitet bei Erfolg den \"Ubergang in den R\"ucksetzzustand (\Code{state\_2}) durch Aktualisierung des \Code{state\_ptr} ein.
 
 Auch die in \Chapter{Entwicklung} beschriebenen Vorteile der Integration softwarebasierter Breakpoints -- insbesondere f\"ur kritische Operationen wie das Lesen und Schreiben auf Speicherzellen -- konnten im Verlauf der Entwicklung best\"atigt werden. Die in \Kapitel{Hardware_VS_Software_Breakpoints} begonnene Konzeptausarbeitung liefert eine fundierte Grundlage f\"ur die folgende Bewertung dieser Mechanismen.\AI
 
@@ -82,11 +84,12 @@ Die erwartete komplexit\"at inklusive der Anforderungen an Robustheit, Echtzeitf
 
 %====================================================================================================%
 
-\newpage
+\vspace{1.0cm}
 \section{Die Bewertung}
 \label{sec:Bewertung}
 Die zeitkritische Synchronisation zwischen Hauptprogramm und Observer-Modul stellte eine zentrale Herausforderung dar -- insbesondere im Hinblick auf den gew\"ahlten, nicht-blockierenden Ansatz der statusorientierten Verarbeitung. Die sequentielle, zeichenweise Abarbeitung von Lese- und Schreiboperationen \"uber mehrere Verarbeitungsschritte hinweg erh\"ohte zwar die Komplexit\"at der Implementierung, f\"uhrte jedoch zu einer \"au{\ss}erst performanten L\"osung hinsichtlich der Systemreaktivit\"at. Dies ist insbesondere f\"ur ein als \glqq{}unsichtbares\grqq{} Plug-in-Modul konzipiertes System essenziell.
 
+\newpage
 Die vollst\"andige Implementierung softwaregesteuerter Breakpoints erweist sich hingegen als \"au{\ss}erst anspruchsvoll. Ein vielversprechender Ansatz wird, gem\"a{\ss} dem in \Kapitel{ImplementierungSoftwareBreakpoints} skizzierten Konzept, entwickelt, (\Abbildung{software_breakpoint}) jedoch gelang keine vollst\"andig funktionale, robuste und konsistente Einbindung zur Laufzeit. Der entsprechende Quellcode befindet sich, wenn auch auskommentiert, im Observer-Modul.
 
 \begin{figure}[h!]
@@ -98,11 +101,11 @@ Die vollst\"andige Implementierung softwaregesteuerter Breakpoints erweist sich 
 
 Nichtsdestotrotz konnte durch die umfassend durchgef\"uhrte Laufzeitanalyse die Echtzeitf\"ahigkeit des Observer-Moduls best\"atigt werden. Diese wird allerdings mit einem erh\"ohten Speicherverbrauch erkauft, bedingt durch den Einsatz nicht vollst\"andig optimierten Codes und speicherintensiver Funktionen der Standard-String-Bibliothek.
 
-\newpage
 Ein wesentliches Manko stellt die aktuelle Beeintr\"achtigung der UART-Schnittstelle dar. Aufgrund der nicht implementierten automatischen Baudratenerkennung -- wie in \Kapitel{auto_baud} kurz beleuchtet wurde -- kann das Hauptprogramm diese Schnittstelle nicht parallel nutzen. Dies steht dem Anspruch entgegen, das Observer-Modul vollst\"andig vom restlichen System zu entkoppeln, da ansonsten ein zentrales Modul f\"ur Kommunikationsmanagement zur Konfliktvermeidung erforderlich w\"are.\AI
 
 %====================================================================================================%
 
+\newpage
 \section{Ein Ausblick}
 \label{sec:EinAusblick}
 

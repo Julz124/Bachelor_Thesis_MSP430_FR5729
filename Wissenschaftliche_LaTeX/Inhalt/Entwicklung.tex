@@ -160,7 +160,7 @@ Zu beginn wird noch das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register ge
 \subsection{UART ISR}
 \label{sec:UART_ISR}
 
-Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dahe das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"alle, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe \Kapitel{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in \Kapitel{datenintegritaet} und \Kapitel{eUSCI_Zusammenfassung}.
+Eine weitere unerl\"assliche Komponente des Observer-Moduls ist die Interrupt Service Routine der UART-Kommunikation. Diese steuert den bidirektionalen Datenaustausch, \dahe das Senden und Empfangen von Zeichen \"uber die serielle Schnittstelle. Sie behandelt zudem Grenzf\"alle, wie den Empfang ung\"ultiger Zeichen oder spezifische UART-Fehlerzust\"ande. Im Unterschied zur zyklisch operierenden Timer-ISR (siehe \Kapitel{Timer_ISR}) wird die UART-ISR ereignisgesteuert ausgel\"ost: entweder nach Empfang eines Datenbytes im Empfangspuffer (\Code{UCA0RXBUF}) oder wenn der Sendepuffer (\Code{UCA0TXBUF}) bereit ist, ein neues Datenbyte f\"ur die \"Ubertragung aufzunehmen. Die Unterscheidung zwischen den verschiedenen UART-Ereignissen -- wie \zB Empfangen, Senden oder Fehler erkannt -- erfolgt \"uber das Interrupt-Vektor-Register \Code{UCA0IV}. Tiefgreifendere Informationen dar\"uber in \Kapitel{datenintegritaet} und \Kapitel{eUSCI_Zusammenfassung}.
 
 Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRXIFG} -- der UART-ISR l\"asst sich anhand des Aktivit\"atsdiagramms in \Abbildung{activity_diagram_uart_isr_rec} pr\"azise nachvollziehen. Zu den Kernaufgaben des Empfangsteils z\"ahlen:
 
@@ -169,7 +169,7 @@ Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRX
 	
 	\item \textbf{Zeichenbehandlung:} Verarbeitung empfangener Bytes -- und zwischenspeichern in der \Code{rx\_byte}-Variable --, inklusive spezieller Steuerzeichen wie \glqq{}\texttt{\textbackslash r}\grqq{} (Carriage Return), welches die Befehlseingabe abschlie{\ss}t und die Zustandsmaschine aktiviert, sowie \glqq{}\texttt{\textbackslash b}\grqq{} (Backspace) zur Korrektur von bereits gespeicherten Eingaben im \Code{uart\_buffer}, und \glqq{}\texttt{\textbackslash n}\grqq{} (Newline), das ignoriert wird.
 
-	\item \textbf{Pufferverwaltung:} Validierung (Pr\"ufung auf Alphanumerik und Leerzeichen), Pufferung der g\"ultiger Zeichen im \Code{uart\_buffer} inklusive \"uberlaufschutz und Echo-Ausgabe des Zeichens.
+	\item \textbf{Pufferverwaltung:} Validierung (Pr\"ufung auf Alphanumerik und Leerzeichen), Pufferung der g\"ultiger Zeichen im \Code{uart\_buffer} inklusive \"Uberlaufschutz und Echo-Ausgabe des Zeichens.
 
 	\item \textbf{Timeout-Initiierung:} Bei Empfang des ersten Zeichens nach einem Reset wird \Code{state\_ptr} auf \Code{state\_0} gesetzt, welches die Timeout-\"Uberwachung startet.
 \end{itemize}
@@ -198,14 +198,14 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 \section{Zustandsmaschine und Hilfsstrukturen}
 \label{sec:Zustandsmaschine_Hilfsstrukturen}
 
-Dieser Abschnitt beschreibt das \glqq{}Rückgrat\grqq{} des Observer-Moduls. Dazu zählen die Zustandsmaschine sowie verschiedene unterstützende Funktionen und Datenstrukturen.
+Dieser Abschnitt beschreibt das \glqq{}R\"uckgrat\grqq{} des Observer-Moduls. Dazu z\"ahlen die Zustandsmaschine sowie verschiedene unterst\"utzende Funktionen und Datenstrukturen.
 
 %----------------------------------------------------------------------------------------------------%
 
 \subsection{Die Zustandsmaschine}
 \label{sec:Zustandsmaschine}
 
-Das in \Kapitel{ZustaendeUndFunktionen} erläuterte Konzept der zustandsbasierten Verarbeitung eingehender Befehle basiert auf den in \Listing{datenstruktur_zustaende} dargestellten \Fachbegriff{Ein Funktionsprototyp legt Signatur und Rückgabetyp einer Funktion fest, ohne deren Implementierung bereitzustellen.}{Funktionsprototypen}[Funktionsprototyp].
+Das in \Kapitel{ZustaendeUndFunktionen} erl\"auterte Konzept der zustandsbasierten Verarbeitung eingehender Befehle basiert auf den in \Listing{datenstruktur_zustaende} dargestellten \Fachbegriff{Ein Funktionsprototyp legt Signatur und R\"uckgabetyp einer Funktion fest, ohne deren Implementierung bereitzustellen.}{Funktionsprototypen}[Funktionsprototyp].
 
 \vspace{0.5cm}
 \begin{lstlisting} [style=modernC, caption={Funktionszeiger f\"ur die Zustandsmaschine}, label={lst:datenstruktur_zustaende}]
@@ -219,7 +219,7 @@ Das in \Kapitel{ZustaendeUndFunktionen} erläuterte Konzept der zustandsbasierte
 	LOCAL Void state_2(Void);
 \end{lstlisting}
 
-Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in denen sich das System zu einem bestimmten Zeitpunkt befindet. Abhängig vom aktuellen Verarbeitungsschritt referenziert der zentrale Funktionszeiger \Code{state\_ptr} eine dieser Funktionen, die anschließend innerhalb der Timer-Interrupt-Service-Routine (ISR) ausgeführt wird.
+Die angegebenen Funktionsprototypen repr\"asentieren die jeweiligen Zust\"ande, in denen sich das System zu einem bestimmten Zeitpunkt befindet. Abh\"angig vom aktuellen Verarbeitungsschritt referenziert der zentrale Funktionszeiger \Code{state\_ptr} eine dieser Funktionen, die anschließend innerhalb der Timer-Interrupt-Service-Routine (ISR) ausgef\"uhrt wird.
 
 \begin{itemize}
     \item \textbf{\Code{state\_dummy}} stellt den Leerlaufzustand des Systems dar, in dem keine Berechnungen stattfinden (\Listing{state_dummy}).
@@ -230,7 +230,7 @@ Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in
 	\end{lstlisting}
 	
 	\newpage
-    \item In \textbf{\Code{state\_0}} ist der Timeout-Timer für die Eingabe von Zeichen über die Benutzerkonsole aktiv (\Listing{state_0}).
+    \item In \textbf{\Code{state\_0}} ist der Timeout-Timer f\"ur die Eingabe von Zeichen \"uber die Benutzerkonsole aktiv (\Listing{state_0}).
 
 	\vspace{0.5cm}
 	\begin{lstlisting} [style=modernC, caption={Implementierung -- state\_0}, label={lst:state_0}]
@@ -245,7 +245,7 @@ Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in
 		}
 	\end{lstlisting}
 	
-    \item \textbf{\Code{state\_1}} überprüft den Eingabepuffer auf das Vorliegen eines gültigen Befehls (\Listing{state_1}).
+    \item \textbf{\Code{state\_1}} \"uberpr\"uft den Eingabepuffer auf das Vorliegen eines g\"ultigen Befehls (\Listing{state_1}).
 	
 	\vspace{0.5cm}
 	\begin{lstlisting} [style=modernC, caption={Implementierung -- state\_1}, label={lst:state_1}]
@@ -275,7 +275,7 @@ Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in
 	\end{lstlisting}
 	
 	\newpage
-    \item \textbf{\Code{state\_2}} setzt das Observer-Modul in einen definierten Anfangszustand zurück (\Listing{state_2}).
+    \item \textbf{\Code{state\_2}} setzt das Observer-Modul in einen definierten Anfangszustand zur\"uck (\Listing{state_2}).
 	
 	\vspace{0.5cm}
 	\begin{lstlisting} [style=modernC, caption={Implementierung -- state\_2}, label={lst:state_2}]
@@ -302,7 +302,7 @@ Die angegebenen Funktionsprototypen repräsentieren die jeweiligen Zustände, in
 	
 \end{itemize}
  
-Das in \Kapitel{Init} vorgestellte Dictionary, in dem Befehle ihren zugehörigen Funktionszeigern zugewiesen werden, implementiert \Listing{Observer_func_dict}.
+Das in \Kapitel{Init} vorgestellte Dictionary, in dem Befehle ihren zugeh\"origen Funktionszeigern zugewiesen werden, implementiert \Listing{Observer_func_dict}.
 
 	\vspace{0.5cm}
 \begin{lstlisting} [style=modernC, caption={Dictionary f\"ur Befehls-Funktionszeiger verkn\"upfung}, label={lst:Observer_func_dict}]
@@ -582,7 +582,7 @@ Die Fehlerpriorisierung basiert auf in der Header-Datei (\Code{Observer.h}) defi
 	#define INV_STR             '5'     // Invalid string
 \end{lstlisting}
 
-Die Konstruktion und Ausgabe der finalen Fehlermeldung obliegt der Timer-ISR. Diese Routine identifiziert den spezifischen Fehlerkontext anhand der zuvor gesetzten Fehlerereignis-Flag im globalen Ereignisregister \Code{global\_events}. Der zugeh\"orige Fehlercode im Fehlerregister \Code{uart\_error} oder \Code{cmd\_error}, zusammen mit einem Pr\"afix-Zeichen (\glqq{}\#\grqq{}) ergibt anschlie{\ss}end die Fehlermeldung. Zur Formatierung wird der Lese- und Schreib-Puffer \Code{rw\_buf} genutzt. Dessen Gr\"o{\ss}e ist auf drei Byte initialisiert, um das Pr\"afix-Zeichen, den alphanumerischen Fehlercode-Wert und das Null-Terminierungszeichen aufzunehmen. Die Startadresse dieses Puffers wird im Anschluss der Funktion \Code{observer\_print} \"ubergeben, welche die zeichenweise \"ubertragung der Fehlermeldung via UART initiiert. Es ist hierbei zu beachten, dass die Timer-ISR darauf ausgelegt ist, pro Durchlauf einen Fehler zu behandeln, da eine weitere Fehlerbehandlung die zuvor Formatierte Fehlermeldung \"uberschreiben w\"urde. Nach der Ausgabe eines Fehlers wird der Systemzustand abermals auf einen definierten Ausgangszustand zur\"uckgesetzt. Die hier beschriebene Routine zur Fehlerbehandlung in der Timer-ISR ist in \Listing{errorcode_isr} visualisiert.
+Die Konstruktion und Ausgabe der finalen Fehlermeldung obliegt der Timer-ISR. Diese Routine identifiziert den spezifischen Fehlerkontext anhand der zuvor gesetzten Fehlerereignis-Flag im globalen Ereignisregister \Code{global\_events}. Der zugeh\"orige Fehlercode im Fehlerregister \Code{uart\_error} oder \Code{cmd\_error}, zusammen mit einem Pr\"afix-Zeichen (\glqq{}\#\grqq{}) ergibt anschlie{\ss}end die Fehlermeldung. Zur Formatierung wird der Lese- und Schreib-Puffer \Code{rw\_buf} genutzt. Dessen Gr\"o{\ss}e ist auf drei Byte initialisiert, um das Pr\"afix-Zeichen, den alphanumerischen Fehlercode-Wert und das Null-Terminierungszeichen aufzunehmen. Die Startadresse dieses Puffers wird im Anschluss der Funktion \Code{observer\_print} \"ubergeben, welche die zeichenweise \"Ubertragung der Fehlermeldung via UART initiiert. Es ist hierbei zu beachten, dass die Timer-ISR darauf ausgelegt ist, pro Durchlauf einen Fehler zu behandeln, da eine weitere Fehlerbehandlung die zuvor Formatierte Fehlermeldung \"uberschreiben w\"urde. Nach der Ausgabe eines Fehlers wird der Systemzustand abermals auf einen definierten Ausgangszustand zur\"uckgesetzt. Die hier beschriebene Routine zur Fehlerbehandlung in der Timer-ISR ist in \Listing{errorcode_isr} visualisiert.
 
 \newpage
 \begin{lstlisting} [style=modernC, caption={Zusammensetzung und Initialisierung der Fehlernachrichtausgabe}, label={lst:errorcode_isr}]
@@ -629,7 +629,7 @@ Gegen\"uber den Software-Breakpoints bieten hardwarebasierte Breakpoints den Vor
 \newpage
 Um dies jedoch zu erreichen, ben\"otigen Hardware-Breakpoints ein dediziertes Hardwaremodul innerhalb des Mikrocontrollers. Im Falle der MSP430-Mikrocontrollerfamilie ist dies das \NeuerBegriff{Embedded Emulation Module (\Abkuerzung{Embedded Emulation Module}{EEM})}. \Zitat[S. 569, Kap. 21]{ti:slau272d} 
 
-Dieses Modul beinhaltet spezielle Hardwareregister, typischerweise \Fachbegriff{Adresskomparatoren vergleichen Speicheradressen zweier Operanden, um deren Gleichheit oder relative Ordnung (gr\"o{\ss}er/kleiner) festzustellen, typischerweise zur Steuerung von Spr\"ungen oder Zugriffsentscheidungen in Programmen.}{Adresskomparatoren}[Adresskomparator], welche die Speicheradresse des Befehls halten, an welcher bei \"ubereinstimmung mit dem Programmz\"ahler ein Breakpoint ausgel\"ost werden soll. Da der Breakpoint durch externe Hardwarelogik ausgel\"ost wird und nicht durch eine im Programmablauf ausgef\"uhrte Instruktion, m\"ussen seitens des Breakpoint-Mechanismus selbst keine Registerinhalte oder Stack-Elemente explizit zwischengespeichert und im Nachhinein wiederhergestellt werden. Ganz im Unterschied wie es bei einem durch einen Software-Breakpoint induzierten Interrupt der Fall sein kann. Die Zustandssicherung erfolgt erst durch die Debug-Routine nach erfolgter Unterbrechung. Der wesentliche Nachteil hierbei ist allerdings die strikte Limitierung der Anzahl gleichzeitig setzbarer Hardware-Breakpoints, welche direkt von der Anzahl der im EEM verf\"ugbaren Komparator-Register abh\"angt. F\"ur den MSP430 sind dies oft nur bis zu zwei. \Zitat[S. 570, Kap. 21.1, \Vgl Kap. 7.1]{ti:slau272d, ti:CCS}
+Dieses Modul beinhaltet spezielle Hardwareregister, typischerweise \Fachbegriff{Adresskomparatoren vergleichen Speicheradressen zweier Operanden, um deren Gleichheit oder relative Ordnung (gr\"o{\ss}er/kleiner) festzustellen, typischerweise zur Steuerung von Spr\"ungen oder Zugriffsentscheidungen in Programmen.}{Adresskomparatoren}[Adresskomparator], welche die Speicheradresse des Befehls halten, an welcher bei \"Ubereinstimmung mit dem Programmz\"ahler ein Breakpoint ausgel\"ost werden soll. Da der Breakpoint durch externe Hardwarelogik ausgel\"ost wird und nicht durch eine im Programmablauf ausgef\"uhrte Instruktion, m\"ussen seitens des Breakpoint-Mechanismus selbst keine Registerinhalte oder Stack-Elemente explizit zwischengespeichert und im Nachhinein wiederhergestellt werden. Ganz im Unterschied wie es bei einem durch einen Software-Breakpoint induzierten Interrupt der Fall sein kann. Die Zustandssicherung erfolgt erst durch die Debug-Routine nach erfolgter Unterbrechung. Der wesentliche Nachteil hierbei ist allerdings die strikte Limitierung der Anzahl gleichzeitig setzbarer Hardware-Breakpoints, welche direkt von der Anzahl der im EEM verf\"ugbaren Komparator-Register abh\"angt. F\"ur den MSP430 sind dies oft nur bis zu zwei. \Zitat[S. 570, Kap. 21.1, \Vgl Kap. 7.1]{ti:slau272d, ti:CCS}
 
 Diese Gegen\"uberstellung offenbart einen klaren \Fachbegriff{Abw\"agung zwischen zwei konkurrierenden Zielen, Konzepten, oder \"ahnlichem, bei der die Verbesserung des einen mit der Verschlechterung des anderen einhergeht.}{Trade-off}: Hardware-Breakpoints gl\"anzen durch ihre Transparenz und die F\"ahigkeit, in gesch\"utzten Speicherbereichen zu operieren, sind jedoch eine knappe Ressource. Software-Breakpoints hingegen bieten eine hohe Flexibilit\"at und nahezu unbegrenzte Verf\"ugbarkeit, gehen aber mit einer leichten Modifikation des Programmcodes und potenziellen, wenn auch meist minimalen, Timing-Ver\"anderungen einher. Angesichts der begrenzten Anzahl an Hardware-Breakpoints auf der MSP430-Plattform, die insbesondere bei komplexeren Debugging-Szenarien schnell ersch\"opft sein k\"onnen, erweist sich die Implementierung von Software-Breakpoints als eine pragmatische und oft notwendige Erweiterung der Debugging-M\"oglichkeiten. Um die technischen Rahmenbedingungen f\"ur die Realisierung solcher Software-Breakpoints auf dem MSP430FR5729 sowie die Interaktion mit der Debugging-Infrastruktur genauer zu verstehen, ist eine detaillierte Betrachtung des eingesetzten Debug-Adapters und seiner Funktionsweise unerl\"asslich. 
 
@@ -676,7 +676,7 @@ Die Kenntnis der Funktionalit\"aten und der Arbeitsweise des MSP-FET ist somit e
 \label{sec:KonzeptionierungSoftwareBreakpoints}
 Zur Realisierung von Breakpoints existieren mehrere Ans\"atze. Ein bew\"ahrter Einstieg besteht darin, etablierte Debugger und ihre Architektur zu studieren. Im Embedded‑ und Low‑Power‑Bereich kommen beispielsweise Werkzeuge wie \NeuerBegriff{TRACE32}, \NeuerBegriff{M-Core} oder das zuvor besprochene MSP-FET von Texas Instruments zum Einsatz. Diese Debugger setzen Hardware-Breakpoints \"uber spezielle Debug‑Interfaces um und bieten damit eine hohe Zuverl\"assigkeit bei minimaler Eingriffstiefe in das Laufzeitsystem.
 
-Im Gegensatz dazu zielt die hier vorgestellte L\"osung auf eine Abwandlung der Software-Breakpoints ab, die direkt den Programmspeicher manipuliert. Dabei ersetzt das System, in dieser Implementierung, an der gew\"unschten Halteadresse den originalen Maschinenbefehl durch einen Sprungbefehl (Jump), der auf eine speziell implementierte \NeuerBegriff{Breakpoint-Handler}-Routine verweist. Beim Erreichen dieses Befehls leitet das System zun\"achst einen kritischen Abschnitt ein: Es werden die f\"ur den Prozess relevanten Register (R1 bis R3) – namentlich \Fachbegriff{Ein Register, das die Speicheradresse des derzeitigen Befehls enth\"alt.}{Program Counter} (\Abkuerzung{Program Counter}{PC}), \Fachbegriff{Ein Register, das die Speicheradresse des letzten oder ersten Datenelements im Stack speichert.}{Stack Pointer} (\Abkuerzung{Stack Pointer}{SP}), \Fachbegriff{Register f\"ur eine Reihe von Flags, die von der arithmetisch-logischen Einheit in Abh\"angigkeit der zuletzt durchgef\"uhrten Rechenoperation gesetzt werden.}{Statusregister} (\Abkuerzung{Status Register}{SR}) und \ggf mehrere \Fachbegriff{Frei verwendbare Arbeitsregister für allgemeine Operationen.}{General-Purpose-Register} (R4 bis R15) – gesichert und Interrupts deaktiviert, um eine atomare Kontextsicherung zu gew\"ahrleisten. Anschlie{\ss}end wechselt das System in die Handler-Routine. Diese blockiert das gesamte System, mit Ausnahme des Observer-Moduls, um weiterhin das Auslesen und Manipulieren von Speicherinhalten zu erm\"oglichen. \Zitat[S.91, Kap. 4.3, S. 31, Kap. 2.4]{ti:slau272d, davies:msp430, yadav2004microcontroller}
+Im Gegensatz dazu zielt die hier vorgestellte L\"osung auf eine Abwandlung der Software-Breakpoints ab, die direkt den Programmspeicher manipuliert. Dabei ersetzt das System, in dieser Implementierung, an der gew\"unschten Halteadresse den originalen Maschinenbefehl durch einen Sprungbefehl (Jump), der auf eine speziell implementierte \NeuerBegriff{Breakpoint-Handler}-Routine verweist. Beim Erreichen dieses Befehls leitet das System zun\"achst einen kritischen Abschnitt ein: Es werden die f\"ur den Prozess relevanten Register (R1 bis R3) – namentlich \Fachbegriff{Ein Register, das die Speicheradresse des derzeitigen Befehls enth\"alt.}{Program Counter} (\Abkuerzung{Program Counter}{PC}), \Fachbegriff{Ein Register, das die Speicheradresse des letzten oder ersten Datenelements im Stack speichert.}{Stack Pointer} (\Abkuerzung{Stack Pointer}{SP}), \Fachbegriff{Register f\"ur eine Reihe von Flags, die von der arithmetisch-logischen Einheit in Abh\"angigkeit der zuletzt durchgef\"uhrten Rechenoperation gesetzt werden.}{Statusregister} (\Abkuerzung{Status Register}{SR}) und \ggf mehrere \Fachbegriff{Frei verwendbare Arbeitsregister f\"ur allgemeine Operationen.}{General-Purpose-Register} (R4 bis R15) – gesichert und Interrupts deaktiviert, um eine atomare Kontextsicherung zu gew\"ahrleisten. Anschlie{\ss}end wechselt das System in die Handler-Routine. Diese blockiert das gesamte System, mit Ausnahme des Observer-Moduls, um weiterhin das Auslesen und Manipulieren von Speicherinhalten zu erm\"oglichen. \Zitat[S.91, Kap. 4.3, S. 31, Kap. 2.4]{ti:slau272d, davies:msp430, yadav2004microcontroller}
 
 Nach der Analyse stellt das System den urspr\"unglichen Programmzustand, durch das Laden der Registers\"atze, wieder her. Der Compiler stellt hierf\"ur \Fachbegriff{Compiler-spezifische, vordefinierte Funktionen als optimierter Assemblercode.}{Compiler-Intrinsics}[Compiler-Intrinsic] bereit wie \Code{\_\_get\_SR}, \Code{\_\_get\_SP} und \Code{\_\_set\_interrupt\_state}. Auf diese Weise wird ein vollst\"andiger Zyklus von Unterbrechung, Inspektion und Fortsetzung des Programmflusses realisiert, ohne dass das Hauptprogramm von dem Observer-Modul tiefgreifender beeinflusst wird. \Zitat[S.137, Kap. 6.8.1]{ti:slau132r}
 
@@ -699,9 +699,11 @@ Aus diesem Grund wurde bewusst auf die Verwendung eines Trap-Mechanismus verzich
 \subsubsection{Implementierung erweiterter Software Breakpoints}
 \label{sec:ImplementierungSoftwareBreakpoints}
 
-Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf benachbarte Code-Segmente zu vermeiden. Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven \Fachbegriff{Der Adressierungsmodus bezeichnet die Art und Weise, wie Operanden innerhalb des Befehlswortes adressiert werden; unterst\"utzt werden \ua Register-, symbolische, absolute und indirekte Adressierung. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}}{Adressierungsmodus} ber\"ucksichtigen.
+Die Grundidee von Software-Breakpoints besteht darin, an einer Stelle im Programmspeicher, an der ein g\"ultiger Maschinenbefehl (\Fachbegriff{Auch op code oder operation code, ist eine meist in hexadezimaler Schreibweise angegebene Zahl, die die Nummer eines Maschinenbefehls f\"ur einen bestimmten Prozessortyp angibt.}{Opcode}) liegt, diesen tempor\"ar durch einen Sprung auf die Breakpoint-Handler-Routine zu ersetzen. Auch hier ist es wieder wichtig, dass die MPU inaktiv ist, um uneingeschr\"ankt auf den Speicher zuzugreifen. Zun\"achst wird der originale Opcode gesichert, um ihn sp\"ater unver\"andert wieder einsetzen zu k\"onnen. Die Auswahl der Adresse erfordert, dass diese auf ein g\"ultiges Befehlswort ausgerichtet ist und im Stack-Bereich liegt, um Kollisionen auf benachbarte Code-Segmente zu vermeiden. 
 
 \newpage
+Zudem muss die Interpretation der Adresse und des zu schreibenden Sprungbefehls den aktiven \Fachbegriff{Der Adressierungsmodus bezeichnet die Art und Weise, wie Operanden innerhalb des Befehlswortes adressiert werden; unterst\"utzt werden \ua Register-, symbolische, absolute und indirekte Adressierung. \Zitat[S. 97, Kap. 4.4]{ti:slau272d}}{Adressierungsmodus} ber\"ucksichtigen.
+
 Die Implementierung gliedert sich in folgende Schritte:
 \begin{enumerate}
 	\item \textbf{Adressvalidierung:} Pr\"ufen, ob die Zieladresse auf vier Byte ausgerichtet ist und im Stack liegt.

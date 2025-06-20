@@ -402,7 +402,7 @@ Beim Empfang eines UART-Blocks ergibt sich folgender Ablauf:
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.9\textwidth]{../Bilder/uart_protocoll.png}
+	\includegraphics[width=1.0\textwidth]{../Bilder/uart_protocoll.png}
 	\caption{UART \"ubertragung der Werte 0x55 und 0xFF\\\Zitat[S. 577, Abb. 10.19]{davies:msp430}}
 	\label{fig:uart_uebertragung}
 \end{figure}
@@ -439,6 +439,7 @@ Die automatische Fehlererkennung des Interfaces erm\"oglicht dem Benutzer eine s
 \newpage
 Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefasst. Eine minimale Konfiguration der Schnittstelle auf den UART-Betrieb wird in \Kapitel{eUSCI_Konfiguration} detailliert beschrieben.
 
+\vspace{1cm}
 \begin{table}[h!]
 	\small
 	\centering
@@ -461,11 +462,13 @@ Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefas
 	\label{tab:uart_features}
 \end{table}
 
-\newpage
 \subsubsection{Automatische Baudratenerkennung}
 \label{sec:auto_baud}
 
-Neben der festen Einstellung ermittelt die Automatische Baudratenerkennung selbstst\"andig, \"uber eine \NeuerBegriff{Break/Sync Sequenz}, die vom Sender verwendete Baudrate. Diese Synchronisations-Sequenz besteht aus einem \NeuerBegriff{Break} und einem \NeuerBegriff{Sync} Feld. Der Bereich der erkennbaren Baudraten liegt im Oversampling-Modus zwischen 244 Baud (im niedrigfrequenz-Modus beginnend ab 15 Baud) und einem Megabaud. Ein Break umfasst 11 bis 21 \"ubertragen Nullen, w\"ahrend weitere Nullen einen \NeuerBegriff{Break Timeout}-Fehler ausl\"osen. Aus Konformit\"atsgr\"unden sollte das UART Protokoll auf acht Datenbits, mit LSB-first, keiner Parit\"at und einem Stop-Bit konfiguriert werden. In \Abbildung{auto_baud} ist die beschriebene Break/Sync-Sequenz dargestellt.
+Neben der festen Einstellung ermittelt die Automatische Baudratenerkennung selbstst\"andig, \"uber eine \NeuerBegriff{Break/Sync Sequenz}, die vom Sender verwendete Baudrate. Diese Synchronisations-Sequenz besteht aus einem \NeuerBegriff{Break} und einem \NeuerBegriff{Sync} Feld. Die mit dem System verbundene Benutzerkonsole muss allerdings das Senden des Break-Signals unterst\"utzen. Der Bereich der erkennbaren Baudraten liegt im Oversampling-Modus zwischen 244 Baud (im niedrigfrequenz-Modus beginnend ab 15 Baud) und einem Megabaud. Ein Break umfasst 11 bis 21 \"ubertragen Nullen, w\"ahrend weitere Nullen einen \NeuerBegriff{Break Timeout}-Fehler ausl\"osen. Aus Konformit\"atsgr\"unden sollte das UART Protokoll auf acht Datenbits, mit LSB-first, keiner Parit\"at und einem Stop-Bit konfiguriert werden. 
+
+\newpage
+In \Abbildung{auto_baud} ist die beschriebene Break/Sync-Sequenz dargestellt.
 
 \begin{figure}[h!]
 	\centering
@@ -474,10 +477,7 @@ Neben der festen Einstellung ermittelt die Automatische Baudratenerkennung selbs
 	\label{fig:auto_baud}
 \end{figure}
 
-\newpage
 Der Synchronisations-Prozess beginnt mit der \"Ubertragung des hexadezimalen Wertes 0x55. Die Zeit zwischen der ersten und letzten fallenden Flanke wird gemessen, um die vom Sender verwendete Baudrate zu ermitteln. Dies ist grafisch in \Abbildung{sync_field} dargestellt. \"Uberschreitet die Messzeit den Maximalwert, tritt ein \NeuerBegriff{Sync-Timeout}-Fehler auf. Ist die Messung erfolgreich, liest das System nach dem Setzen des \NeuerBegriff{Receive Interrupt Flags} die Information aus. 
-
-Nach jedem empfangenen Zeichen setzt das System das \Code{UCDORM}-Bit zur\"uck, da bei gesetztem Bit zwar alle Zeichen empfangen, aber nicht in das Puffer-Register der Schnittstelle geschrieben werden. \Zitat[S. 481, Kap. 18.3.4]{ti:slau272d}
 
 \begin{figure}[h!]
 	\centering
@@ -486,11 +486,15 @@ Nach jedem empfangenen Zeichen setzt das System das \Code{UCDORM}-Bit zur\"uck, 
 	\label{fig:sync_field}
 \end{figure}
 
-\newpage
+Nach jedem empfangenen Zeichen setzt das System das \Code{UCDORM}-Bit zur\"uck, da bei gesetztem Bit zwar alle Zeichen empfangen, aber nicht in das Puffer-Register der Schnittstelle geschrieben werden. \Zitat[S. 481, Kap. 18.3.4]{ti:slau272d}
+
 \subsection{eUSCI-Konfiguration}
 \label{sec:eUSCI_Konfiguration}
 
-Die Initialisierung und Konfiguration des eUSCI\_A-Moduls f\"ur den UART-Betrieb folgt einer definierten Abfolge von Schritten zum Setzen von verschiedenen Bits und Werten in die daf\"ur vorgesehene Register. Der Prozess setzt das \Code{UCSWRST}-Bit zu Beginn. Dieses Bit erm\"oglicht die Konfiguration der Schnittstelle und schlie{\ss}t unerw\"unschtes Verhalten aus. Dabei wird das \Code{UCTXIFG}-Bit, zum freigeben der Konfiguration, gesetzt. Zudem werden diverse Interrupt-Enable-Bits wie \Code{UCRXIE} und \Code{UCTXIE} sowie Status- und Fehlerflags (\Code{UCRXIFG, UCRXERR, UCBRK, UCPE, UCOE, UCFE, UCSTOE, UCBTOE}) im \Code{UCAxSTATW}- und \Code{UCAxIFG}-Register gel\"oscht oder in einen definierten Anfangszustand gebracht. Dadurch gelangt das eUSCI\_A-Modul in einen sicheren Reset-Zustand. \Zitat[S. 478, Kap. 18.3.1]{ti:slau272d}
+Die Initialisierung und Konfiguration des eUSCI\_A-Moduls f\"ur den UART-Betrieb folgt einer definierten Abfolge von Schritten zum Setzen von verschiedenen Bits und Werten in die daf\"ur vorgesehene Register. 
+
+\newpage
+Der Prozess setzt das \Code{UCSWRST}-Bit zu Beginn. Dieses Bit erm\"oglicht die Konfiguration der Schnittstelle und schlie{\ss}t unerw\"unschtes Verhalten aus. Dabei wird das \Code{UCTXIFG}-Bit, zum freigeben der Konfiguration, gesetzt. Zudem werden diverse Interrupt-Enable-Bits wie \Code{UCRXIE} und \Code{UCTXIE} sowie Status- und Fehlerflags (\Code{UCRXIFG, UCRXERR, UCBRK, UCPE, UCOE, UCFE, UCSTOE, UCBTOE}) im \Code{UCAxSTATW}- und \Code{UCAxIFG}-Register gel\"oscht oder in einen definierten Anfangszustand gebracht. Dadurch gelangt das eUSCI\_A-Modul in einen sicheren Reset-Zustand. \Zitat[S. 478, Kap. 18.3.1]{ti:slau272d}
 
 Nachdem das Modul sicher in den Reset-Zustand \"uberf\"uhrt wird, lassen sich weitere spezifische Konfigurationsparameter f\"ur den UART-Betrieb setzen. Hierzu z\"ahlen insbesondere die folgenden Kontrollbits im \Code{UCAxCTLWn}-Register, welche die grundlegenden Betriebscharakteristika des UART-Modus definieren, wie beispielsweise:
 
@@ -507,9 +511,9 @@ Nachdem das Modul sicher in den Reset-Zustand \"uberf\"uhrt wird, lassen sich we
 
 \"Uber die genannten grundlegenden Einstellungen hinaus existieren weitere spezifischere Kontrollbits. Beispielsweise ist das \Code{UCRXEIE}-Bit zur freigabe des Fehler-Interrupts und das \Code{UCBRKIE} zum aktivieren der Break-Interrupts zust\"andig. 
 
-\newpage
 Spezialfunktionen wie der Multiprozessor-Modus, welcher \"uber das \Code{UCTXADDR}-Bit gesteuert wird, oder das Senden eines Break-Zeichens mittels \Code{UCTXBRK} sind f\"ur eine Standard-UART-Konfiguration oft zu vernachl\"assigen, sofern diese Funktionalit\"aten nicht explizit gefordert sind. \Zitat[S. 495, Kap. 18.4.1 \& S. 496, Kap. 18.4.2]{ti:slau272d}
 
+\newpage
 Eine weitere essenzielle Konfiguration f\"ur den UART-Betrieb ist die der Baudrate. Diese erfolgt \"uber das \Code{UCAxBRW}-Register und das \Code{UCAxMCTLW}-Register. Die korrekte Wertermittlung f\"ur diese Register ist direkt von der Frequenz der zuvor mittels \Code{UCSSELx} gew\"ahlten Taktquelle sowie der angestrebten Baudrate abh\"angig. Der \glqq Family User's Guide\grqq{} des MSP430FR5729 von Texas Intruments liefert f\"ur die Berechnung dieser Werte detaillierte Formeln und Beispieltabellen. Das \Code{UCAxBRW}-Register nimmt den ganzzahligen Anteil des Baudratenteilers (Prescaler) auf. Das \Code{UCAxMCTLW}-Register beinhaltet die Konfiguration f\"ur die Modulation der Frequenz, sowie das Bit zur Aktivierung des Oversampling-Modus. Durch das \Code{UCBRFx}-Bit wird, in der ersten Modulationsstufe, die Feineinstellung des Prescalers vorgenommen. In der zweiten Modulationsstufe wird durch \Code{UCBRSx} ein Modulationsmuster f\"ur die BITCLK festgelegt. Im letzten Bitfeld kann nun der Oversampling-Modus aktiviert oder deaktiviert werden. \Zitat[S. 487, Kap. 18.3.10 \& S. 497, Kap. 18.4.3, 18.4.4]{ti:slau272d}
 
 Obwohl weitere spezifische Einstellungen m\"oglich sind, w\"urde deren detaillierte Er\"orterung den Rahmen dieser \"Ubersicht \"uberschreiten. Eine unerl\"assliche, abschlie{\ss}ende Konfigurationsma{\ss}nahme vor der Inbetriebnahme betrifft jedoch die Port-Pins: Die f\"ur den UART Betrieb verwendeten Pins m\"ussen, \"uber die Function-Select-Register (\Code{PxSEL}), auf die asynchrone UART-Kommunikation konfiguriert werden. \\\Zitat[S. 294, Kap. 8.2.5]{ti:slau272d}

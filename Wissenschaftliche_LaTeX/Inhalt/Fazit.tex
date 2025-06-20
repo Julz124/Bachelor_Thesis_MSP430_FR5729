@@ -94,7 +94,7 @@ Die vollst\"andige Implementierung softwaregesteuerter Breakpoints erweist sich 
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.7\textwidth]{../Bilder/ObserverModule/set_breakpoint.png}
+	\includegraphics[width=0.75\textwidth]{../Bilder/ObserverModule/set_breakpoint.png}
 	\caption{Setzen eines Software-Breakpoints an einer frei ausgew\"ahlten Speicheradresse im Stack -- Befehl: \Code{sbr 0xD03C}}
 	\label{fig:software_breakpoint}
 \end{figure}
@@ -111,6 +111,6 @@ Ein wesentliches Manko stellt die aktuelle Beeintr\"achtigung der UART-Schnittst
 
 Der modulare Aufbau des Systems bietet, kombiniert mit der flexiblen Konfiguration der Timer- und UART-Interrupts, eine solide Grundlage f\"ur die Integration weiterf\"uhrender Funktionalit\"aten. Insbesondere die strukturierte Umsetzung und umfangreiche Analyse der Software-Breakpoint-Mechanismen liefern wertvolle Impulse f\"ur zuk\"unftige Arbeiten im Bereich experimenteller Debugging-Techniken.
 
-Ein weiterer Entwicklungsschritt k\"onnte die Implementierung eines weiteren Moduls zur automatischen Baudratenerkennung darstellen. Diese w\"urde es erm\"oglichen, die UART-Schnittstelle sowohl f\"ur interne als auch externe Kommunikationsprozesse effizient zu nutzen, ohne die Systemtrennung aufzugeben.
+Ein weiterer Entwicklungsschritt k\"onnte die Implementierung eines weiteren Moduls zur automatischen Baudratenerkennung darstellen. Diese w\"urde es erm\"oglichen, die UART-Schnittstelle sowohl f\"ur interne als auch externe Kommunikationsprozesse effizient zu nutzen, ohne die Systemtrennung aufzugeben. 
 
 Langfristig k\"onnte die entwickelte Architektur auch in komplexere, multitaskingf\"ahige Systeme \"uberf\"uhrt werden. Durch den nicht-blockierenden und zustandsbasierten Aufbau ist das Observer-Modul pr\"adestiniert f\"ur eine Integration in reaktive, ereignisgesteuerte Steuerungsplattformen zur Erg\"anzung bereits vorhandener Debugging-Mechanismen.

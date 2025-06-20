@@ -48,7 +48,7 @@ Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich 
 \newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[angle=270, width=1.0\textwidth]{../Bilder/observer_state_machine.png}
+	\includegraphics[angle=270, width=0.77\textwidth]{../Bilder/observer_state_machine.png}
 	\caption{Zustandsautomat -- Observer-Modul}
 	\label{fig:StateMachine_ObserverModul}
 \end{figure}
@@ -150,7 +150,7 @@ Zu beginn wird noch das \Code{TBIFG}-Interrupt-Flag im \Code{TB0CTL}-Register ge
 \vspace{1cm}
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.85\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
+	\includegraphics[width=1.0\textwidth]{../Bilder/observer_activity_diagram_timer_b0.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_timer_isr}
 \end{figure}
@@ -178,8 +178,8 @@ Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRX
 \newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[angle=90, width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
-	\caption{Aktivit\"atsdiagramm -- Timer ISR}
+	\includegraphics[angle=270, width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
+	\caption{Aktivit\"atsdiagramm -- UART ISR}
 	\label{fig:activity_diagram_uart_isr_rec}
 \end{figure}
 
@@ -188,8 +188,8 @@ Der Sendeteil -- mit dem Interruptvektor \Code{USCI\_UART\_UCTXIFG} -- der UART-
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.60\textwidth]{../Bilder/observer_activity_diagram_eusci_send.png}
-	\caption{Aktivit\"atsdiagramm -- Timer ISR}
+	\includegraphics[width=0.65\textwidth]{../Bilder/observer_activity_diagram_eusci_send.png}
+	\caption{Aktivit\"atsdiagramm -- UART ISR}
 	\label{fig:activity_diagram_uart_isr_send}
 \end{figure}
 
@@ -338,6 +338,8 @@ Die in \Kapitel{Timer_ISR} erw\"ahnte \Code{observer\_print}-Funktion dient der 
 		}
 		SETBIT(global_events, WRT_UART);
 		print_ptr = str;
+		
+		// Indirect call of UART-ISR
 		SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
 		SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
 		return;
@@ -427,6 +429,8 @@ Der Programmablauf der \Code{read\_mem}-Funktion ist wie folgt strukturiert (sie
 		
 		print_ptr = rw_buf_ptr;
 		SETBIT(global_events, WRT_UART);
+		
+		// Indirect call of UART-ISR
 		SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
 		SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
 		
@@ -468,7 +472,6 @@ Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert, we
 			//CLRBIT(P3OUT, BIT4);
 			return;
 		}
-		
 		if (mem_addr_ptr EQ 0) {
 			// Extract useful arguments
 			Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
@@ -476,7 +479,6 @@ Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert, we
 			
 			mem_addr_ptr = (Char *)strtol(mem_addr_str, NULL, 0);
 		}
-		
 		if (between("0x000000", mem_addr_ptr, "0x0001FF")
 		|| between("0x000C00", mem_addr_ptr, "0x000FFF")) {
 			set_cmd_error(INV_ADDR);
@@ -490,25 +492,24 @@ Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert, we
 			//CLRBIT(P3OUT, BIT4);
 			return;
 		}
-		
 		if (!IS_ALNUM(*rw_buf_ptr)) {
 			*rw_buf_ptr = ' ';
 		}
-		
 		print_ptr = rw_buf_ptr;
 		SETBIT(global_events, WRT_UART);
+		
+		// Indirect call of UART-ISR
 		SETBIT(UCA0IFG, UCTXIFG);   // UART Transmit Interrupt Flag
 		SETBIT(UCA0IE,  UCTXIE);    // Enable UART Receive Interrupt
 		
 		*((volatile Char *)mem_addr_ptr + mem_addr_idx) = *rw_buf_ptr;
 		mem_addr_idx++;
-		
 		//CLRBIT(P3OUT, BIT4);
 	}
 \end{lstlisting}
 
 \vspace{0.60cm}
-Kurzer Einschub zur Pr\"ufung auf Alphanumerische Zeichen mittels eines eigenen \Fachbegriff{Ein Makro ist eine Anweisung oder ein Symbol, das durch eine andere Zeichenfolge ersetzt wird, typischerweise zur Automatisierung wiederkehrender Codeabschnitte oder Befehle.}{Makros}[Makro]. Findet auch Verwendung in der zuvor, in \Kapitel{UART_ISR}, besprochenen UART-ISR.
+Kurzer Einschub zur Pr\"ufung auf Alphanumerische Zeichen mittels eines eigenen \Fachbegriff{Ein Makro ist eine Anweisung oder ein Symbol, das durch eine andere Zeichenfolge ersetzt wird, typischerweise zur Automatisierung wiederkehrender Codeabschnitte oder Befehle.}{Makros}[Makro]. Findet auch Verwendung in der zuvor, in \Kapitel{UART_ISR}, besprochenen UART-ISR. Der Grund f\"ur die Verwendung eines Makros anstelle der Funktion \Code{isalnum} aus der \Code{ctype}-Bibliothek -- obwohl beide dieselbe Funktionalit\"at bieten -- liegt in der Gr\"o{\ss}e der Bibliothek in Kombination mit der geringen Nutzung. Die Funktion wird im Observer-Modul lediglich dreimal verwendet, was den zus\"atzlichen Aufwand, eine vergleichsweise gro{\ss}e Bibliothek einzubinden, nicht rechtfertigt.
 
 \vspace{0.5cm}
 \begin{lstlisting} [style=modernC, caption={Zeichenpr\"ufung auf Alphanumerik mittels eigen Makros}, label={lst:is_alnum}]
@@ -661,7 +662,7 @@ Dar\"uber hinaus spielt der MSP-FET eine ebenso gro{\ss}e Rolle f\"ur die Implem
 \newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.75\textwidth]{../Bilder/HW_SW_Breakpoint.png}
+	\includegraphics[width=0.80\textwidth]{../Bilder/HW_SW_Breakpoint.png}
 	\caption{Code Composer Studio - Breakpoint \"Ubersicht}
 	\label{fig:CCS_SetBR}
 \end{figure}
@@ -737,7 +738,7 @@ Die Manipulation von Befehlen im Stack ist hoch kritisch, da das Hauptprogramm k
 	
 	\begin{figure}[h!]
 		\centering
-		\includegraphics[width=0.75\textwidth]{../Bilder/OpcodeLaengen.png}
+		\includegraphics[width=0.85\textwidth]{../Bilder/OpcodeLaengen.png}
 		\caption{Code Composer Disassembly Modus - Opcode l\"angen}
 		\label{fig:DisassemblyOpcodeLaengen}
 	\end{figure}

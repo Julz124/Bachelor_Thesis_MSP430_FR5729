@@ -44,7 +44,7 @@ Timer und Interrupt Service Routinen (\Abkuerzung{Interrupt Service Routine}{ISR
 Der MSP430FR5729 verf\"ugt \"uber insgesamt F\"unf 16-Bit-Timer, wovon Zwei zu Typ A und Drei zu Typ B geh\"oren. Timer haben vielseitige Einsatzgebiete und erm\"oglichen verschiedenste Zeitsteuerungsfunktionen. Die Unterscheidung in Zwei Typen l\"asst dabei eine gr\"o{\ss}ere Vielfalt an spezifischen Konfigurationsm\"oglichkeiten zu.
 
 \newpage
-Beide Timer-Typen verf\"ugen \"uber einen gemeinsamen 16-Bit-Z\"ahler sowie Drei Capture/Compare-Register. Die korrekte Konfiguration dieser Register ist ausschlaggebend f\"ur die Implementierung verschiedenster Funktionen. Eine der beiden \"ubergeordneten Eigenschaften, die Capture-Funktionalit\"at, dient dazu, den aktuellen Z\"ahlerwert bei einem externen oder internen Ereignis pr\"azise zu erfassen. Dies ist beispielsweise n\"utzlich f\"ur die Messung von Pulsweiten oder Frequenzen. Die Compare-Funktionalit\"at hingegen erlaubt den Vergleich des aktuellen Z\"ahlerstandes mit einem in den Compare-Registern hinterlegten Wert. Bei einer \"ubereinstimmung kann eine konfigurierbare Aktion ausgel\"ost werden, wie beispielsweise das Setzen oder R\"ucksetzen eines Ausgangspins oder das Generieren eines Interrupts. Ausf\"uhrlicher beleuchtet ab \Kapitel{Timer_CaptureMode}. Die vielseitigen Einstellungsm\"oglichkeiten dieser und weiterer Register erlauben die Realisierung komplexer Zeitgesteuerter Aufgaben.\\\Zitat[S. 333, Kap. 11 \& S. 355, Kap. 12, S. 287, Kap. 8.3 \& S. 194, Kap. 6.8.2]{ti:slau272d,davies:msp430}
+Beide Timer-Typen verf\"ugen \"uber einen gemeinsamen 16-Bit-Z\"ahler sowie Drei Cap\-ture/Compare-Register. Die korrekte Konfiguration dieser Register ist ausschlaggebend f\"ur die Implementierung verschiedenster Funktionen. Eine der beiden \"ubergeordneten Eigenschaften, die Capture-Funktionalit\"at, dient dazu, den aktuellen Z\"ahlerwert bei einem externen oder internen Ereignis pr\"azise zu erfassen. Dies ist beispielsweise n\"utzlich f\"ur die Messung von Pulsweiten oder Frequenzen. Die Compare-Funktionalit\"at hingegen erlaubt den Vergleich des aktuellen Z\"ahlerstandes mit einem in den Compare-Registern hinterlegten Wert. Bei einer \"ubereinstimmung kann eine konfigurierbare Aktion ausgel\"ost werden, wie beispielsweise das Setzen oder R\"ucksetzen eines Ausgangspins oder das Generieren eines Interrupts. Ausf\"uhrlicher beleuchtet ab \Kapitel{Timer_CaptureMode}. Die vielseitigen Einstellungsm\"oglichkeiten dieser und weiterer Register erlauben die Realisierung komplexer Zeitgesteuerter Aufgaben.\\\Zitat[S. 333, Kap. 11 \& S. 355, Kap. 12, S. 287, Kap. 8.3 \& S. 194, Kap. 6.8.2]{ti:slau272d,davies:msp430}
 
 Die Timer des Typs B weisen im Vergleich zu dem Timer des Typs A, erweiterte Konfigurationsm\"oglichkeiten auf. Darunter f\"allt die Konfigurierbarkeit der Timer-L\"ange auf 8, 10, 12 oder 16 Bit, was eine flexible Anpassung der Z\"ahlaufl\"osung und der \"uberlaufperiode f\"ur unterschiedliche Aufl\"osungen erm\"oglicht. Zus\"atzlich sind alle Capture/Compare-Bl\"ocke doppelt gepuffert. Diese doppelte Pufferung erlaubt das Laden neuer Vergleichswerte, w\"ahrend eines aktiven Z\"ahlzyklus. Unerw\"unschte Effekte oder Inkonsistenzen in den Ausgangssignalen k\"onnen dadurch vermieden werden. Ein weiterer Unterschied besteht darin, dass die Capture/Compare-Eing\"ange asynchron zueinander sind. Somit k\"onnen sie unabh\"angig zum internen Takt des Timers operieren, was in bestimmten Szenarien die Erfassung externer Ereignisse erleichtert. \Zitat[S. 356, Kap. 12.1.1, S. 353, Kap. 8.9]{ti:slau272d, davies:msp430}
 
@@ -185,7 +185,8 @@ Beispielsweise durch das Setzen des \Code{CCIE}-Bits auf Eins oder Null, kann di
 		1 & COV & 0h & Capture overflow. Dieses Bit zeigt ein \grqq capture overflow\grqq{} an. \Code{COV} muss Softwareseitig zur\"uckgesetzt werden.  \\ \hline
 		0 & CCIFG & 0h & Capture/compare interrupt flag \\ \hline
 	\end{tabular}
-	\caption{Registerbeschreibung – Capture-/Compare Register Timer B \\ \Zitat[S. 375, Tab. 12-8]{ti:slau272d}}
+	\vspace{0.50cm}
+	\caption{Registerbeschreibung – Capture-/Compare Register Timer B\\\Zitat[S. 375, Tab. 12-8]{ti:slau272d}}
 	\label{tab:tb_ccc_register}
 \end{table}
 
@@ -235,6 +236,7 @@ Die Auswahl der Clock-Source, des Prescalers und weiteren Steuerbits ist daher e
 		1 & TBIE & 0h & Timer\_B interrupt enable \\ \hline
 		0 & TBIFG & 0h & Timer\_B interrupt flag \\ \hline
 	\end{tabular}
+	\vspace{0.50cm}
 	\caption{Registerbeschreibung – Control Register Timer B\\\Zitat[S. 372, Tab. 12-6]{ti:slau272d}}
 	\label{tab:tb_c_register}
 \end{table}
@@ -316,6 +318,7 @@ Entsprechend ist der universelle Kommunikationskanal vom Typ B (\Abkuerzung{enha
 		Adress- und Broadcast-Modus (I$^{2}$C) & -- & \checkmark \\\hline
 		Multimaster-Unterst\"utzung (I$^{2}$C) & -- & \checkmark \\\hline
 	\end{tabular}
+	\vspace{0.50cm}
 	\caption{Funktionsvergleich der eUSCI-Module des MSP430FR5729\\\Zitat[Kap. 18, 19, 20, S. 493, Kap. 10]{ti:slau272d, davies:msp430}}
 	\label{tab:eusci-vergleich}
 \end{table}
@@ -325,10 +328,10 @@ Entsprechend ist der universelle Kommunikationskanal vom Typ B (\Abkuerzung{enha
 \subsection{Einordnung vorhandener Kommunikationsschnittstellen}
 \label{sec:Einordnung_Schnittstellen}
 
-Diese Arbeit entwickelt eine interruptgesteuerte Benutzerschnittstelle. Die Evaluation daf\"ur geeigneter Protokolle zur Interaktion mit externen \Abkuerzung{Personal Computer}{PC} Systemen bestimmt ma{\ss}geblich den weiteren Verlauf des Projekts. Daher ordnet die Arbeit die verf\"ugbaren seriellen Protokolle ein, um im weiteren Verlauf gezielt auf jene Technologie eingehen zu k\"onnen, welche im Kontext der Arbeit von praktischer Relevanz ist.
+Diese Arbeit entwickelt eine interruptgesteuerte Benutzerschnittstelle. Die Evaluation daf\"ur geeigneter Protokolle zur Interaktion mit externen \Abkuerzung{Personal Computer}{PC} Systemen bestimmt ma{\ss}geblich den weiteren Verlauf des Projekts. 
 
 \newpage
-Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich besonders gut f\"ur den Datenaustausch zwischen einem Mikrocontroller und seinen Peripherieger\"aten oder weiteren Mikrocontrollern im Master-Slave-Verh\"altnis. Die Wahl der Technologie richtet sich unter anderem nach der Anzahl beteiligter Ger\"ate sowie der Distanz zu den Kommunikationspartnern. Weitere technische Unterschiede dieser Protokolle sind in \Tabelle{synchrone_protokolle} aufgelistet.
+Daher ordnet die Arbeit die verf\"ugbaren seriellen Protokolle ein, um im weiteren Verlauf gezielt auf jene Technologie eingehen zu k\"onnen, welche im Kontext der Arbeit von praktischer Relevanz ist. Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich besonders gut f\"ur den Datenaustausch zwischen einem Mikrocontroller und seinen Peripherieger\"aten oder weiteren Mikrocontrollern im Master-Slave-Verh\"altnis. Die Wahl der Technologie richtet sich unter anderem nach der Anzahl beteiligter Ger\"ate sowie der Distanz zu den Kommunikationspartnern. Weitere technische Unterschiede dieser Protokolle sind in \Tabelle{synchrone_protokolle} aufgelistet.
 
 \begin{table}[h!]
 	\small
@@ -346,13 +349,14 @@ Die Kommunikation \"uber synchrone Protokolle wie I$^{2}$C und SPI eignen sich b
 		\textbf{Typische Einsatzgebiete} & Hochgeschwindigkeits-kommunikation (\zB SD-Karten, Displays) & Niedriggeschwindigkeits-Komponenten (\zB Sensoren, EEPROMs) \\\hline
 		\textbf{Leitungsl\"ange / St\"oranf\"alligkeit} & Gut f\"ur kurze, direkte Verbindungen & H\"ohere Anf\"alligkeit f\"ur St\"orungen und Begrenzung durch Leitungskapazit\"at \\\hline
 	\end{tabular}
+	\vspace{0.50cm}
 	\caption{Vergleich der synchronen seriellen Protokolle SPI und I$^{2}$C\\\Zitat[S. 497, Kap. 10.2, S. 534, Kap. 10.7]{davies:msp430}}
 	\label{tab:synchrone_protokolle}
 \end{table}
 
+\newpage
 Zusammenfassend zeigt sich, dass die synchrone Daten\"ubertragung sich nur bedingt f\"ur die Kommunikation mit einem auf Windows oder Linux basierenden System eignet. Im Gegensatz dazu sind asynchrone Protokolle wie UART f\"ur diese Art der Anwendung deutlich besser geeignet, wie der folgende Abschnitt beschreibt. 
 
-\newpage
 Das UART-Protokoll zeichnet sich nicht nur durch eine einfache Implementierung aus, sondern ist auch \"au{\ss}erst robust und ressourcenschonend -- Eigenschaften, die insbesondere bei modularen, \Fachbegriff{Automatische Erkennung und Integration von Komponenten in ein System ohne manuelle Konfiguration. \Zitat{Duden_plugAndPlay}}{Plug-and-Play-f\"ahigen}[Plug-and-Play] Systemkomponenten entscheidend sind. Der Verzicht auf eine gemeinsame Taktleitung erlaubt eine Punkt-zu-Punkt-Verbindung mit vergleichsweise geringen Hardwareanforderungen. 
 
 Diese Vorteile gelten gleicherma{\ss}en f\"ur die gegen\"uberliegende Seite der Schnittstelle: Alle g\"angigen Betriebssysteme wie Windows, Linux oder macOS stellen standardm\"a{\ss}ig Treiber f\"ur die asynchrone serielle Daten\"ubertragung bereit. Unter Windows erfolgt dies beispielsweise \"uber sogenannte \NeuerBegriff{COM-Ports}, w\"ahrend unter Linux Schnittstellen wie \NeuerBegriff{/dev/ttySx} oder \NeuerBegriff{/dev/ttyUSBx} verwendet werden. \Zitat{microsoft_serial, linux_kernel_docs}
@@ -432,6 +436,7 @@ Die automatische Fehlererkennung des Interfaces erm\"oglicht dem Benutzer eine s
 		Empfangs\"uberlauf & UCOE & Wenn ein neues Zeichen empfangen wird, bevor das vorherige gelesen wurde, wird ein \"Uberlauf erkannt.\\\hline
 		Break-Bedingung & UCBRK & Wird erkannt, wenn alle Bits auf Low liegen (bei deaktivierter Baudratenerkennung). \Code{UCBRK} wird gesetzt und \ggf auch \Code{UCRXIFG}, wenn \Code{UCBRKIE} aktiv ist. \\\hline
 	\end{tabular}
+	\vspace{0.50cm}
 	\caption{UART-Fehlerbedingungen und zugeh\"orige Status-Flags des MSP430FR5729\\\Zitat[S. 483, Tab. 18-1]{ti:slau272d}}
 	\label{tab:uart_error_flags}
 \end{table}
@@ -458,6 +463,7 @@ Weitere technische Spezifikationen sind in \Tabelle{uart_features} zusammengefas
 		Interrupt-Unterst\"utzung & Unabh\"angige Interruptquellen f\"ur Empfang, \"Ubertragung, Startbit-Empfang sowie Abschluss der \"Ubertragung \\
 		\hline
 	\end{tabular}
+	\vspace{0.50cm}
 	\caption{Technische Merkmale der UART-Schnittstelle des MSP430FR5729\\\Zitat[S. 476, kap. 18.2]{ti:slau272d}}
 	\label{tab:uart_features}
 \end{table}

@@ -174,7 +174,7 @@ GLOBAL Void Observer_init(Void) {
 
     dict_idx = 0;
 
-    mem_addr_ptr = NULL;
+    mem_addr_ptr = 0;
     mem_addr_idx = 0;
     blocks = 0;
     rw_buf_ptr = rw_buf;
@@ -280,7 +280,7 @@ LOCAL Void read_mem(Void) {
         return;
     }
 
-    if (mem_addr_ptr EQ NULL) {
+    if (mem_addr_ptr EQ 0) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
         Char *block_str = mem_addr_str + strlen(mem_addr_str) + 1;
@@ -314,7 +314,7 @@ LOCAL Void write_mem(Void) {
         return;
     }
 
-    if (mem_addr_ptr EQ NULL) {
+    if (mem_addr_ptr EQ 0) {
         // Extract useful arguments
         Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
         write_str_ptr = mem_addr_str + strlen(mem_addr_str) + 1;

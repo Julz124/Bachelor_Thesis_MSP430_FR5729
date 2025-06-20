@@ -45,9 +45,10 @@ Der Programmablauf, nach der Initialisierung des Moduls bis zur erfolgreichen Au
 Solange kein Befehl \"uber die Eingabetaste eines verbundenen PCs best\"atigt wurde, verbleibt das Modul im Ruhezustand. Bereits ab dem ersten \Fachbegriff{Zeichenkombination aus Buchstaben (lateinisches Alphabet) und Ziffern (0–9).}{alphanumerischen}[alphanumerisch] Zeichen wird ein \glqq{}Time-Out-Timer\grqq{} aktiviert. Dieser Time-Out-Timer bildet den ersten von drei Zust\"anden (\Code{state\_0}). Erfolgt innerhalb eines definierten Zeitintervalls keine abschlie{\ss}ende Eingabe, wird der Vorgang \"uber den Zustand \Code{state\_2} zur\"uckgesetzt, und es wird ein \Code{\glqq{}Time-Out-Error\grqq{}} generiert. Bei erfolgreicher Best\"atigung hingegen wird der Timer deaktiviert und \"uber den Zustand \Code{state\_1} die Befehlsinterpretation eingeleitet. In \Code{state\_1} wird ein zum Befehl passender Funktionszeiger dem Statuszeiger zugewiesen. Das Ergebnis der Befehlsverarbeitung wird anschlie{\ss}end \"uber UART zur\"uckgegeben. Etwaige Fehler im Ablauf werden mithilfe eines Fehlervektors priorisiert, gespeichert und entsprechend ausgegeben. Das Observer-Modul arbeitet statusorientiert und verarbeitet Ereignisse gem\"a{\ss} ihres Auftretens. \Abbildung{StateMachine_ObserverModul} zeigt einen voll Umfassenden \Fachbegriff{Auch endlicher Automat, ist ein mathematisches Modell zur Beschreibung von Systemen mit endlich vielen Zust\"anden, das \"Uberg\"ange zwischen diesen in Abh\"angigkeit von Eingaben definiert.}{Zustandsautomaten}[Zustandsautomat].
 Eine detaillierte Beschreibung der Abarbeitung gesetzter Zust\"ande findet sich in \Kapitel{Timer_ISR}.
 
+\newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=1.0\textwidth]{../Bilder/observer_state_machine.png}
+	\includegraphics[angle=270, width=1.0\textwidth]{../Bilder/observer_state_machine.png}
 	\caption{Zustandsautomat -- Observer-Modul}
 	\label{fig:StateMachine_ObserverModul}
 \end{figure}
@@ -177,7 +178,7 @@ Die Empfangslogik -- definiert \"uber den Interruptvektor \Code{USCI\_UART\_UCRX
 \newpage
 \begin{figure}[h!]
 	\centering
-	\includegraphics[angle=270, width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
+	\includegraphics[angle=90, width=1.0\textwidth]{../Bilder/observer_activity_diagram_eusci_receive.png}
 	\caption{Aktivit\"atsdiagramm -- Timer ISR}
 	\label{fig:activity_diagram_uart_isr_rec}
 \end{figure}
@@ -410,7 +411,7 @@ Der Programmablauf der \Code{read\_mem}-Funktion ist wie folgt strukturiert (sie
 			return;
 		}
 		
-		if (mem_addr_ptr EQ NULL) {
+		if (mem_addr_ptr EQ 0) {
 			// Extract useful arguments
 			Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
 			Char *block_str = mem_addr_str + strlen(mem_addr_str) + 1;
@@ -468,7 +469,7 @@ Analog dazu ist der Programmablauf der \Code{write\_mem}-Funktion konzipiert, we
 			return;
 		}
 		
-		if (mem_addr_ptr EQ NULL) {
+		if (mem_addr_ptr EQ 0) {
 			// Extract useful arguments
 			Char *mem_addr_str = strtok(uart_buffer_ptr + 4, " ");
 			write_str_ptr = mem_addr_str + strlen(mem_addr_str) + 1;
